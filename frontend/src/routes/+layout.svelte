@@ -97,7 +97,7 @@
 	<nav>
 		{#if auth.session}
 			<a class="who" href="/profile">{auth.session.displayName}</a>
-			<a href="/lobby">Lobby</a>
+			<a href="/">Home</a>
 			<a href="/daily">Parola del Giorno</a>
 			<a href="/leaderboard">Classifica</a>
 			<a class="invites" href="/invites">

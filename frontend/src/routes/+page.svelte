@@ -3,10 +3,17 @@
 	import { goto } from '$app/navigation';
 	import { auth } from '$lib/auth.svelte';
 	import { api } from '$lib/api';
-	import { GAME_CATALOG } from '$lib/games/catalog';
+	import { GAME_CATALOG, gameLabel } from '$lib/games/catalog';
 	import { parseAvatar, renderAvatar } from '$lib/avatar';
+	import GameOptions from '$lib/games/GameOptions.svelte';
 
-	type RoomView = { code: string };
+	type RoomView = {
+		code: string;
+		gameSlug: string;
+		hostEmail: string;
+		players: number;
+		maxPlayers: number;
+	};
 	type DailyState = {
 		masked: string;
 		status: 'PLAYING' | 'WON' | 'LOST';
@@ -19,16 +26,22 @@
 
 	let daily = $state<DailyState | null>(null);
 	let users = $state<UserView[]>([]);
+	let rooms = $state<RoomView[]>([]);
 	let error = $state('');
 
 	// Card "Ospita"
 	let hostGame = $state('connect4');
+	let hostOptions = $state<unknown>(undefined);
 	let hosting = $state(false);
 
 	// Card "Invita"
 	let inviteGame = $state('connect4');
+	let inviteOptions = $state<unknown>(undefined);
 	let selected = $state<Set<string>>(new Set());
 	let inviting = $state(false);
+
+	// Entra con codice
+	let joinCode = $state('');
 
 	const lettersLeft = $derived(daily ? (daily.masked.match(/_/g)?.length ?? 0) : 0);
 
@@ -44,6 +57,15 @@
 		try {
 			daily = await api<DailyState>('/api/daily');
 			users = await api<UserView[]>('/api/users');
+			await refreshRooms();
+		} catch (e) {
+			error = (e as Error).message;
+		}
+	}
+
+	async function refreshRooms() {
+		try {
+			rooms = await api<RoomView[]>('/api/rooms');
 		} catch (e) {
 			error = (e as Error).message;
 		}
@@ -63,7 +85,7 @@
 		try {
 			const r = await api<RoomView>('/api/rooms', {
 				method: 'POST',
-				body: JSON.stringify({ gameSlug: hostGame, isPrivate: false })
+				body: JSON.stringify({ gameSlug: hostGame, isPrivate: false, options: hostOptions })
 			});
 			goto(`/room/${r.code}`);
 		} catch (e) {
@@ -87,7 +109,11 @@
 		try {
 			const r = await api<{ roomCode: string }>('/api/invites', {
 				method: 'POST',
-				body: JSON.stringify({ gameSlug: inviteGame, usernames: [...selected] })
+				body: JSON.stringify({
+					gameSlug: inviteGame,
+					usernames: [...selected],
+					options: inviteOptions
+				})
 			});
 			goto(`/room/${r.roomCode}`);
 		} catch (e) {
@@ -97,9 +123,12 @@
 		}
 	}
 
-	function avatarFace(u: UserView): string {
-		return renderAvatar(parseAvatar(u.avatar));
+	function join(code: string) {
+		const c = code.trim().toUpperCase();
+		if (c) goto(`/room/${c}`);
 	}
+
+	const avatarFace = (u: UserView) => renderAvatar(parseAvatar(u.avatar));
 </script>
 
 <h1 class="title">🎮 DigiGames</h1>
@@ -110,12 +139,13 @@
 	<section class="card fade" style="--delay: 0ms">
 		<div class="card-icon">🏠</div>
 		<h2>Ospita partita</h2>
-		<p class="muted">Apri una stanza pubblica: chiunque può entrare dalla lobby.</p>
+		<p class="muted">Apri una stanza pubblica: chiunque può entrare.</p>
 		<select bind:value={hostGame}>
 			{#each GAME_CATALOG as g (g.slug)}
 				<option value={g.slug}>{g.emoji} {g.label}</option>
 			{/each}
 		</select>
+		<GameOptions game={hostGame} bind:options={hostOptions} />
 		<button onclick={createHost} disabled={hosting}>
 			{hosting ? 'Creo…' : 'Crea partita pubblica'}
 		</button>
@@ -160,13 +190,14 @@
 	<section class="card fade" style="--delay: 160ms">
 		<div class="card-icon">✉️</div>
 		<h2>Invita un amico</h2>
-		<p class="muted">Scegli un gioco e invita una o più persone iscritte.</p>
+		<p class="muted">Scegli un gioco e invita una o più persone.</p>
 		<p class="muted small">🟢 {onlineCount} online ora</p>
 		<select bind:value={inviteGame}>
 			{#each GAME_CATALOG as g (g.slug)}
 				<option value={g.slug}>{g.emoji} {g.label}</option>
 			{/each}
 		</select>
+		<GameOptions game={inviteGame} bind:options={inviteOptions} />
 		<div class="users">
 			{#if users.length === 0}
 				<p class="muted small">Nessun altro utente iscritto.</p>
@@ -192,6 +223,40 @@
 	</section>
 </div>
 
+<!-- Entra con codice -->
+<section class="panel">
+	<h3>Entra con un codice</h3>
+	<div class="row">
+		<input placeholder="ABC123" bind:value={joinCode} maxlength="6" />
+		<button class="alt" onclick={() => join(joinCode)}>Entra</button>
+	</div>
+</section>
+
+<!-- Stanze pubbliche -->
+<section class="panel">
+	<div class="row between">
+		<h3>Stanze pubbliche</h3>
+		<button class="link" onclick={refreshRooms}>↻ Aggiorna</button>
+	</div>
+	{#if rooms.length === 0}
+		<p class="muted">Nessuna stanza aperta. Creane una qui sopra!</p>
+	{:else}
+		<ul class="rooms">
+			{#each rooms as r (r.code)}
+				<li>
+					<div>
+						<strong>{gameLabel(r.gameSlug)}</strong>
+						<span class="muted">· {r.code} · {r.players}/{r.maxPlayers} · host {r.hostEmail}</span>
+					</div>
+					<button class="alt" onclick={() => join(r.code)} disabled={r.players >= r.maxPlayers}>
+						{r.players >= r.maxPlayers ? 'Piena' : 'Entra'}
+					</button>
+				</li>
+			{/each}
+		</ul>
+	{/if}
+</section>
+
 <style>
 	.title {
 		text-align: center;
@@ -206,6 +271,7 @@
 		grid-template-columns: repeat(3, 1fr);
 		gap: 1.25rem;
 		align-items: start;
+		margin-bottom: 1.5rem;
 	}
 	.card {
 		background: var(--panel);
@@ -244,7 +310,8 @@
 		color: var(--accent);
 		line-height: 1;
 	}
-	select {
+	select,
+	input {
 		width: 100%;
 		padding: 0.55rem;
 		border-radius: 8px;
@@ -349,14 +416,64 @@
 		color: #4ade80;
 		font-weight: 700;
 	}
+	.panel {
+		background: var(--panel);
+		padding: 1rem 1.25rem;
+		border-radius: 12px;
+		margin-bottom: 1.25rem;
+	}
+	h3 {
+		font-size: 1.05rem;
+		margin: 0 0 0.75rem;
+	}
+	.row {
+		display: flex;
+		gap: 0.75rem;
+		align-items: center;
+		flex-wrap: wrap;
+	}
+	.row.between {
+		justify-content: space-between;
+	}
+	.row input {
+		flex: 1;
+		width: auto;
+		min-width: 8rem;
+	}
+	.alt {
+		width: auto;
+		margin-top: 0;
+		background: var(--accent);
+	}
+	.link {
+		width: auto;
+		margin-top: 0;
+		background: none;
+		color: var(--muted);
+	}
+	.rooms {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	.rooms li {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.6rem 0.75rem;
+		background: #0f172a;
+		border-radius: 8px;
+		flex-wrap: wrap;
+	}
 	.fade {
 		opacity: 0;
 		transform: translateY(8px);
 		animation: fadein 0.45s ease forwards;
 		animation-delay: var(--delay);
-	}
-	.card.center.fade {
-		transform: translateY(8px) scale(1.03);
 	}
 	@keyframes fadein {
 		to {
@@ -366,6 +483,7 @@
 	}
 	.card.center.fade {
 		--s: 1.03;
+		transform: translateY(8px) scale(1.03);
 	}
 	.pulse {
 		animation: pulse 1.6s ease-in-out infinite;

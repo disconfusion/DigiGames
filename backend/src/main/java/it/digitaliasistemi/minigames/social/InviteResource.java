@@ -47,7 +47,7 @@ public class InviteResource {
         AppUser meUser = AppUser.findByUsername(me);
         String myDisplay = meUser != null ? meUser.displayName : me;
 
-        Room room = rooms.create(req.gameSlug(), me, true, engine.maxPlayers(), null);
+        Room room = rooms.create(req.gameSlug(), me, true, engine.maxPlayers(), req.options());
 
         Set<String> targets = new LinkedHashSet<>(req.usernames());
         targets.remove(me);
@@ -110,7 +110,8 @@ public class InviteResource {
         return Response.status(status).entity(Map.of("message", message)).build();
     }
 
-    public record CreateInviteRequest(String gameSlug, List<String> usernames) {}
+    public record CreateInviteRequest(String gameSlug, List<String> usernames,
+                                      com.fasterxml.jackson.databind.JsonNode options) {}
 
     public record InviteView(Long id, String fromDisplayName, String fromUsername,
                              String gameSlug, String roomCode, String createdAt) {}

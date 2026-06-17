@@ -92,7 +92,7 @@
 
 	function leave() {
 		conn?.close();
-		goto('/lobby');
+		goto('/');
 	}
 
 	async function loadAvatars() {
@@ -140,7 +140,7 @@
 
 {#if loadError}
 	<p class="error">{loadError}</p>
-	<button onclick={() => goto('/lobby')}>Torna alla lobby</button>
+	<button onclick={() => goto('/')}>Torna alla home</button>
 {:else}
 	<p class="status">
 		{connected ? '🟢 connesso' : '🟡 connessione…'} · giocatori: {players}/{room?.maxPlayers ?? '?'}

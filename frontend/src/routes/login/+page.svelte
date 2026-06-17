@@ -23,7 +23,7 @@
 				body: JSON.stringify(payload)
 			});
 			setSession(res);
-			goto('/lobby');
+			goto('/');
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Errore';
 		} finally {

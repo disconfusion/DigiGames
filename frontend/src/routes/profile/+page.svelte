@@ -193,7 +193,7 @@
 		<section class="panel">
 			<h2>📊 Le tue statistiche</h2>
 			{#if stats.total === 0}
-				<p class="hint">Nessuna partita registrata. Gioca qualcosa nella lobby!</p>
+				<p class="hint">Nessuna partita registrata. Gioca qualcosa dalla home!</p>
 			{:else}
 				<div class="summary">
 					<div class="stat"><span class="num">{stats.total}</span> partite</div>
