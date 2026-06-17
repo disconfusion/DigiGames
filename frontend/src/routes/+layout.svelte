@@ -166,11 +166,40 @@
 		--text: #e2e8f0;
 		--muted: #94a3b8;
 	}
+	:global(*, *::before, *::after) {
+		box-sizing: border-box;
+	}
+	:global(html) {
+		/* Scrollbar a tema (Firefox) */
+		scrollbar-width: thin;
+		scrollbar-color: #475569 transparent;
+	}
 	:global(body) {
 		margin: 0;
 		font-family: system-ui, sans-serif;
 		background: var(--bg);
 		color: var(--text);
+		overflow-x: hidden;
+		-webkit-text-size-adjust: 100%;
+	}
+	/* Scrollbar a tema (WebKit/Chromium) */
+	:global(::-webkit-scrollbar) {
+		width: 10px;
+		height: 10px;
+	}
+	:global(::-webkit-scrollbar-track) {
+		background: var(--bg);
+	}
+	:global(::-webkit-scrollbar-thumb) {
+		background: #334155;
+		border-radius: 8px;
+		border: 2px solid var(--bg);
+	}
+	:global(::-webkit-scrollbar-thumb:hover) {
+		background: var(--accent);
+	}
+	:global(::-webkit-scrollbar-corner) {
+		background: var(--bg);
 	}
 	header {
 		display: flex;
@@ -234,9 +263,26 @@
 		max-width: 900px;
 		margin: 0 auto;
 		padding: 1.5rem 1rem;
+		width: 100%;
 	}
 	.bug {
 		color: #fbbf24;
+	}
+	@media (max-width: 640px) {
+		header {
+			padding: 0.6rem 0.8rem;
+		}
+		.brand {
+			font-size: 1.05rem;
+		}
+		nav {
+			gap: 0.6rem 0.85rem;
+			font-size: 0.9rem;
+			width: 100%;
+		}
+		main {
+			padding: 1rem 0.8rem;
+		}
 	}
 	.modal-backdrop {
 		position: fixed;

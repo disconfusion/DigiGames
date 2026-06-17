@@ -26,6 +26,7 @@
 		legalMoves: LegalMove[];
 		drawOfferBy: string | null; // "W" | "B" | null
 		clock: Clock;
+		captured: { W: string[]; B: string[] };
 	}
 
 	let state = $state<GameState | null>(null);
@@ -189,6 +190,11 @@
 	const bottomClock = $derived(myColor === 'W' ? dispWhite : dispBlack);
 	const topRunning = $derived(turnColor != null && turnColor !== myColor && isPlaying);
 	const bottomRunning = $derived(turnColor === myColor && isPlaying);
+
+	// Pezzi mangiati. captured[X] = pezzi catturati dal colore X (cioè pezzi avversari).
+	const oppColor = $derived(myColor === 'W' ? 'B' : 'W');
+	const myCaptured = $derived(state?.captured?.[myColor as 'W' | 'B'] ?? []); // pezzi avversari che ho preso
+	const oppCaptured = $derived(state?.captured?.[oppColor as 'W' | 'B'] ?? []); // miei pezzi presi dall'avversario
 </script>
 
 <div class="chess">
@@ -208,11 +214,22 @@
 	</div>
 
 	{#if state}
-		{#if state.clock?.timed}
-			<div class="clock" class:running={topRunning} class:low={topClock < 30000}>
-				⏱ {fmt(topClock)} <span class="clock-who">avversario</span>
-			</div>
-		{/if}
+		<div class="player-bar">
+			{#if state.clock?.timed}
+				<div class="clock" class:running={topRunning} class:low={topClock < 30000}>
+					⏱ {fmt(topClock)} <span class="clock-who">avversario</span>
+				</div>
+			{:else}
+				<span class="clock-who">avversario</span>
+			{/if}
+			{#if oppCaptured.length}
+				<div class="captured">
+					{#each oppCaptured as t, i (i)}
+						<span class="cap" class:white={myColor === 'W'} class:black={myColor === 'B'}>{GLYPH[t]}</span>
+					{/each}
+				</div>
+			{/if}
+		</div>
 
 		<div class="grid">
 			{#each rowOrder as r (r)}
@@ -241,11 +258,22 @@
 			{/each}
 		</div>
 
-		{#if state.clock?.timed}
-			<div class="clock" class:running={bottomRunning} class:low={bottomClock < 30000}>
-				⏱ {fmt(bottomClock)} <span class="clock-who">tu</span>
-			</div>
-		{/if}
+		<div class="player-bar">
+			{#if state.clock?.timed}
+				<div class="clock" class:running={bottomRunning} class:low={bottomClock < 30000}>
+					⏱ {fmt(bottomClock)} <span class="clock-who">tu</span>
+				</div>
+			{:else}
+				<span class="clock-who">tu</span>
+			{/if}
+			{#if myCaptured.length}
+				<div class="captured">
+					{#each myCaptured as t, i (i)}
+						<span class="cap" class:white={oppColor === 'W'} class:black={oppColor === 'B'}>{GLYPH[t]}</span>
+					{/each}
+				</div>
+			{/if}
+		</div>
 
 		{#if pendingPromo}
 			<div class="promo">
@@ -417,6 +445,27 @@
 		font-size: 0.75rem;
 		font-weight: 400;
 		opacity: 0.7;
+	}
+	.player-bar {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		width: min(92vw, 460px);
+		flex-wrap: wrap;
+	}
+	.captured {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.05rem;
+		font-size: 1.1rem;
+		line-height: 1;
+	}
+	.cap.white {
+		color: #f8fafc;
+		text-shadow: 0 0 2px #000;
+	}
+	.cap.black {
+		color: #475569;
 	}
 	@keyframes blink {
 		50% {

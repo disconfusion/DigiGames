@@ -56,6 +56,10 @@ public class ChessState {
     private final String whitePlayer;
     private final String blackPlayer;
 
+    // Pezzi catturati: tipi dei pezzi mangiati da ciascun colore
+    private final List<Character> capturedByWhite = new ArrayList<>();
+    private final List<Character> capturedByBlack = new ArrayList<>();
+
     // Patta per ripetizione: conteggio posizioni
     private final Map<String, Integer> positionCounts = new HashMap<>();
     // Offerta di patta pendente, fatta dal colore indicato (null = nessuna)
@@ -150,6 +154,13 @@ public class ChessState {
         int[] newEp = null;
         if (p.type == 'P' && Math.abs(m.tr - m.fr) == 2) {
             newEp = new int[]{(m.fr + m.tr) / 2, m.fc};
+        }
+
+        // Pezzo catturato (cattura normale o en passant)
+        Piece captured = m.enPassant ? board[m.fr][m.tc] : board[m.tr][m.tc];
+        if (captured != null) {
+            if (p.color == WHITE) capturedByWhite.add(captured.type);
+            else capturedByBlack.add(captured.type);
         }
 
         applyToBoard(board, m, p.color);
@@ -538,6 +549,14 @@ public class ChessState {
     }
     public synchronized boolean inCheck() { return isInCheck(board, turn); }
     public synchronized Character drawOfferBy() { return drawOfferBy; }
+
+    /** Pezzi catturati per colore: {"W":[tipi mangiati dal Bianco], "B":[...]}. */
+    public synchronized Map<String, List<String>> capturedView() {
+        Map<String, List<String>> m = new LinkedHashMap<>();
+        m.put("W", capturedByWhite.stream().map(String::valueOf).toList());
+        m.put("B", capturedByBlack.stream().map(String::valueOf).toList());
+        return m;
+    }
     public synchronized boolean timed() { return timed; }
 
     /** Orologio live: tempo residuo in ms, scalando il tempo trascorso al giocatore di turno. */

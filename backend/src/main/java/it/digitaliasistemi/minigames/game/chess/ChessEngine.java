@@ -142,6 +142,7 @@ public class ChessEngine implements GameEngine {
         m.put("legalMoves", cs.legalMovesView());
         m.put("drawOfferBy", cs.drawOfferBy() == null ? null : String.valueOf(cs.drawOfferBy()));
         m.put("clock", cs.clockView());
+        m.put("captured", cs.capturedView());
         return m;
     }
 
