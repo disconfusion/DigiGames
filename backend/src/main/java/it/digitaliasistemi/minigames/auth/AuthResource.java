@@ -39,7 +39,7 @@ public class AuthResource {
         u.persist();
         String token = auth.issueToken(u.username, u.displayName, u.role);
         return Response.status(Response.Status.CREATED)
-                .entity(new AuthResponse(token, u.username, u.displayName)).build();
+                .entity(new AuthResponse(token, u.username, u.displayName, u.role)).build();
     }
 
     @POST
@@ -51,7 +51,7 @@ public class AuthResource {
             return error(Response.Status.UNAUTHORIZED, "Credenziali non valide");
         }
         String token = auth.issueToken(u.username, u.displayName, u.role);
-        return Response.ok(new AuthResponse(token, u.username, u.displayName)).build();
+        return Response.ok(new AuthResponse(token, u.username, u.displayName, u.role)).build();
     }
 
     private Response error(Response.Status status, String message) {

@@ -4,11 +4,49 @@
 	import { auth, logout } from '$lib/auth.svelte';
 	import { goto } from '$app/navigation';
 	import { api } from '$lib/api';
+	import { GAME_CATALOG } from '$lib/games/catalog';
 
 	let { children } = $props();
 
 	let inviteCount = $state(0);
 	let timer: ReturnType<typeof setInterval> | undefined;
+
+	const isAdmin = $derived(auth.session?.role === 'admin');
+
+	// Modale segnalazione bug
+	let showBug = $state(false);
+	let bugGame = $state('generale');
+	let bugDesc = $state('');
+	let bugMsg = $state('');
+	let bugErr = $state('');
+	let bugSending = $state(false);
+
+	function openBug() {
+		bugGame = 'generale';
+		bugDesc = '';
+		bugMsg = '';
+		bugErr = '';
+		showBug = true;
+	}
+
+	async function submitBug() {
+		if (!bugDesc.trim()) return;
+		bugSending = true;
+		bugErr = '';
+		try {
+			await api('/api/bugs', {
+				method: 'POST',
+				body: JSON.stringify({ game: bugGame, description: bugDesc })
+			});
+			bugMsg = '✓ Grazie per la segnalazione!';
+			bugDesc = '';
+			setTimeout(() => (showBug = false), 1200);
+		} catch (e) {
+			bugErr = (e as Error).message;
+		} finally {
+			bugSending = false;
+		}
+	}
 
 	async function tick() {
 		if (!auth.session) {
@@ -66,6 +104,8 @@
 				Inviti
 				{#if inviteCount > 0}<span class="nav-badge">{inviteCount}</span>{/if}
 			</a>
+			{#if isAdmin}<a href="/admin">🛠 Admin</a>{/if}
+			<button class="link bug" onclick={openBug}>🐞 Segnala bug</button>
 			<button class="link" onclick={doLogout}>Esci</button>
 		{:else}
 			<a href="/login">Accedi</a>
@@ -76,6 +116,47 @@
 <main>
 	{@render children()}
 </main>
+
+{#if showBug}
+	<div
+		class="modal-backdrop"
+		role="presentation"
+		onclick={() => (showBug = false)}
+	>
+		<div class="modal" role="dialog" aria-modal="true" onclick={(e) => e.stopPropagation()}>
+			<div class="modal-head">
+				<h2>🐞 Segnala un bug</h2>
+				<button class="x" onclick={() => (showBug = false)} aria-label="Chiudi">✕</button>
+			</div>
+			<label class="field">
+				Gioco / area interessata
+				<select bind:value={bugGame}>
+					<option value="generale">Generale / Altro</option>
+					{#each GAME_CATALOG as g (g.slug)}
+						<option value={g.slug}>{g.emoji} {g.label}</option>
+					{/each}
+				</select>
+			</label>
+			<label class="field">
+				Descrizione del problema
+				<textarea
+					bind:value={bugDesc}
+					rows="5"
+					maxlength="2000"
+					placeholder="Cosa è successo? Come riprodurlo?"
+				></textarea>
+			</label>
+			{#if bugErr}<p class="bug-err">{bugErr}</p>{/if}
+			{#if bugMsg}<p class="bug-ok">{bugMsg}</p>{/if}
+			<div class="modal-actions">
+				<button class="cancel" onclick={() => (showBug = false)}>Annulla</button>
+				<button class="send" onclick={submitBug} disabled={bugSending || !bugDesc.trim()}>
+					{bugSending ? 'Invio…' : 'Invia segnalazione'}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <style>
 	:global(:root) {
@@ -153,5 +234,93 @@
 		max-width: 900px;
 		margin: 0 auto;
 		padding: 1.5rem 1rem;
+	}
+	.bug {
+		color: #fbbf24;
+	}
+	.modal-backdrop {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.6);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 1rem;
+		z-index: 50;
+	}
+	.modal {
+		background: var(--panel);
+		border-radius: 14px;
+		padding: 1.25rem;
+		width: 100%;
+		max-width: 460px;
+		border: 1px solid #334155;
+	}
+	.modal-head {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 0.75rem;
+	}
+	.modal-head h2 {
+		margin: 0;
+		font-size: 1.15rem;
+	}
+	.x {
+		background: none;
+		border: none;
+		color: var(--muted);
+		font-size: 1.1rem;
+		cursor: pointer;
+	}
+	.field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		font-size: 0.9rem;
+		color: var(--muted);
+		margin-bottom: 0.75rem;
+	}
+	.field select,
+	.field textarea {
+		padding: 0.55rem;
+		border-radius: 8px;
+		border: 1px solid #334155;
+		background: #0f172a;
+		color: var(--text);
+		font: inherit;
+		resize: vertical;
+	}
+	.modal-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 0.6rem;
+	}
+	.modal-actions button {
+		padding: 0.55rem 1.1rem;
+		border: none;
+		border-radius: 8px;
+		cursor: pointer;
+		font-size: 0.95rem;
+	}
+	.cancel {
+		background: #475569;
+		color: white;
+	}
+	.send {
+		background: var(--accent);
+		color: white;
+	}
+	.send:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+	.bug-err {
+		color: #f87171;
+		margin: 0 0 0.5rem;
+	}
+	.bug-ok {
+		color: #4ade80;
+		margin: 0 0 0.5rem;
 	}
 </style>

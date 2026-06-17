@@ -65,7 +65,7 @@ public class ProfileResource {
         }
 
         String token = auth.issueToken(u.username, u.displayName, u.role);
-        return Response.ok(new AuthResponse(token, u.username, u.displayName)).build();
+        return Response.ok(new AuthResponse(token, u.username, u.displayName, u.role)).build();
     }
 
     @PUT

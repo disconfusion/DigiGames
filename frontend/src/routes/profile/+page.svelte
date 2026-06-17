@@ -15,7 +15,7 @@
 	} from '$lib/avatar';
 
 	type Profile = { username: string; displayName: string; avatar: string | null; role: string };
-	type AuthResponse = { token: string; username: string; displayName: string };
+	type AuthResponse = { token: string; username: string; displayName: string; role: string };
 	type GameStat = { game: string; played: number; wins: number; losses: number; draws: number };
 	type Stats = {
 		total: number;
@@ -91,8 +91,13 @@
 				method: 'PUT',
 				body: JSON.stringify({ displayName, avatar: serializeAvatar(spec) })
 			});
-			// Aggiorna la sessione col nuovo token/displayName
-			setSession({ token: res.token, username: res.username, displayName: res.displayName });
+			// Aggiorna la sessione col nuovo token/displayName/ruolo
+			setSession({
+				token: res.token,
+				username: res.username,
+				displayName: res.displayName,
+				role: res.role
+			});
 			profileMsg = '✓ Profilo aggiornato';
 		} catch (e) {
 			profileErr = (e as Error).message;
