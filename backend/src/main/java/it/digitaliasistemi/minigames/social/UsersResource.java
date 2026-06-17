@@ -20,14 +20,17 @@ public class UsersResource {
     @Inject
     JsonWebToken jwt;
 
+    @Inject
+    PresenceService presence;
+
     @GET
     public List<UserView> list() {
         String me = jwt.getName();
         return AppUser.<AppUser>listAll().stream()
                 .filter(u -> !u.username.equals(me))
-                .map(u -> new UserView(u.username, u.displayName, u.avatar))
+                .map(u -> new UserView(u.username, u.displayName, u.avatar, presence.isOnline(u.username)))
                 .toList();
     }
 
-    public record UserView(String username, String displayName, String avatar) {}
+    public record UserView(String username, String displayName, String avatar, boolean online) {}
 }

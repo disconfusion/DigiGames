@@ -15,7 +15,7 @@
 		won: boolean;
 		eliminated: boolean;
 	};
-	type UserView = { username: string; displayName: string; avatar: string | null };
+	type UserView = { username: string; displayName: string; avatar: string | null; online: boolean };
 
 	let daily = $state<DailyState | null>(null);
 	let users = $state<UserView[]>([]);
@@ -31,6 +31,14 @@
 	let inviting = $state(false);
 
 	const lettersLeft = $derived(daily ? (daily.masked.match(/_/g)?.length ?? 0) : 0);
+
+	const sortedUsers = $derived(
+		[...users].sort((a, b) => {
+			if (a.online !== b.online) return a.online ? -1 : 1;
+			return a.displayName.localeCompare(b.displayName);
+		})
+	);
+	const onlineCount = $derived(users.filter((u) => u.online).length);
 
 	async function load() {
 		try {
@@ -153,6 +161,7 @@
 		<div class="card-icon">✉️</div>
 		<h2>Invita un amico</h2>
 		<p class="muted">Scegli un gioco e invita una o più persone iscritte.</p>
+		<p class="muted small">🟢 {onlineCount} online ora</p>
 		<select bind:value={inviteGame}>
 			{#each GAME_CATALOG as g (g.slug)}
 				<option value={g.slug}>{g.emoji} {g.label}</option>
@@ -162,13 +171,14 @@
 			{#if users.length === 0}
 				<p class="muted small">Nessun altro utente iscritto.</p>
 			{:else}
-				{#each users as u (u.username)}
+				{#each sortedUsers as u (u.username)}
 					<button
 						class="user"
 						class:on={selected.has(u.username)}
 						onclick={() => toggle(u.username)}
 						type="button"
 					>
+						<span class="presence" class:online={u.online} title={u.online ? 'Online' : 'Offline'}></span>
 						<pre class="mini-face">{avatarFace(u)}</pre>
 						<span class="uname">{u.displayName}</span>
 						{#if selected.has(u.username)}<span class="check">✓</span>{/if}
@@ -312,6 +322,17 @@
 	.user.on {
 		border-color: var(--accent);
 		background: #1e3a5f;
+	}
+	.presence {
+		width: 0.6rem;
+		height: 0.6rem;
+		border-radius: 50%;
+		background: #475569;
+		flex: 0 0 auto;
+	}
+	.presence.online {
+		background: #22c55e;
+		box-shadow: 0 0 6px #22c55e;
 	}
 	.mini-face {
 		font-family: ui-monospace, monospace;

@@ -5,6 +5,7 @@
 	import { auth, setSession } from '$lib/auth.svelte';
 	import {
 		EYES,
+		NOSES,
 		MOUTHS,
 		HATS,
 		parseAvatar,
@@ -43,7 +44,7 @@
 	const winRate = $derived(stats && stats.total > 0 ? Math.round((stats.wins / stats.total) * 100) : 0);
 
 	// Avatar
-	let spec = $state<AvatarSpec>({ eyes: 0, mouth: 0, hat: 0 });
+	let spec = $state<AvatarSpec>({ eyes: 0, nose: 0, mouth: 0, hat: 0 });
 	const preview = $derived(renderAvatar(spec));
 
 	// Form displayName
@@ -134,6 +135,11 @@
 					<button onclick={() => cycle('eyes', EYES.length, -1)}>◀</button>
 					<span>Occhi</span>
 					<button onclick={() => cycle('eyes', EYES.length, 1)}>▶</button>
+				</div>
+				<div class="ctrl">
+					<button onclick={() => cycle('nose', NOSES.length, -1)}>◀</button>
+					<span>Naso</span>
+					<button onclick={() => cycle('nose', NOSES.length, 1)}>▶</button>
 				</div>
 				<div class="ctrl">
 					<button onclick={() => cycle('mouth', MOUTHS.length, -1)}>◀</button>

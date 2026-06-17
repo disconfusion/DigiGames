@@ -86,9 +86,17 @@ public class LeaderboardService {
             s.gameStats.get(r.game)[0]++;
             if ("WIN".equals(r.result)) s.gameStats.get(r.game)[1]++;
         }
+
+        Map<String, String> avatars = new HashMap<>();
+        for (AppUser u : AppUser.<AppUser>listAll()) avatars.put(u.username, u.avatar);
+
         return stats.values().stream()
             .sorted(Comparator.comparingInt((UserStats u) -> u.wins).reversed())
-            .map(UserStats::toMap)
+            .map(u -> {
+                Map<String, Object> m = u.toMap();
+                m.put("avatar", avatars.get(u.username));
+                return m;
+            })
             .toList();
     }
 

@@ -10,10 +10,16 @@
 	let inviteCount = $state(0);
 	let timer: ReturnType<typeof setInterval> | undefined;
 
-	async function refreshInvites() {
+	async function tick() {
 		if (!auth.session) {
 			inviteCount = 0;
 			return;
+		}
+		// Heartbeat presenza + conteggio inviti
+		try {
+			await api('/api/presence/ping', { method: 'POST' });
+		} catch {
+			// silenzioso
 		}
 		try {
 			const r = await api<{ count: number }>('/api/invites/count');
@@ -26,8 +32,8 @@
 	$effect(() => {
 		// (Ri)avvia il polling quando cambia lo stato di login
 		if (auth.session && !timer) {
-			refreshInvites();
-			timer = setInterval(refreshInvites, 15_000);
+			tick();
+			timer = setInterval(tick, 15_000);
 		} else if (!auth.session && timer) {
 			clearInterval(timer);
 			timer = undefined;

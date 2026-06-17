@@ -6,42 +6,75 @@
 	import { api } from '$lib/api';
 	import { connectRoom, type RoomEvent, type RoomConnection } from '$lib/ws';
 	import { BOARDS } from '$lib/games/registry';
+	import { parseAvatar, renderAvatar } from '$lib/avatar';
 
 	type RoomView = { code: string; gameSlug: string; players: number; maxPlayers: number };
+	type UserInfo = { displayName: string; avatar: string | null };
 
 	const SYSTEM = new Set(['player:joined', 'player:left', 'chat']);
 	const code: string = page.params.code ?? '';
+	const meUsername = auth.session?.username ?? '';
 
 	let conn: RoomConnection | null = null;
 	let wsStatus = $state<'connected' | 'reconnecting' | 'closed'>('reconnecting');
 	let connected = $state(false);
 	let players = $state(0);
+	let playerNames = $state<string[]>([]);
 	let room = $state<RoomView | null>(null);
 	let loadError = $state('');
 	let gameEvent = $state<RoomEvent | null>(null);
+
+	let userInfo = $state<Record<string, UserInfo>>({});
+	let bubbles = $state<Record<string, { text: string; key: number }>>({});
+	let bubbleSeq = 0;
 
 	let log = $state<string[]>([]);
 	let chatText = $state('');
 	const push = (line: string) => (log = [...log, line]);
 
 	const Board = $derived(room ? BOARDS[room.gameSlug] : undefined);
+	const opponents = $derived(playerNames.filter((u) => u !== meUsername));
+
+	const face = (u: string) => renderAvatar(parseAvatar(userInfo[u]?.avatar ?? null));
+	const nameOf = (u: string) => (u === meUsername ? 'Tu' : (userInfo[u]?.displayName ?? u));
+
+	function addPlayer(u: string) {
+		if (u && !playerNames.includes(u)) playerNames = [...playerNames, u];
+	}
+	function removePlayer(u: string) {
+		playerNames = playerNames.filter((p) => p !== u);
+	}
+
+	function showBubble(from: string, text: string) {
+		const key = ++bubbleSeq;
+		bubbles = { ...bubbles, [from]: { text, key } };
+		setTimeout(() => {
+			if (bubbles[from]?.key === key) {
+				const next = { ...bubbles };
+				delete next[from];
+				bubbles = next;
+			}
+		}, 4500);
+	}
 
 	function handle(e: RoomEvent) {
 		switch (e.type) {
 			case 'player:joined':
 				players = Number(e.players);
-				if (e.username === auth.session?.username) connected = true;
+				addPlayer(String(e.username));
+				if (e.username === meUsername) connected = true;
 				push(`▶ ${e.username} è entrato`);
 				break;
 			case 'player:left':
 				players = Number(e.players);
+				removePlayer(String(e.username));
 				push(`◀ ${e.username} è uscito`);
 				break;
 			case 'chat':
 				push(`${e.from}: ${e.text}`);
+				showBubble(String(e.from), String(e.text));
 				break;
 			default:
-				// Evento di gioco (game:state, game:over, error): inoltralo al tabellone.
 				if (e.type === 'error') push(`⚠ ${e.message}`);
 				if (!SYSTEM.has(e.type)) gameEvent = e;
 		}
@@ -62,12 +95,29 @@
 		goto('/lobby');
 	}
 
+	async function loadAvatars() {
+		try {
+			const me = await api<{ username: string; displayName: string; avatar: string | null }>('/api/me');
+			const others = await api<{ username: string; displayName: string; avatar: string | null }[]>(
+				'/api/users'
+			);
+			const map: Record<string, UserInfo> = {};
+			map[me.username] = { displayName: me.displayName, avatar: me.avatar };
+			for (const u of others) map[u.username] = { displayName: u.displayName, avatar: u.avatar };
+			userInfo = map;
+		} catch {
+			// avatar non disponibili: si userà il volto di default
+		}
+	}
+
 	onMount(async () => {
 		if (!auth.session) {
 			goto('/login');
 			return;
 		}
+		if (meUsername) addPlayer(meUsername);
 		const token: string = auth.session.token ?? '';
+		await loadAvatars();
 		try {
 			room = await api<RoomView>(`/api/rooms/${code}`);
 		} catch {
@@ -96,13 +146,44 @@
 		{connected ? '🟢 connesso' : '🟡 connessione…'} · giocatori: {players}/{room?.maxPlayers ?? '?'}
 	</p>
 
-	<section class="panel">
-		{#if Board && auth.session}
-			<Board send={sendMsg} event={gameEvent} me={auth.session} />
-		{:else}
-			<p class="muted">Gioco "{room?.gameSlug}" non disponibile.</p>
-		{/if}
-	</section>
+	{#snippet seat(username: string, side: 'left' | 'right')}
+		<div class="seat {side}">
+			<div class="avatar-box">
+				{#if bubbles[username]}
+					<div class="bubble {side}">{bubbles[username].text}</div>
+				{/if}
+				<pre class="face">{face(username)}</pre>
+			</div>
+			<span class="seat-name" class:me={username === meUsername}>{nameOf(username)}</span>
+		</div>
+	{/snippet}
+
+	<div class="arena">
+		<div class="rail">
+			{@render seat(meUsername, 'left')}
+		</div>
+
+		<section class="panel board-panel">
+			{#if Board && auth.session}
+				<Board send={sendMsg} event={gameEvent} me={auth.session} />
+			{:else}
+				<p class="muted">Gioco "{room?.gameSlug}" non disponibile.</p>
+			{/if}
+		</section>
+
+		<div class="rail">
+			{#if opponents.length === 0}
+				<div class="seat right empty">
+					<div class="avatar-box dim"><pre class="face">{renderAvatar(parseAvatar(null))}</pre></div>
+					<span class="seat-name">In attesa…</span>
+				</div>
+			{:else}
+				{#each opponents as o (o)}
+					{@render seat(o, 'right')}
+				{/each}
+			{/if}
+		</div>
+	</div>
 
 	<section class="panel">
 		<h2>Eventi & chat</h2>
@@ -136,6 +217,98 @@
 	}
 	.status {
 		color: var(--muted);
+	}
+	.arena {
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
+		gap: 0.75rem;
+		margin-bottom: 1.25rem;
+	}
+	.rail {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		padding-top: 1rem;
+	}
+	.board-panel {
+		flex: 1;
+		min-width: 0;
+		margin: 0;
+	}
+	.seat {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.3rem;
+		width: 5.5rem;
+	}
+	.avatar-box {
+		position: relative;
+		background: var(--panel);
+		border: 1px solid #334155;
+		border-radius: 12px;
+		padding: 0.4rem 0.5rem;
+	}
+	.avatar-box.dim {
+		opacity: 0.4;
+	}
+	.face {
+		font-family: ui-monospace, monospace;
+		font-size: 0.6rem;
+		line-height: 1.05;
+		margin: 0;
+		color: var(--text);
+	}
+	.seat-name {
+		font-size: 0.8rem;
+		color: var(--muted);
+		max-width: 5.5rem;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.seat-name.me {
+		color: var(--accent);
+		font-weight: 600;
+	}
+	.bubble {
+		position: absolute;
+		bottom: 100%;
+		margin-bottom: 8px;
+		left: 50%;
+		transform: translateX(-50%);
+		background: #e2e8f0;
+		color: #0f172a;
+		padding: 0.4rem 0.6rem;
+		border-radius: 10px;
+		font-size: 0.78rem;
+		min-width: 4rem;
+		max-width: 11rem;
+		width: max-content;
+		text-align: center;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+		z-index: 5;
+		animation: pop 0.18s ease-out;
+	}
+	.bubble::after {
+		content: '';
+		position: absolute;
+		top: 100%;
+		left: 50%;
+		transform: translateX(-50%);
+		border: 7px solid transparent;
+		border-top-color: #e2e8f0;
+	}
+	@keyframes pop {
+		from {
+			opacity: 0;
+			transform: translateX(-50%) scale(0.8);
+		}
+		to {
+			opacity: 1;
+			transform: translateX(-50%) scale(1);
+		}
 	}
 	.panel {
 		background: var(--panel);
@@ -187,5 +360,19 @@
 	}
 	.error {
 		color: #f87171;
+	}
+	@media (max-width: 680px) {
+		.arena {
+			flex-direction: column;
+			align-items: center;
+		}
+		.rail {
+			flex-direction: row;
+			padding-top: 0;
+		}
+		.board-panel {
+			width: 100%;
+			order: -1;
+		}
 	}
 </style>

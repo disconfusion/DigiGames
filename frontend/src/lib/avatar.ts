@@ -1,12 +1,32 @@
-/** Avatar ASCII componibile: l'utente sceglie occhi, bocca e un cappello opzionale. */
+/** Avatar ASCII componibile: cappello, occhi, naso, bocca. Tutto monospace. */
 
-export const EYES = ['o o', 'O O', '^ ^', '- -', '* *', '@ @', '> <', 'x x'];
-export const MOUTHS = ['___', ' o ', 'vvv', '   ', ' u ', '===', ' ~ ', ' D '];
-export const HATS = ['     ', ' ___ ', '/\\_/\\', '[===]', '.-^-.'];
+export const EYES = [
+	'o o', 'O O', '^ ^', '- -', '* *', '@ @', '> <', 'x x',
+	'. .', 'q p', 'T T', '$ $', '/ \\', '# #', 'u u', 'O o'
+];
 
-export type AvatarSpec = { eyes: number; mouth: number; hat: number };
+export const NOSES = ['   ', ' . ', ' L ', ' > ', ' ^ ', ' v ', ' 7 ', ' i ', ' c ', ' o '];
 
-export const DEFAULT_AVATAR: AvatarSpec = { eyes: 0, mouth: 0, hat: 0 };
+export const MOUTHS = [
+	'___', ' o ', 'vvv', '   ', ' u ', '===', ' ~ ', ' D ',
+	'> <', ' 3 ', ' p ', 'www', ' v ', ' x ', ' O ', '---'
+];
+
+export const HATS = [
+	'       ', // niente
+	'  ___  ',
+	' /===\\ ',
+	' _---_ ',
+	' \\\\|// ',
+	' (###) ',
+	' .-^-. ',
+	' <===> ',
+	' vvv  '
+];
+
+export type AvatarSpec = { eyes: number; nose: number; mouth: number; hat: number };
+
+export const DEFAULT_AVATAR: AvatarSpec = { eyes: 0, nose: 0, mouth: 0, hat: 0 };
 
 const clamp = (v: unknown, max: number): number => {
 	const n = typeof v === 'number' ? v : 0;
@@ -20,6 +40,7 @@ export function parseAvatar(raw: string | null | undefined): AvatarSpec {
 		const o = JSON.parse(raw);
 		return {
 			eyes: clamp(o.eyes, EYES.length),
+			nose: clamp(o.nose, NOSES.length),
 			mouth: clamp(o.mouth, MOUTHS.length),
 			hat: clamp(o.hat, HATS.length)
 		};
@@ -35,6 +56,7 @@ export function serializeAvatar(spec: AvatarSpec): string {
 /** Rende l'avatar come faccia ASCII multi-riga (monospace). */
 export function renderAvatar(spec: AvatarSpec): string {
 	const eyes = EYES[clamp(spec.eyes, EYES.length)];
+	const nose = NOSES[clamp(spec.nose, NOSES.length)];
 	const mouth = MOUTHS[clamp(spec.mouth, MOUTHS.length)];
 	const hat = HATS[clamp(spec.hat, HATS.length)];
 
@@ -42,6 +64,7 @@ export function renderAvatar(spec: AvatarSpec): string {
 	if (spec.hat > 0) lines.push(hat);
 	lines.push('.-----.');
 	lines.push(`| ${eyes} |`);
+	lines.push(`| ${nose} |`);
 	lines.push(`| ${mouth} |`);
 	lines.push("'-----'");
 	return lines.join('\n');

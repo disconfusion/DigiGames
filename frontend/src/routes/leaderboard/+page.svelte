@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { api } from '$lib/api';
+	import { parseAvatar, renderAvatar } from '$lib/avatar';
 
 	type GameStats = { played: number; wins: number };
 
 	type UserRow = {
 		username: string;
 		displayName: string;
+		avatar: string | null;
 		wins: number;
 		total: number;
 		games: Record<string, GameStats>;
@@ -17,8 +19,12 @@
 		battleship: 'Battaglia Navale',
 		quiz: 'Quiz',
 		hangman: 'Impiccato',
-		minesweeper: 'Campo Minato'
+		minesweeper: 'Campo Minato',
+		tris: 'Tris',
+		dama: 'Dama'
 	};
+
+	const face = (avatar: string | null) => renderAvatar(parseAvatar(avatar));
 
 	let rows = $state<UserRow[]>([]);
 	let loading = $state(true);
@@ -72,8 +78,13 @@
 								{#if i === 0}🥇{:else if i === 1}🥈{:else if i === 2}🥉{:else}{i + 1}{/if}
 							</td>
 							<td>
-								<span class="name">{row.displayName}</span>
-								<span class="uname">@{row.username}</span>
+								<div class="player-cell">
+									<pre class="mini-face">{face(row.avatar)}</pre>
+									<span>
+										<span class="name">{row.displayName}</span>
+										<span class="uname">@{row.username}</span>
+									</span>
+								</div>
 							</td>
 							<td class="wins">{row.wins}</td>
 							<td class="total">{row.total}</td>
@@ -132,6 +143,14 @@
 	tr:hover td { background: #1e293b; }
 
 	.rank { font-size: 1.1rem; text-align: center; width: 2.5rem; }
+	.player-cell { display: flex; align-items: center; gap: 0.6rem; }
+	.mini-face {
+		font-family: ui-monospace, monospace;
+		font-size: 0.4rem;
+		line-height: 1.05;
+		margin: 0;
+		color: var(--muted);
+	}
 	.name { display: block; font-weight: 600; }
 	.uname { display: block; font-size: 0.78rem; color: var(--muted); }
 	.wins { font-weight: 700; color: #86efac; }
