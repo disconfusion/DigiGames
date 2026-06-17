@@ -21,6 +21,10 @@ public class AppUser extends PanacheEntity {
     @Column(nullable = false)
     public String role = "user";
 
+    /** Avatar ASCII componibile: spec JSON compatta scelta dall'utente (es. {"eyes":2,"mouth":1,"acc":0}). Null = default. */
+    @Column(columnDefinition = "text")
+    public String avatar;
+
     public static AppUser findByUsername(String username) {
         return find("username", username).firstResult();
     }

@@ -19,6 +19,9 @@ public class QuizEngine implements GameEngine {
     @Inject
     LeaderboardService leaderboard;
 
+    @Inject
+    QuizQuestionProvider questionProvider;
+
     @Override
     public String slug() {
         return "quiz";
@@ -42,7 +45,8 @@ public class QuizEngine implements GameEngine {
 
         switch (type) {
             case "game:start" -> {
-                QuizState qs = new QuizState(QuizState.randomSelection(), room.players);
+                String source = room.options != null ? room.options.path("source").asText("local") : "local";
+                QuizState qs = new QuizState(questionProvider.select(source, 5), room.players);
                 room.game = qs;
                 room.status = Room.Status.PLAYING;
                 ctx.broadcast(buildSnapshot(qs));

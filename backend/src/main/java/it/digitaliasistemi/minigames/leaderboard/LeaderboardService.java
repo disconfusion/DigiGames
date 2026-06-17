@@ -23,6 +23,58 @@ public class LeaderboardService {
         r.persist();
     }
 
+    /** Statistiche personali di un utente: totali, per-gioco e ultime partite. */
+    public Map<String, Object> userStats(String username) {
+        List<MatchResult> all = MatchResult.list("username", username);
+
+        int wins = 0, losses = 0, draws = 0;
+        Map<String, int[]> perGame = new LinkedHashMap<>(); // game -> [played, wins, losses, draws]
+        for (MatchResult r : all) {
+            int[] g = perGame.computeIfAbsent(r.game, k -> new int[4]);
+            g[0]++;
+            switch (r.result) {
+                case "WIN" -> { wins++; g[1]++; }
+                case "LOSE" -> { losses++; g[2]++; }
+                case "DRAW" -> { draws++; g[3]++; }
+                default -> { }
+            }
+        }
+
+        List<Map<String, Object>> games = new ArrayList<>();
+        for (var e : perGame.entrySet()) {
+            int[] v = e.getValue();
+            Map<String, Object> g = new LinkedHashMap<>();
+            g.put("game", e.getKey());
+            g.put("played", v[0]);
+            g.put("wins", v[1]);
+            g.put("losses", v[2]);
+            g.put("draws", v[3]);
+            games.add(g);
+        }
+        games.sort((a, b) -> Integer.compare((Integer) b.get("played"), (Integer) a.get("played")));
+
+        List<Map<String, Object>> recent = all.stream()
+            .sorted(Comparator.comparing((MatchResult r) -> r.playedAt).reversed())
+            .limit(20)
+            .map(r -> {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("game", r.game);
+                m.put("result", r.result);
+                m.put("playedAt", r.playedAt.toString());
+                return m;
+            })
+            .toList();
+
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("total", all.size());
+        out.put("wins", wins);
+        out.put("losses", losses);
+        out.put("draws", draws);
+        out.put("games", games);
+        out.put("recent", recent);
+        return out;
+    }
+
     public List<Map<String, Object>> getLeaderboard() {
         List<MatchResult> all = MatchResult.listAll();
         Map<String, UserStats> stats = new LinkedHashMap<>();

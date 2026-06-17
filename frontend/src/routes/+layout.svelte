@@ -20,7 +20,7 @@
 	<a class="brand" href="/">🎮 DigiGames</a>
 	<nav>
 		{#if auth.session}
-			<span class="who">{auth.session.displayName}</span>
+			<a class="who" href="/profile">{auth.session.displayName}</a>
 			<a href="/lobby">Lobby</a>
 			<a href="/daily">Parola del Giorno</a>
 			<a href="/leaderboard">Classifica</a>

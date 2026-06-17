@@ -20,7 +20,8 @@
 		{ slug: 'hangman', label: 'Impiccato' },
 		{ slug: 'quiz', label: 'Quiz' },
 		{ slug: 'battleship', label: 'Battaglia navale' },
-		{ slug: 'minesweeper', label: 'Campo minato' }
+		{ slug: 'minesweeper', label: 'Campo minato' },
+		{ slug: 'tris', label: 'Tris' }
 	];
 	const labelOf = (slug: string) => GAMES.find((g) => g.slug === slug)?.label ?? slug;
 
@@ -29,6 +30,9 @@
 	let newGame = $state('connect4');
 	let isPrivate = $state(false);
 	let joinCode = $state('');
+
+	// Opzioni quiz
+	let quizSource = $state<'local' | 'opentdb' | 'mixed'>('local');
 
 	// Opzioni impiccato
 	let hmPreset = $state<'classic' | 'custom'>('classic');
@@ -56,13 +60,13 @@
 
 	async function create() {
 		try {
+			let options: unknown = undefined;
+			if (newGame === 'hangman') options = hmOptions;
+			else if (newGame === 'quiz') options = { source: quizSource };
+
 			const r = await api<RoomView>('/api/rooms', {
 				method: 'POST',
-				body: JSON.stringify({
-					gameSlug: newGame,
-					isPrivate,
-					options: newGame === 'hangman' ? hmOptions : undefined
-				})
+				body: JSON.stringify({ gameSlug: newGame, isPrivate, options })
 			});
 			goto(`/room/${r.code}`);
 		} catch (e) {
@@ -100,6 +104,20 @@
 		</label>
 		<button onclick={create}>Crea</button>
 	</div>
+
+	{#if newGame === 'quiz'}
+		<div class="hm-options">
+			<div class="opt">
+				<label for="quizSource">Sorgente domande</label>
+				<select id="quizSource" bind:value={quizSource}>
+					<option value="local">Banca IT locale</option>
+					<option value="opentdb">Open Trivia DB (varietà, in inglese)</option>
+					<option value="mixed">Mista (locale + OpenTDB)</option>
+				</select>
+			</div>
+			<span class="hint">OpenTDB è gratuito ma le domande sono in inglese; in caso di errore di rete si usa la banca locale.</span>
+		</div>
+	{/if}
 
 	{#if newGame === 'hangman'}
 		<div class="hm-options">
