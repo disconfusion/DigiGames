@@ -1,9 +1,12 @@
 package it.digitaliasistemi.minigames.daily;
 
 import it.digitaliasistemi.minigames.domain.DailyAttempt;
+import it.digitaliasistemi.minigames.domain.DailyWordState;
 import it.digitaliasistemi.minigames.game.hangman.HangmanState;
 import it.digitaliasistemi.minigames.game.hangman.HangmanWords;
+import it.digitaliasistemi.minigames.leaderboard.LeaderboardService;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import java.time.LocalDate;
@@ -13,75 +16,125 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class DailyHangmanService {
 
+    @Inject
+    LeaderboardService leaderboard;
+
     @Transactional
-    public DailyStateDTO getOrCreate(LocalDate date, String username) {
-        String word = HangmanWords.daily(date);
-        DailyAttempt attempt = DailyAttempt.findByDateAndUser(date, username);
-        if (attempt == null) {
-            attempt = new DailyAttempt();
-            attempt.date = date;
-            attempt.username = username;
-            attempt.persist();
-        }
-        return toDTO(word, attempt);
+    public DailyStateDTO getState(LocalDate date, String username) {
+        DailyWordState shared = getOrCreateShared(date);
+        DailyAttempt attempt = getOrCreateAttempt(date, username);
+        return toDTO(shared, attempt, HangmanWords.daily(date));
     }
 
     @Transactional
-    public DailyStateDTO guess(LocalDate date, String username, char letter) {
+    public DailyStateDTO guessLetter(LocalDate date, String username, char letter) {
+        DailyWordState shared = getOrCreateShared(date);
+        DailyAttempt attempt = getOrCreateAttempt(date, username);
         String word = HangmanWords.daily(date);
-        DailyAttempt attempt = DailyAttempt.findByDateAndUser(date, username);
-        if (attempt == null) {
-            attempt = new DailyAttempt();
-            attempt.date = date;
-            attempt.username = username;
-            attempt.persist();
+
+        // Slot già usato o partita terminata
+        if (attempt.letterUsed || !"PLAYING".equals(shared.status)) {
+            return toDTO(shared, attempt, word);
         }
 
-        if (!"PLAYING".equals(attempt.status)) {
-            return toDTO(word, attempt);
+        attempt.letterUsed = true;
+
+        Set<Character> revealed = parseLetters(shared.revealedLetters);
+        Set<Character> wrong = parseLetters(shared.wrongLetters);
+
+        // Lettera già presente nello stato condiviso — slot consumato senza effetto
+        if (!revealed.contains(letter) && !wrong.contains(letter)) {
+            if (word.indexOf(letter) >= 0) {
+                revealed.add(letter);
+                shared.revealedLetters = joinLetters(revealed);
+            } else {
+                wrong.add(letter);
+                shared.wrongLetters = joinLetters(wrong);
+            }
         }
 
-        Set<Character> guessed = parseLetters(attempt.guessed);
-        Set<Character> wrong = parseLetters(attempt.wrong);
-
-        if (guessed.contains(letter) || wrong.contains(letter)) {
-            return toDTO(word, attempt);
-        }
-
-        if (word.indexOf(letter) >= 0) {
-            guessed.add(letter);
-            attempt.guessed = joinLetters(guessed);
-        } else {
-            wrong.add(letter);
-            attempt.wrong = joinLetters(wrong);
-        }
-
-        boolean won = word.chars().allMatch(c -> guessed.contains((char) c));
-        if (won) {
-            attempt.status = "WON";
+        // Controlla fine partita
+        boolean allRevealed = word.chars().allMatch(c -> revealed.contains((char) c));
+        if (allRevealed) {
+            shared.status = "WON";
+            shared.winner = username;
+            attempt.won = true;
+            leaderboard.record(username, "daily", "WIN");
         } else if (wrong.size() >= HangmanState.MAX_WRONG) {
-            attempt.status = "LOST";
+            shared.status = "LOST";
         }
 
-        return toDTO(word, attempt);
+        return toDTO(shared, attempt, word);
     }
 
-    private DailyStateDTO toDTO(String word, DailyAttempt attempt) {
-        Set<Character> guessed = parseLetters(attempt.guessed);
-        Set<Character> wrong = parseLetters(attempt.wrong);
+    @Transactional
+    public DailyStateDTO guessWord(LocalDate date, String username, String guessedWord) {
+        DailyWordState shared = getOrCreateShared(date);
+        DailyAttempt attempt = getOrCreateAttempt(date, username);
+        String word = HangmanWords.daily(date);
+
+        if (attempt.wordAttemptUsed || !"PLAYING".equals(shared.status)) {
+            return toDTO(shared, attempt, word);
+        }
+
+        attempt.wordAttemptUsed = true;
+
+        if (word.equalsIgnoreCase(guessedWord.trim())) {
+            shared.status = "WON";
+            shared.winner = username;
+            attempt.won = true;
+            leaderboard.record(username, "daily", "WIN");
+        }
+
+        return toDTO(shared, attempt, word);
+    }
+
+    // -------------------------------------------------------------------------
+
+    private DailyWordState getOrCreateShared(LocalDate date) {
+        DailyWordState s = DailyWordState.findByDate(date);
+        if (s == null) {
+            s = new DailyWordState();
+            s.date = date;
+            s.persist();
+        }
+        return s;
+    }
+
+    private DailyAttempt getOrCreateAttempt(LocalDate date, String username) {
+        DailyAttempt a = DailyAttempt.findByDateAndUser(date, username);
+        if (a == null) {
+            a = new DailyAttempt();
+            a.date = date;
+            a.username = username;
+            a.persist();
+        }
+        return a;
+    }
+
+    private DailyStateDTO toDTO(DailyWordState shared, DailyAttempt attempt, String word) {
+        Set<Character> revealed = parseLetters(shared.revealedLetters);
+        Set<Character> wrong = parseLetters(shared.wrongLetters);
 
         StringBuilder masked = new StringBuilder();
         for (char c : word.toCharArray()) {
-            masked.append(guessed.contains(c) ? c : '_');
+            masked.append(revealed.contains(c) ? c : '_');
         }
 
-        List<String> wrongList = wrong.stream().map(String::valueOf).sorted().toList();
-        List<String> guessedList = guessed.stream().map(String::valueOf).sorted().toList();
-        String revealedWord = "PLAYING".equals(attempt.status) ? null : word;
+        String revealedWord = "PLAYING".equals(shared.status) ? null : word;
 
         return new DailyStateDTO(
-            masked.toString(), wrongList, guessedList,
-            wrong.size(), HangmanState.MAX_WRONG, attempt.status, revealedWord
+            masked.toString(),
+            wrong.stream().map(String::valueOf).sorted().toList(),
+            revealed.stream().map(String::valueOf).sorted().toList(),
+            wrong.size(),
+            HangmanState.MAX_WRONG,
+            shared.status,
+            shared.winner,
+            revealedWord,
+            attempt.letterUsed,
+            attempt.wordAttemptUsed,
+            attempt.won
         );
     }
 

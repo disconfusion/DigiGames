@@ -1,17 +1,23 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { auth } from '$lib/auth.svelte';
 	import { api } from '$lib/api';
 
 	type DailyState = {
+		// stato condiviso
 		masked: string;
-		wrong: string[];
-		guessed: string[];
+		wrongLetters: string[];
+		revealedLetters: string[];
 		wrongCount: number;
 		maxWrong: number;
 		status: 'PLAYING' | 'WON' | 'LOST';
+		winner: string | null;
 		word: string | null;
+		// stato per-utente
+		letterUsed: boolean;
+		wordAttemptUsed: boolean;
+		won: boolean;
 	};
 
 	const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
@@ -27,96 +33,165 @@
 	];
 
 	let state = $state<DailyState | null>(null);
-	let error = $state('');
+	let loadError = $state('');
 	let loading = $state(true);
-	let guessing = $state(false);
+	let busy = $state(false);
+	let wordInput = $state('');
+	let wordError = $state('');
 
-	const used = $derived(new Set([...(state?.guessed ?? []), ...(state?.wrong ?? [])]));
+	let pollTimer: ReturnType<typeof setInterval>;
+
+	const used = $derived(
+		new Set([...(state?.wrongLetters ?? []), ...(state?.revealedLetters ?? [])])
+	);
 	const frame = $derived(FRAMES[Math.min(state?.wrongCount ?? 0, FRAMES.length - 1)]);
 	const playing = $derived(state?.status === 'PLAYING');
+	const canGuessLetter = $derived(playing && !(state?.letterUsed));
+	const canGuessWord = $derived(playing && !(state?.wordAttemptUsed));
+	const me = $derived(auth.session?.username ?? '');
 
-	onMount(async () => {
-		if (!auth.session) {
-			goto('/login');
-			return;
-		}
+	async function load() {
 		try {
 			state = await api<DailyState>('/api/daily');
 		} catch (e) {
-			error = (e as Error).message;
-		} finally {
-			loading = false;
+			loadError = (e as Error).message;
 		}
-	});
+	}
 
-	async function guess(letter: string) {
-		if (!playing || guessing || used.has(letter)) return;
-		guessing = true;
+	onMount(async () => {
+		if (!auth.session) { goto('/login'); return; }
+		await load();
+		loading = false;
+		// Poll ogni 15s per aggiornare lo stato condiviso
+		pollTimer = setInterval(load, 15_000);
+	});
+	onDestroy(() => clearInterval(pollTimer));
+
+	async function guessLetter(letter: string) {
+		if (!canGuessLetter || busy || used.has(letter)) return;
+		busy = true;
 		try {
-			state = await api<DailyState>('/api/daily/guess', {
+			state = await api<DailyState>('/api/daily/letter', {
 				method: 'POST',
 				body: JSON.stringify({ letter })
 			});
 		} catch (e) {
-			error = (e as Error).message;
+			loadError = (e as Error).message;
 		} finally {
-			guessing = false;
+			busy = false;
 		}
 	}
 
-	function handleKeydown(e: KeyboardEvent) {
-		const k = e.key.toLowerCase();
-		if (k.length === 1 && k >= 'a' && k <= 'z') guess(k);
+	async function guessWord(e: SubmitEvent) {
+		e.preventDefault();
+		if (!canGuessWord || busy || !wordInput.trim()) return;
+		busy = true;
+		wordError = '';
+		try {
+			const prev = state?.winner;
+			state = await api<DailyState>('/api/daily/word', {
+				method: 'POST',
+				body: JSON.stringify({ word: wordInput.trim() })
+			});
+			if (state?.status !== 'WON' || state.winner === prev) {
+				wordError = '✗ Parola sbagliata. Tentativo esaurito.';
+			}
+			wordInput = '';
+		} catch (e2) {
+			loadError = (e2 as Error).message;
+		} finally {
+			busy = false;
+		}
 	}
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
-
 <div class="daily">
-	<h1>🗓 Impiccato del Giorno</h1>
-	<p class="sub">Una parola al giorno — vale solo per te!</p>
+	<h1>🗓 Parola del Giorno</h1>
+	<p class="sub">Uno slot lettera + un tentativo parola a testa. Chi indovina vince 10 punti!</p>
 
 	{#if loading}
 		<p class="muted">Caricamento…</p>
-	{:else if error}
-		<p class="err">⚠ {error}</p>
+	{:else if loadError}
+		<p class="err">⚠ {loadError}</p>
 	{:else if state}
 		<pre class="gallows">{frame}</pre>
 
+		<!-- Parola mascherata -->
 		<div class="word">
 			{#each state.masked.split('') as ch, i (i)}
 				<span class="slot" class:filled={ch !== '_'}>{ch === '_' ? '' : ch}</span>
 			{/each}
 		</div>
 
+		<!-- Errori condivisi -->
 		<p class="errors">
-			Errori: {state.wrongCount}/{state.maxWrong}
-			{#if state.wrong.length}
-				— <span class="wrong">{state.wrong.join(' ').toUpperCase()}</span>
+			Errori condivisi: {state.wrongCount}/{state.maxWrong}
+			{#if state.wrongLetters.length}
+				— <span class="wrong">{state.wrongLetters.join(' ').toUpperCase()}</span>
 			{/if}
 		</p>
 
+		<!-- Banner fine partita -->
 		{#if state.status === 'WON'}
-			<div class="banner won">🎉 Complimenti! Hai indovinato la parola di oggi!</div>
+			{#if state.winner === me || state.won}
+				<div class="banner won">🎉 Hai vinto! +10 punti!</div>
+			{:else}
+				<div class="banner won">🏆 <strong>{state.winner}</strong> ha indovinato la parola: <strong>{state.word}</strong></div>
+			{/if}
 		{:else if state.status === 'LOST'}
-			<div class="banner lost">
-				💀 Sei stato impiccato! La parola era <strong>{state.word}</strong>.
-			</div>
+			<div class="banner lost">💀 Parola persa! Era: <strong>{state.word}</strong></div>
 		{/if}
 
-		<div class="keyboard">
-			{#each ALPHABET as l (l)}
-				<button
-					class="key"
-					class:hit={state.guessed.includes(l)}
-					class:miss={state.wrong.includes(l)}
-					disabled={!playing || guessing || used.has(l)}
-					onclick={() => guess(l)}
-				>
-					{l.toUpperCase()}
-				</button>
-			{/each}
-		</div>
+		<!-- Sezione: la tua lettera -->
+		<section class="section">
+			<h2>
+				{#if state.letterUsed}
+					✅ Lettera usata
+				{:else}
+					🔤 Scegli la tua lettera
+				{/if}
+			</h2>
+			<div class="keyboard">
+				{#each ALPHABET as l (l)}
+					<button
+						class="key"
+						class:hit={state.revealedLetters.includes(l)}
+						class:miss={state.wrongLetters.includes(l)}
+						disabled={!canGuessLetter || busy || used.has(l)}
+						onclick={() => guessLetter(l)}
+					>
+						{l.toUpperCase()}
+					</button>
+				{/each}
+			</div>
+		</section>
+
+		<!-- Sezione: indovina la parola -->
+		<section class="section">
+			<h2>
+				{#if state.wordAttemptUsed}
+					{#if state.won}✅ Hai indovinato!{:else}❌ Tentativo esaurito{/if}
+				{:else}
+					💬 Indovina la parola
+				{/if}
+			</h2>
+			{#if !state.wordAttemptUsed && playing}
+				<form class="word-form" onsubmit={guessWord}>
+					<input
+						placeholder="Scrivi la parola…"
+						bind:value={wordInput}
+						disabled={busy}
+						autocomplete="off"
+					/>
+					<button type="submit" disabled={busy || !wordInput.trim()}>Invia</button>
+				</form>
+				{#if wordError}
+					<p class="word-err">{wordError}</p>
+				{/if}
+			{/if}
+		</section>
+
+		<p class="refresh-hint">Stato aggiornato ogni 15 secondi</p>
 	{/if}
 </div>
 
@@ -125,10 +200,12 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 1rem;
+		gap: 1.2rem;
+		max-width: 600px;
+		margin: 0 auto;
 	}
 	h1 { margin: 0; }
-	.sub { color: var(--muted); margin: 0; }
+	.sub { color: var(--muted); margin: 0; text-align: center; }
 	.muted { color: var(--muted); }
 	.err { color: #f87171; }
 
@@ -159,10 +236,11 @@
 		border-bottom: 3px solid #475569;
 	}
 	.slot.filled { border-bottom-color: var(--accent); }
-	.errors { color: var(--muted); margin: 0; }
+	.errors { color: var(--muted); margin: 0; font-size: 0.9rem; }
 	.wrong { color: #f87171; letter-spacing: 0.1em; }
 
 	.banner {
+		width: 100%;
 		padding: 0.65rem 1.2rem;
 		border-radius: 8px;
 		font-size: 1rem;
@@ -172,30 +250,64 @@
 	.banner.won { background: #14532d; color: #bbf7d0; }
 	.banner.lost { background: #7f1d1d; color: #fecaca; }
 
+	.section {
+		width: 100%;
+		background: var(--panel);
+		border-radius: 12px;
+		padding: 1rem 1.25rem;
+	}
+	h2 { margin: 0 0 0.75rem; font-size: 1rem; }
+
 	.keyboard {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.4rem;
+		gap: 0.35rem;
 		justify-content: center;
-		max-width: 520px;
 	}
 	.key {
-		width: 2.4rem;
-		height: 2.4rem;
+		width: 2.2rem;
+		height: 2.2rem;
 		border: 1px solid #334155;
 		border-radius: 8px;
-		background: #1e293b;
+		background: #0f172a;
 		color: var(--text);
-		font-size: 1rem;
+		font-size: 0.9rem;
 		font-weight: 600;
 		cursor: pointer;
 	}
 	.key.hit { background: #14532d; border-color: #16a34a; color: #bbf7d0; }
 	.key.miss { background: #7f1d1d; border-color: #dc2626; color: #fecaca; opacity: 0.85; }
-	.key:disabled { cursor: default; }
+	.key:disabled { cursor: default; opacity: 0.5; }
+	.key.hit:disabled, .key.miss:disabled { opacity: 1; }
+
+	.word-form {
+		display: flex;
+		gap: 0.5rem;
+	}
+	.word-form input {
+		flex: 1;
+		padding: 0.55rem;
+		border-radius: 8px;
+		border: 1px solid #334155;
+		background: #0f172a;
+		color: var(--text);
+		font-size: 1rem;
+	}
+	.word-form button {
+		background: var(--accent);
+		color: white;
+		border: none;
+		border-radius: 8px;
+		padding: 0.55rem 1rem;
+		cursor: pointer;
+		font-weight: 600;
+	}
+	.word-form button:disabled { opacity: 0.5; cursor: default; }
+	.word-err { color: #f87171; margin: 0.4rem 0 0; font-size: 0.9rem; }
+	.refresh-hint { color: #475569; font-size: 0.78rem; margin: 0; }
 
 	@media (max-width: 480px) {
-		.key { width: 2rem; height: 2rem; font-size: 0.9rem; }
+		.key { width: 1.9rem; height: 1.9rem; font-size: 0.8rem; }
 		.slot { width: 1.3rem; font-size: 1.2rem; }
 	}
 </style>

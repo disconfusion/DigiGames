@@ -16,20 +16,17 @@ import java.util.Map;
 @Authenticated
 public class DailyHangmanResource {
 
-    @Inject
-    DailyHangmanService service;
-
-    @Inject
-    JsonWebToken jwt;
+    @Inject DailyHangmanService service;
+    @Inject JsonWebToken jwt;
 
     @GET
     public DailyStateDTO get() {
-        return service.getOrCreate(LocalDate.now(), jwt.getSubject());
+        return service.getState(LocalDate.now(), jwt.getSubject());
     }
 
     @POST
-    @Path("/guess")
-    public Response guess(GuessRequest req) {
+    @Path("/letter")
+    public Response letter(LetterRequest req) {
         if (req == null || req.letter() == null || req.letter().length() != 1) {
             return Response.status(400).entity(Map.of("message", "Lettera non valida")).build();
         }
@@ -37,9 +34,18 @@ public class DailyHangmanResource {
         if (letter < 'a' || letter > 'z') {
             return Response.status(400).entity(Map.of("message", "Lettera non valida")).build();
         }
-        DailyStateDTO state = service.guess(LocalDate.now(), jwt.getSubject(), letter);
-        return Response.ok(state).build();
+        return Response.ok(service.guessLetter(LocalDate.now(), jwt.getSubject(), letter)).build();
     }
 
-    public record GuessRequest(String letter) {}
+    @POST
+    @Path("/word")
+    public Response word(WordRequest req) {
+        if (req == null || req.word() == null || req.word().isBlank()) {
+            return Response.status(400).entity(Map.of("message", "Parola non valida")).build();
+        }
+        return Response.ok(service.guessWord(LocalDate.now(), jwt.getSubject(), req.word())).build();
+    }
+
+    public record LetterRequest(String letter) {}
+    public record WordRequest(String word) {}
 }
