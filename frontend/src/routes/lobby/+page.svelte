@@ -22,7 +22,8 @@
 		{ slug: 'battleship', label: 'Battaglia navale' },
 		{ slug: 'minesweeper', label: 'Campo minato' },
 		{ slug: 'tris', label: 'Tris' },
-		{ slug: 'dama', label: 'Dama' }
+		{ slug: 'dama', label: 'Dama' },
+		{ slug: 'chess', label: 'Scacchi' }
 	];
 	const labelOf = (slug: string) => GAMES.find((g) => g.slug === slug)?.label ?? slug;
 
@@ -34,6 +35,9 @@
 
 	// Opzioni quiz
 	let quizSource = $state<'local' | 'opentdb' | 'mixed'>('local');
+
+	// Opzioni scacchi
+	let chessMinutes = $state(0);
 
 	// Opzioni impiccato
 	let hmPreset = $state<'classic' | 'custom'>('classic');
@@ -64,6 +68,7 @@
 			let options: unknown = undefined;
 			if (newGame === 'hangman') options = hmOptions;
 			else if (newGame === 'quiz') options = { source: quizSource };
+			else if (newGame === 'chess') options = { minutesPerPlayer: chessMinutes };
 
 			const r = await api<RoomView>('/api/rooms', {
 				method: 'POST',
@@ -105,6 +110,16 @@
 		</label>
 		<button onclick={create}>Crea</button>
 	</div>
+
+	{#if newGame === 'chess'}
+		<div class="hm-options">
+			<div class="opt">
+				<label for="chessMinutes">Minuti a testa</label>
+				<input id="chessMinutes" type="number" min="0" max="180" bind:value={chessMinutes} />
+				<span class="hint">0 = senza limite di tempo</span>
+			</div>
+		</div>
+	{/if}
 
 	{#if newGame === 'quiz'}
 		<div class="hm-options">

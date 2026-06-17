@@ -21,7 +21,8 @@
 		hangman: 'Impiccato',
 		minesweeper: 'Campo Minato',
 		tris: 'Tris',
-		dama: 'Dama'
+		dama: 'Dama',
+		chess: 'Scacchi'
 	};
 
 	const face = (avatar: string | null) => renderAvatar(parseAvatar(avatar));

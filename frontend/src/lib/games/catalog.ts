@@ -6,7 +6,8 @@ export const GAME_CATALOG: { slug: string; label: string; emoji: string }[] = [
 	{ slug: 'battleship', label: 'Battaglia navale', emoji: '🚢' },
 	{ slug: 'minesweeper', label: 'Campo minato', emoji: '💣' },
 	{ slug: 'tris', label: 'Tris', emoji: '❌' },
-	{ slug: 'dama', label: 'Dama', emoji: '⛀' }
+	{ slug: 'dama', label: 'Dama', emoji: '⛀' },
+	{ slug: 'chess', label: 'Scacchi', emoji: '♟️' }
 ];
 
 export const gameLabel = (slug: string): string =>

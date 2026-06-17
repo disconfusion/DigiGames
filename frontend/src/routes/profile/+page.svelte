@@ -33,6 +33,8 @@
 		battleship: 'Battaglia navale',
 		minesweeper: 'Campo minato',
 		tris: 'Tris',
+		dama: 'Dama',
+		chess: 'Scacchi',
 		daily: 'Parola del Giorno'
 	};
 	const gameLabel = (g: string) => GAME_LABELS[g] ?? g;
