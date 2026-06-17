@@ -1,0 +1,24 @@
+# Config Fly.io. Cambia "app" con un nome univoco (o usa `fly launch`).
+app = "digigames"
+primary_region = "fra"   # Francoforte, vicino all'Italia
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 8080
+  force_https = true          # TLS terminato al bordo -> il browser usa https/wss
+  auto_stop_machines = "stop" # spegne la macchina quando idle (risparmio)
+  auto_start_machines = true  # la riaccende alla prima richiesta
+  min_machines_running = 0    # 0 = costo minimo; metti 1 per evitare il cold start
+
+  [[http_service.checks]]
+    grace_period = "30s"
+    interval = "15s"
+    method = "GET"
+    path = "/"
+    timeout = "3s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"            # JVM Quarkus sta in 512MB; 256MB e' troppo tirato

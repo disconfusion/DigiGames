@@ -1,0 +1,2 @@
+-- Seed dati di sviluppo. Vuoto per ora: gli utenti si registrano via /api/auth/register.
+-- (gli step successivi aggiungeranno quiz_questions, daily_hangman, ecc.)

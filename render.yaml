@@ -1,0 +1,18 @@
+# Render Blueprint. Crea il servizio da questo file (New > Blueprint) oppure
+# manualmente come Web Service (runtime Docker). DB su Neon (esterno, free).
+services:
+  - type: web
+    name: digigames
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free          # dorme dopo 15min idle; cold start ~50s
+    region: frankfurt
+    healthCheckPath: /
+    envVars:
+      # Valori da Neon — impostali nel dashboard (sync:false = non versionati).
+      - key: DB_URL       # jdbc:postgresql://<host>/<db>?sslmode=require
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false

@@ -1,0 +1,12 @@
+# Java / Maven
+backend/target/
+
+# Node / SvelteKit
+frontend/node_modules/
+frontend/build/
+frontend/.svelte-kit/
+
+# Log e vari
+*.log
+.onboarding/
+.DS_Store
