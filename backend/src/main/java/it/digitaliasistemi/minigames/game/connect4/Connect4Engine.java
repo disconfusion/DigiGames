@@ -3,8 +3,10 @@ package it.digitaliasistemi.minigames.game.connect4;
 import com.fasterxml.jackson.databind.JsonNode;
 import it.digitaliasistemi.minigames.game.GameContext;
 import it.digitaliasistemi.minigames.game.GameEngine;
+import it.digitaliasistemi.minigames.leaderboard.LeaderboardService;
 import it.digitaliasistemi.minigames.rooms.Room;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -14,6 +16,9 @@ import java.util.Map;
 /** Forza 4: 2 giocatori, board 6x7, primo a fare 4 di fila vince. */
 @ApplicationScoped
 public class Connect4Engine implements GameEngine {
+
+    @Inject
+    LeaderboardService leaderboard;
 
     @Override
     public String slug() {
@@ -69,6 +74,14 @@ public class Connect4Engine implements GameEngine {
                 if (cs.status() != Connect4State.Status.PLAYING) {
                     room.status = Room.Status.DONE;
                     ctx.broadcast(over(cs));
+                    List<String> seated = new ArrayList<>(cs.seats().keySet());
+                    if (cs.winner() != null) {
+                        for (String p : seated) {
+                            leaderboard.record(p, "connect4", p.equals(cs.winner()) ? "WIN" : "LOSE");
+                        }
+                    } else {
+                        for (String p : seated) leaderboard.record(p, "connect4", "DRAW");
+                    }
                 }
             }
             default -> ctx.replyToSender(error("Azione sconosciuta: " + type));

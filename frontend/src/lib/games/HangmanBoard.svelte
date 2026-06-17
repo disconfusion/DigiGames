@@ -10,13 +10,12 @@
 	}: {
 		send: (msg: Record<string, unknown>) => void;
 		event: RoomEvent | null;
-		me: { email: string; displayName: string };
+		me: { username: string; displayName: string };
 	} = $props();
 
 	let state = $state<HangmanGameState | null>(null);
 	let over = $state<{ status: string; word: string } | null>(null);
 
-	// Reagisce agli snapshot di gioco (l'ultimo è sempre autoritativo).
 	$effect(() => {
 		const e = event;
 		if (!e) return;
@@ -40,17 +39,22 @@
 		' +---+\n |   |\n O   |\n/|\\  |\n/ \\  |\n     |\n======='
 	];
 
-	const playing = $derived(state?.status === 'PLAYING');
-	const used = $derived(new Set([...(state?.guessed ?? []), ...(state?.wrong ?? [])]));
-	const frame = $derived(FRAMES[Math.min(state?.wrongCount ?? 0, FRAMES.length - 1)]);
+	const playing  = $derived(state?.status === 'PLAYING');
+	const used     = $derived(new Set([...(state?.guessed ?? []), ...(state?.wrong ?? [])]));
+	const frame    = $derived(FRAMES[Math.min(state?.wrongCount ?? 0, FRAMES.length - 1)]);
+	const isMyTurn = $derived(state?.currentTurn == null || state.currentTurn === me.username);
+	const canPlay  = $derived(playing && isMyTurn);
 
 	function tryLetter(l: string) {
-		if (playing && !used.has(l)) send({ type: 'guess', letter: l });
+		if (canPlay && !used.has(l)) send({ type: 'guess', letter: l });
 	}
 	const startGame = () => send({ type: 'game:start' });
 
 	onMount(() => {
 		const handler = (e: KeyboardEvent) => {
+			// Fix bug: non intercettare se il focus è su un input/textarea
+			const tag = (e.target as HTMLElement).tagName;
+			if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 			const k = e.key.toLowerCase();
 			if (k.length === 1 && k >= 'a' && k <= 'z') tryLetter(k);
 		};
@@ -77,6 +81,15 @@
 			{#if state.wrong.length}— <span class="wrong">{state.wrong.join(' ').toUpperCase()}</span>{/if}
 		</p>
 
+		<!-- Indicatore turno -->
+		{#if playing && state.currentTurn != null}
+			{#if isMyTurn}
+				<div class="turn-badge my-turn">Tocca a te!</div>
+			{:else}
+				<div class="turn-badge wait">Tocca a <strong>{state.currentTurn}</strong></div>
+			{/if}
+		{/if}
+
 		{#if over}
 			<div class="result" class:won={over.status === 'WON'} class:lost={over.status === 'LOST'}>
 				{#if over.status === 'WON'}🎉 Indovinata!{:else}💀 Impiccato! La parola era <strong>{over.word}</strong>{/if}
@@ -90,7 +103,7 @@
 					class="key"
 					class:hit={state.guessed.includes(l)}
 					class:miss={state.wrong.includes(l)}
-					disabled={!playing || used.has(l)}
+					disabled={!canPlay || used.has(l)}
 					onclick={() => tryLetter(l)}
 				>
 					{l.toUpperCase()}
@@ -144,20 +157,30 @@
 		color: #f87171;
 		letter-spacing: 0.1em;
 	}
+	.turn-badge {
+		padding: 0.4rem 0.9rem;
+		border-radius: 20px;
+		font-size: 0.9rem;
+		font-weight: 600;
+	}
+	.turn-badge.my-turn {
+		background: #1e3a5f;
+		color: #93c5fd;
+		border: 1px solid #3b82f6;
+	}
+	.turn-badge.wait {
+		background: #1e293b;
+		color: var(--muted);
+		border: 1px solid #334155;
+	}
 	.result {
 		font-size: 1.1rem;
 		padding: 0.6rem 1rem;
 		border-radius: 8px;
 		text-align: center;
 	}
-	.result.won {
-		background: #14532d;
-		color: #bbf7d0;
-	}
-	.result.lost {
-		background: #7f1d1d;
-		color: #fecaca;
-	}
+	.result.won { background: #14532d; color: #bbf7d0; }
+	.result.lost { background: #7f1d1d; color: #fecaca; }
 	.keyboard {
 		display: flex;
 		flex-wrap: wrap;
@@ -176,17 +199,8 @@
 		font-weight: 600;
 		cursor: pointer;
 	}
-	.key.hit {
-		background: #14532d;
-		border-color: #16a34a;
-		color: #bbf7d0;
-	}
-	.key.miss {
-		background: #7f1d1d;
-		border-color: #dc2626;
-		color: #fecaca;
-		opacity: 0.85;
-	}
+	.key.hit { background: #14532d; border-color: #16a34a; color: #bbf7d0; }
+	.key.miss { background: #7f1d1d; border-color: #dc2626; color: #fecaca; opacity: 0.85; }
 	.start {
 		padding: 0.6rem 1.2rem;
 		border: none;
@@ -197,14 +211,7 @@
 		cursor: pointer;
 	}
 	@media (max-width: 480px) {
-		.key {
-			width: 2rem;
-			height: 2rem;
-			font-size: 0.9rem;
-		}
-		.slot {
-			width: 1.3rem;
-			font-size: 1.2rem;
-		}
+		.key { width: 2rem; height: 2rem; font-size: 0.9rem; }
+		.slot { width: 1.3rem; font-size: 1.2rem; }
 	}
 </style>

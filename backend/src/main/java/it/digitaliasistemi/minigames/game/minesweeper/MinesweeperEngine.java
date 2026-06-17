@@ -3,30 +3,24 @@ package it.digitaliasistemi.minigames.game.minesweeper;
 import com.fasterxml.jackson.databind.JsonNode;
 import it.digitaliasistemi.minigames.game.GameContext;
 import it.digitaliasistemi.minigames.game.GameEngine;
+import it.digitaliasistemi.minigames.leaderboard.LeaderboardService;
 import it.digitaliasistemi.minigames.rooms.Room;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Campo Minato co-op: fino a 8 giocatori rivelano la stessa board.
- * Il server è l'unica autorità; le mine non vengono mai trasmesse finché la partita è in corso.
- */
 @ApplicationScoped
 public class MinesweeperEngine implements GameEngine {
 
-    @Override
-    public String slug() {
-        return "minesweeper";
-    }
+    @Inject
+    LeaderboardService leaderboard;
 
-    @Override
-    public int maxPlayers() {
-        return 8;
-    }
+    @Override public String slug() { return "minesweeper"; }
+    @Override public int maxPlayers() { return 8; }
 
     @Override
     public void onJoin(GameContext ctx) {
@@ -42,7 +36,7 @@ public class MinesweeperEngine implements GameEngine {
         switch (type) {
 
             case "game:start" -> {
-                MinesweeperState ms = new MinesweeperState();
+                MinesweeperState ms = new MinesweeperState(new ArrayList<>(room.players));
                 room.game   = ms;
                 room.status = Room.Status.PLAYING;
                 ctx.broadcast(buildState(ms));
@@ -53,12 +47,19 @@ public class MinesweeperEngine implements GameEngine {
                     ctx.replyToSender(error("Partita non avviata"));
                     return;
                 }
+                if (!ms.isMyTurn(ctx.senderEmail())) {
+                    ctx.replyToSender(error("Non è il tuo turno"));
+                    return;
+                }
                 int r = payload.path("r").asInt(-1);
                 int c = payload.path("c").asInt(-1);
-                if (!ms.reveal(r, c)) return; // ignorato (già rivelata, flagged, o fuori bounds)
+                if (!ms.reveal(r, c)) return;
                 ctx.broadcast(buildState(ms));
                 if (ms.status() != MinesweeperState.Status.PLAYING) {
                     ctx.broadcast(buildOver(ms));
+                    room.status = Room.Status.DONE;
+                    String lbResult = ms.status() == MinesweeperState.Status.WON ? "WIN" : "LOSE";
+                    for (String p : room.players) leaderboard.record(p, "minesweeper", lbResult);
                 }
             }
 
@@ -67,9 +68,13 @@ public class MinesweeperEngine implements GameEngine {
                     ctx.replyToSender(error("Partita non avviata"));
                     return;
                 }
+                if (!ms.isMyTurn(ctx.senderEmail())) {
+                    ctx.replyToSender(error("Non è il tuo turno"));
+                    return;
+                }
                 int r = payload.path("r").asInt(-1);
                 int c = payload.path("c").asInt(-1);
-                if (!ms.flag(r, c)) return; // ignorato
+                if (!ms.flag(r, c)) return;
                 ctx.broadcast(buildState(ms));
             }
 
@@ -77,20 +82,17 @@ public class MinesweeperEngine implements GameEngine {
         }
     }
 
-    // ----------------------------------------------------------------
-    // Costruzione snapshot
-    // ----------------------------------------------------------------
-
     private Map<String, Object> buildState(MinesweeperState ms) {
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("type",       "game:state");
-        m.put("game",       "minesweeper");
-        m.put("rows",       MinesweeperState.ROWS);
-        m.put("cols",       MinesweeperState.COLS);
-        m.put("minesTotal", MinesweeperState.MINES);
-        m.put("flagsUsed",  ms.flagsUsed());
-        m.put("status",     ms.status().name());
-        m.put("cells",      serializeCells(ms.cellSnapshot()));
+        m.put("type",        "game:state");
+        m.put("game",        "minesweeper");
+        m.put("rows",        MinesweeperState.ROWS);
+        m.put("cols",        MinesweeperState.COLS);
+        m.put("minesTotal",  MinesweeperState.MINES);
+        m.put("flagsUsed",   ms.flagsUsed());
+        m.put("status",      ms.status().name());
+        m.put("currentTurn", ms.currentTurn());
+        m.put("cells",       serializeCells(ms.cellSnapshot()));
         return m;
     }
 
@@ -109,11 +111,6 @@ public class MinesweeperEngine implements GameEngine {
         return m;
     }
 
-    /**
-     * Serializza la matrice di CellSnapshot in una List<List<Map>> compatibile con Jackson.
-     * I campi opzionali (adjacent, mine) vengono omessi quando null per non esporre mine
-     * nascoste durante la partita.
-     */
     private List<List<Map<String, Object>>> serializeCells(MinesweeperState.CellSnapshot[][] snap) {
         List<List<Map<String, Object>>> rows = new ArrayList<>(snap.length);
         for (MinesweeperState.CellSnapshot[] row : snap) {

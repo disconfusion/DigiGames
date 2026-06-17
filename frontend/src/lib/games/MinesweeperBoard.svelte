@@ -3,10 +3,6 @@
 
 	let { send, event, me }: BoardProps = $props();
 
-	// ----------------------------------------------------------------
-	// Tipi
-	// ----------------------------------------------------------------
-
 	type Cell = {
 		revealed: boolean;
 		flagged: boolean;
@@ -20,20 +16,13 @@
 		minesTotal: number;
 		flagsUsed: number;
 		status: 'PLAYING' | 'WON' | 'LOST';
+		currentTurn: string | null;
 		cells: Cell[][];
 	};
 
-	// ----------------------------------------------------------------
-	// Stato reattivo
-	// ----------------------------------------------------------------
-
 	let state = $state<GameState | null>(null);
 	let over  = $state<{ status: string } | null>(null);
-	let flagMode = $state(false); // modalità bandierina per mobile
-
-	// ----------------------------------------------------------------
-	// Reazione agli eventi (snapshot autoritativi)
-	// ----------------------------------------------------------------
+	let flagMode = $state(false);
 
 	$effect(() => {
 		const e = event;
@@ -47,32 +36,22 @@
 		}
 	});
 
-	// ----------------------------------------------------------------
-	// Derived
-	// ----------------------------------------------------------------
-
-	const playing     = $derived(state?.status === 'PLAYING');
-	const minesLeft   = $derived((state?.minesTotal ?? 0) - (state?.flagsUsed ?? 0));
-
-	// ----------------------------------------------------------------
-	// Azioni
-	// ----------------------------------------------------------------
+	const playing   = $derived(state?.status === 'PLAYING');
+	const minesLeft = $derived((state?.minesTotal ?? 0) - (state?.flagsUsed ?? 0));
+	const isMyTurn  = $derived(state?.currentTurn == null || state.currentTurn === me.username);
+	const canPlay   = $derived(playing && isMyTurn);
 
 	function handleCellClick(r: number, c: number) {
-		if (!playing) return;
+		if (!canPlay) return;
 		const cell = state!.cells[r][c];
 		if (cell.revealed) return;
-
-		if (flagMode) {
-			send({ type: 'flag', r, c });
-		} else {
-			send({ type: 'reveal', r, c });
-		}
+		if (flagMode) send({ type: 'flag', r, c });
+		else send({ type: 'reveal', r, c });
 	}
 
 	function handleRightClick(e: MouseEvent, r: number, c: number) {
 		e.preventDefault();
-		if (!playing) return;
+		if (!canPlay) return;
 		const cell = state!.cells[r][c];
 		if (cell.revealed) return;
 		send({ type: 'flag', r, c });
@@ -84,33 +63,17 @@
 		flagMode = false;
 	}
 
-	// ----------------------------------------------------------------
-	// Colori numeri adiacenti (classico minesweeper)
-	// ----------------------------------------------------------------
-
 	const ADJ_COLORS: Record<number, string> = {
-		1: '#3b82f6', // blu
-		2: '#22c55e', // verde
-		3: '#ef4444', // rosso
-		4: '#7c3aed', // viola
-		5: '#dc2626', // rosso scuro
-		6: '#06b6d4', // cyan
-		7: '#ec4899', // rosa
-		8: '#94a3b8', // grigio
+		1: '#3b82f6', 2: '#22c55e', 3: '#ef4444', 4: '#7c3aed',
+		5: '#dc2626', 6: '#06b6d4', 7: '#ec4899', 8: '#94a3b8',
 	};
-
-	function adjColor(n: number): string {
-		return ADJ_COLORS[n] ?? '#e2e8f0';
-	}
+	function adjColor(n: number): string { return ADJ_COLORS[n] ?? '#e2e8f0'; }
 </script>
 
 <div class="ms-wrapper">
 
-	<!-- Header: contatore mine + toggle flag mode + nuova partita -->
 	<div class="ms-header">
-		<span class="mine-counter" title="Mine rimanenti">
-			💣 {minesLeft}
-		</span>
+		<span class="mine-counter" title="Mine rimanenti">💣 {minesLeft}</span>
 
 		{#if state}
 			<button
@@ -128,6 +91,15 @@
 		</button>
 	</div>
 
+	<!-- Indicatore turno -->
+	{#if playing && state?.currentTurn != null}
+		{#if isMyTurn}
+			<div class="turn-badge my-turn">Tocca a te! Rivela o piazza una bandierina.</div>
+		{:else}
+			<div class="turn-badge wait">Tocca a <strong>{state.currentTurn}</strong></div>
+		{/if}
+	{/if}
+
 	<!-- Banner WON / LOST -->
 	{#if over || (state && state.status !== 'PLAYING')}
 		{@const s = over?.status ?? state?.status}
@@ -140,7 +112,6 @@
 		</div>
 	{/if}
 
-	<!-- Griglia -->
 	{#if state}
 		<div
 			class="ms-grid"
@@ -156,7 +127,7 @@
 						class:flagged={cell.flagged}
 						class:mine={cell.revealed && cell.mine}
 						class:safe={cell.revealed && !cell.mine}
-						disabled={cell.revealed || !playing}
+						disabled={cell.revealed || !canPlay}
 						onclick={() => handleCellClick(r, c)}
 						oncontextmenu={(e) => handleRightClick(e, r, c)}
 						aria-label="Cella ({r},{c})"
@@ -184,7 +155,6 @@
 </div>
 
 <style>
-	/* ---- Variabili tema (dark) ---- */
 	:root {
 		--bg:     #0f172a;
 		--panel:  #1e293b;
@@ -192,7 +162,6 @@
 		--text:   #e2e8f0;
 		--muted:  #94a3b8;
 	}
-
 	.ms-wrapper {
 		display: flex;
 		flex-direction: column;
@@ -204,8 +173,6 @@
 		min-height: 100%;
 		box-sizing: border-box;
 	}
-
-	/* ---- Header ---- */
 	.ms-header {
 		display: flex;
 		flex-wrap: wrap;
@@ -215,13 +182,7 @@
 		max-width: 560px;
 		justify-content: space-between;
 	}
-
-	.mine-counter {
-		font-size: 1.2rem;
-		font-weight: 700;
-		min-width: 3.5rem;
-	}
-
+	.mine-counter { font-size: 1.2rem; font-weight: 700; min-width: 3.5rem; }
 	.flag-toggle {
 		padding: 0.35rem 0.7rem;
 		border-radius: 6px;
@@ -232,12 +193,7 @@
 		font-size: 0.85rem;
 		transition: border-color 0.15s, background 0.15s;
 	}
-	.flag-toggle.active {
-		border-color: #f59e0b;
-		background: #451a03;
-		color: #fde68a;
-	}
-
+	.flag-toggle.active { border-color: #f59e0b; background: #451a03; color: #fde68a; }
 	.btn-start {
 		padding: 0.4rem 0.9rem;
 		border: none;
@@ -249,11 +205,20 @@
 		cursor: pointer;
 		transition: opacity 0.15s;
 	}
-	.btn-start:hover {
-		opacity: 0.85;
-	}
+	.btn-start:hover { opacity: 0.85; }
 
-	/* ---- Banner ---- */
+	.turn-badge {
+		width: 100%;
+		max-width: 560px;
+		padding: 0.4rem 0.9rem;
+		border-radius: 8px;
+		font-size: 0.9rem;
+		font-weight: 600;
+		text-align: center;
+	}
+	.turn-badge.my-turn { background: #1e3a5f; color: #93c5fd; border: 1px solid #3b82f6; }
+	.turn-badge.wait { background: #1e293b; color: var(--muted); border: 1px solid #334155; }
+
 	.ms-banner {
 		width: 100%;
 		max-width: 560px;
@@ -266,17 +231,13 @@
 	.ms-banner.won  { background: #14532d; color: #bbf7d0; }
 	.ms-banner.lost { background: #7f1d1d; color: #fecaca; }
 
-	/* ---- Griglia ---- */
 	.ms-grid {
 		display: grid;
 		grid-template-columns: repeat(var(--cols), 1fr);
 		gap: 2px;
 		width: 100%;
 		max-width: 560px;
-		/* celle quadrate: aspect-ratio non funziona su grid col, usiamo padding-bottom trick via JS */
 	}
-
-	/* ---- Cella ---- */
 	.ms-cell {
 		aspect-ratio: 1 / 1;
 		display: flex;
@@ -295,58 +256,17 @@
 		line-height: 1;
 		min-width: 0;
 	}
+	.ms-cell:hover:not(:disabled) { background: #334155; transform: scale(1.08); }
+	.ms-cell.revealed.safe { background: #0f172a; box-shadow: inset 0 0 0 1px #1e293b; cursor: default; }
+	.ms-cell.revealed.mine { background: #7f1d1d; box-shadow: inset 0 0 0 1px #dc2626; cursor: default; }
+	.ms-cell.flagged { background: #1c1917; box-shadow: inset 0 0 0 1px #f59e0b; }
+	.ms-cell:disabled { cursor: default; }
+	.ms-cell:disabled:not(.revealed) { opacity: 0.7; }
+	.ms-empty { color: var(--muted); text-align: center; padding: 2rem; max-width: 400px; }
 
-	.ms-cell:hover:not(:disabled) {
-		background: #334155;
-		transform: scale(1.08);
-	}
-
-	/* Cella rivelata (sicura) */
-	.ms-cell.revealed.safe {
-		background: #0f172a;
-		box-shadow: inset 0 0 0 1px #1e293b;
-		cursor: default;
-	}
-
-	/* Cella con mina (solo dopo game over) */
-	.ms-cell.revealed.mine {
-		background: #7f1d1d;
-		box-shadow: inset 0 0 0 1px #dc2626;
-		cursor: default;
-	}
-
-	/* Cella flaggata (coperta) */
-	.ms-cell.flagged {
-		background: #1c1917;
-		box-shadow: inset 0 0 0 1px #f59e0b;
-	}
-
-	/* Disabilitata (già rivelata o partita finita) */
-	.ms-cell:disabled {
-		cursor: default;
-	}
-	.ms-cell:disabled:not(.revealed) {
-		opacity: 0.7;
-	}
-
-	/* ---- Empty state ---- */
-	.ms-empty {
-		color: var(--muted);
-		text-align: center;
-		padding: 2rem;
-		max-width: 400px;
-	}
-
-	/* ---- Responsive ---- */
 	@media (max-width: 480px) {
-		.ms-header {
-			justify-content: center;
-		}
-		.ms-grid {
-			gap: 1px;
-		}
-		.ms-cell {
-			border-radius: 2px;
-		}
+		.ms-header { justify-content: center; }
+		.ms-grid { gap: 1px; }
+		.ms-cell { border-radius: 2px; }
 	}
 </style>

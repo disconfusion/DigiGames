@@ -5,6 +5,7 @@ export type HangmanGameState = {
 	wrongCount: number;
 	maxWrong: number;
 	status: 'PLAYING' | 'WON' | 'LOST';
+	currentTurn: string | null;
 	lastBy?: string;
 	lastLetter?: string;
 };

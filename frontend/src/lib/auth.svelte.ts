@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 
-export type Session = { token: string; email: string; displayName: string } | null;
+export type Session = { token: string; username: string; displayName: string } | null;
 
 const KEY = 'minigames.session';
 

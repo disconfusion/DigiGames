@@ -3,8 +3,10 @@ package it.digitaliasistemi.minigames.game.quiz;
 import com.fasterxml.jackson.databind.JsonNode;
 import it.digitaliasistemi.minigames.game.GameContext;
 import it.digitaliasistemi.minigames.game.GameEngine;
+import it.digitaliasistemi.minigames.leaderboard.LeaderboardService;
 import it.digitaliasistemi.minigames.rooms.Room;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -13,6 +15,9 @@ import java.util.Map;
 /** Quiz a risposta multipla, fino a 8 giocatori, 5 domande a partita. */
 @ApplicationScoped
 public class QuizEngine implements GameEngine {
+
+    @Inject
+    LeaderboardService leaderboard;
 
     @Override
     public String slug() {
@@ -88,6 +93,11 @@ public class QuizEngine implements GameEngine {
                     // partita finita
                     room.status = Room.Status.DONE;
                     ctx.broadcast(buildGameOver(qs));
+                    List<Map<String, Object>> ranking = qs.ranking();
+                    String winner = ranking.isEmpty() ? null : (String) ranking.get(0).get("username");
+                    for (String p : room.players) {
+                        leaderboard.record(p, "quiz", p.equals(winner) ? "WIN" : "LOSE");
+                    }
                 }
             }
 

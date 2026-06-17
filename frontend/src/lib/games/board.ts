@@ -8,5 +8,5 @@ import type { RoomEvent } from '$lib/ws';
 export type BoardProps = {
 	send: (msg: Record<string, unknown>) => void;
 	event: RoomEvent | null;
-	me: { email: string; displayName: string };
+	me: { username: string; displayName: string };
 };

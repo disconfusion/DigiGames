@@ -3,25 +3,23 @@ package it.digitaliasistemi.minigames.game.hangman;
 import com.fasterxml.jackson.databind.JsonNode;
 import it.digitaliasistemi.minigames.game.GameContext;
 import it.digitaliasistemi.minigames.game.GameEngine;
+import it.digitaliasistemi.minigames.leaderboard.LeaderboardService;
 import it.digitaliasistemi.minigames.rooms.Room;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/** Impiccato co-op: tutti in stanza indovinano la stessa parola, errori condivisi. */
 @ApplicationScoped
 public class HangmanEngine implements GameEngine {
 
-    @Override
-    public String slug() {
-        return "hangman";
-    }
+    @Inject
+    LeaderboardService leaderboard;
 
-    @Override
-    public int maxPlayers() {
-        return 8;
-    }
+    @Override public String slug() { return "hangman"; }
+    @Override public int maxPlayers() { return 8; }
 
     @Override
     public void onJoin(GameContext ctx) {
@@ -35,7 +33,7 @@ public class HangmanEngine implements GameEngine {
         Room room = ctx.room();
         switch (type) {
             case "game:start" -> {
-                HangmanState hs = new HangmanState(HangmanWords.random());
+                HangmanState hs = new HangmanState(HangmanWords.random(), new ArrayList<>(room.players));
                 room.game = hs;
                 room.status = Room.Status.PLAYING;
                 ctx.broadcast(state(hs, ctx.senderEmail(), null));
@@ -45,15 +43,22 @@ public class HangmanEngine implements GameEngine {
                     ctx.replyToSender(error("Partita non avviata"));
                     return;
                 }
+                if (!hs.isMyTurn(ctx.senderEmail())) {
+                    ctx.replyToSender(error("Non è il tuo turno"));
+                    return;
+                }
                 String letter = payload.path("letter").asText("").toLowerCase();
                 if (letter.length() != 1 || letter.charAt(0) < 'a' || letter.charAt(0) > 'z') {
                     ctx.replyToSender(error("Lettera non valida"));
                     return;
                 }
-                if (hs.guess(letter.charAt(0))) {
+                if (hs.guess(letter.charAt(0), ctx.senderEmail())) {
                     ctx.broadcast(state(hs, ctx.senderEmail(), letter));
                     if (hs.status() != HangmanState.Status.PLAYING) {
                         ctx.broadcast(over(hs));
+                        room.status = Room.Status.DONE;
+                        String lbResult = hs.status() == HangmanState.Status.WON ? "WIN" : "LOSE";
+                        for (String p : room.players) leaderboard.record(p, "hangman", lbResult);
                     }
                 }
             }
@@ -71,6 +76,7 @@ public class HangmanEngine implements GameEngine {
         m.put("wrongCount", hs.wrongCount());
         m.put("maxWrong", HangmanState.MAX_WRONG);
         m.put("status", hs.status().name());
+        m.put("currentTurn", hs.currentTurn());
         if (by != null) m.put("lastBy", by);
         if (letter != null) m.put("lastLetter", letter);
         return m;

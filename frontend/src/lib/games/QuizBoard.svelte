@@ -34,7 +34,7 @@
 	};
 
 	type GameOverState = {
-		ranking: { email: string; score: number }[];
+		ranking: { username: string; score: number }[];
 	};
 
 	// -------------------------------------------------------------------------
@@ -59,7 +59,7 @@
 			gameState = s;
 			gameOver = null;
 		} else if (e.type === 'game:over') {
-			const o = e as unknown as { ranking: { email: string; score: number }[] };
+			const o = e as unknown as { ranking: { username: string; score: number }[] };
 			gameOver = { ranking: o.ranking };
 			gameState = null;
 		}
@@ -93,7 +93,7 @@
 	/** In fase REVEAL: indice risposta data dal giocatore corrente. */
 	const myRevealAnswer = $derived(
 		isReveal && gameState
-			? ((gameState as RevealState).answers[me.email] ?? null)
+			? ((gameState as RevealState).answers[me.username] ?? null)
 			: null
 	);
 
@@ -102,7 +102,7 @@
 		gameState
 			? Object.entries(gameState.scores)
 					.sort(([, a], [, b]) => b - a)
-					.map(([email, score]) => ({ email, score }))
+					.map(([username, score]) => ({ username, score }))
 			: []
 	);
 </script>
@@ -127,12 +127,12 @@
 						<tr><th>#</th><th>Giocatore</th><th>Punti</th></tr>
 					</thead>
 					<tbody>
-						{#each gameOver.ranking as player, i (player.email)}
-							<tr class:me={player.email === me.email}>
+						{#each gameOver.ranking as player, i (player.username)}
+							<tr class:me={player.username === me.username}>
 								<td class="rank">
 									{#if i === 0}🥇{:else if i === 1}🥈{:else if i === 2}🥉{:else}{i + 1}{/if}
 								</td>
-								<td class="email">{player.email}</td>
+								<td class="email">{player.username}</td>
 								<td class="score">{player.score}</td>
 							</tr>
 						{/each}
@@ -181,9 +181,9 @@
 			<!-- Tabella punteggi laterale -->
 			{#if sortedScores.length > 1}
 				<div class="scores-mini">
-					{#each sortedScores as p (p.email)}
-						<div class="score-row" class:me={p.email === me.email}>
-							<span class="score-email">{p.email}</span>
+					{#each sortedScores as p (p.username)}
+						<div class="score-row" class:me={p.username === me.username}>
+							<span class="score-email">{p.username}</span>
 							<span class="score-pts">{p.score} pt</span>
 						</div>
 					{/each}
@@ -228,9 +228,9 @@
 						<tr><th>Giocatore</th><th>Punti</th></tr>
 					</thead>
 					<tbody>
-						{#each sortedScores as p (p.email)}
-							<tr class:me={p.email === me.email}>
-								<td class="email">{p.email}</td>
+						{#each sortedScores as p (p.username)}
+							<tr class:me={p.username === me.username}>
+								<td class="email">{p.username}</td>
 								<td class="score">{p.score}</td>
 							</tr>
 						{/each}

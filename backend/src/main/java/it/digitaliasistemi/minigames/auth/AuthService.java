@@ -9,31 +9,20 @@ import org.wildfly.security.password.util.ModularCrypt;
 
 import java.time.Duration;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 @ApplicationScoped
 public class AuthService {
 
-    /** Solo email dei domini aziendali consentiti. */
-    private static final Pattern ALLOWED_DOMAIN =
-            Pattern.compile("^[a-z0-9._%+-]+@(digitaliasistemi|ascesa)\\.it$");
-
-    public boolean isAllowedEmail(String email) {
-        return email != null && ALLOWED_DOMAIN.matcher(email.trim().toLowerCase()).matches();
-    }
-
-    /** Emette un JWT firmato (RSA) valido 12 ore. */
-    public String issueToken(String email, String displayName, String role) {
+    public String issueToken(String username, String displayName, String role) {
         return Jwt.issuer("minigames")
-                .subject(email)
-                .upn(email)
+                .subject(username)
+                .upn(username)
                 .claim("displayName", displayName)
                 .groups(Set.of(role))
                 .expiresIn(Duration.ofHours(12))
                 .sign();
     }
 
-    /** Verifica una password in chiaro contro l'hash bcrypt (Modular Crypt Format). */
     public boolean verifyPassword(String plain, String bcryptHash) {
         try {
             var provider = new WildFlyElytronPasswordProvider();

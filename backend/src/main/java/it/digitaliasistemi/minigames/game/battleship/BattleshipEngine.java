@@ -3,8 +3,10 @@ package it.digitaliasistemi.minigames.game.battleship;
 import com.fasterxml.jackson.databind.JsonNode;
 import it.digitaliasistemi.minigames.game.GameContext;
 import it.digitaliasistemi.minigames.game.GameEngine;
+import it.digitaliasistemi.minigames.leaderboard.LeaderboardService;
 import it.digitaliasistemi.minigames.rooms.Room;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -21,6 +23,9 @@ import java.util.Map;
  */
 @ApplicationScoped
 public class BattleshipEngine implements GameEngine {
+
+    @Inject
+    LeaderboardService leaderboard;
 
     @Override
     public String slug() {
@@ -101,6 +106,8 @@ public class BattleshipEngine implements GameEngine {
                 if (bs.status() == BattleshipState.Status.WON) {
                     room.status = Room.Status.DONE;
                     sendOverToBoth(ctx, bs);
+                    leaderboard.record(bs.winner(), "battleship", "WIN");
+                    leaderboard.record(bs.opponent(bs.winner()), "battleship", "LOSE");
                 }
             }
             default -> ctx.replyToSender(error("Azione sconosciuta: " + type));

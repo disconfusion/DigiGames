@@ -112,7 +112,7 @@ public class QuizState {
             .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
             .map(e -> {
                 Map<String, Object> entry = new LinkedHashMap<>();
-                entry.put("email", e.getKey());
+                entry.put("username", e.getKey());
                 entry.put("score", e.getValue());
                 return entry;
             })

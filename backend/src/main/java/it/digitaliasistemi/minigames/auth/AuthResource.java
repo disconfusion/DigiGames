@@ -27,35 +27,31 @@ public class AuthResource {
     @Path("/register")
     @Transactional
     public Response register(@Valid RegisterRequest req) {
-        String email = req.email().trim().toLowerCase();
-        if (!auth.isAllowedEmail(email)) {
-            return error(Response.Status.FORBIDDEN,
-                    "Email non ammessa: usa @digitaliasistemi.it oppure @ascesa.it");
-        }
-        if (AppUser.emailExists(email)) {
-            return error(Response.Status.CONFLICT, "Email gia registrata");
+        String username = req.username().trim().toLowerCase();
+        if (AppUser.usernameExists(username)) {
+            return error(Response.Status.CONFLICT, "Username già registrato");
         }
         AppUser u = new AppUser();
-        u.email = email;
+        u.username = username;
         u.displayName = req.displayName().trim();
         u.passwordHash = BcryptUtil.bcryptHash(req.password());
         u.role = "user";
         u.persist();
-        String token = auth.issueToken(u.email, u.displayName, u.role);
+        String token = auth.issueToken(u.username, u.displayName, u.role);
         return Response.status(Response.Status.CREATED)
-                .entity(new AuthResponse(token, u.email, u.displayName)).build();
+                .entity(new AuthResponse(token, u.username, u.displayName)).build();
     }
 
     @POST
     @Path("/login")
     public Response login(@Valid LoginRequest req) {
-        String email = req.email().trim().toLowerCase();
-        AppUser u = AppUser.findByEmail(email);
+        String username = req.username().trim().toLowerCase();
+        AppUser u = AppUser.findByUsername(username);
         if (u == null || !auth.verifyPassword(req.password(), u.passwordHash)) {
             return error(Response.Status.UNAUTHORIZED, "Credenziali non valide");
         }
-        String token = auth.issueToken(u.email, u.displayName, u.role);
-        return Response.ok(new AuthResponse(token, u.email, u.displayName)).build();
+        String token = auth.issueToken(u.username, u.displayName, u.role);
+        return Response.ok(new AuthResponse(token, u.username, u.displayName)).build();
     }
 
     private Response error(Response.Status status, String message) {

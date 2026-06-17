@@ -4,7 +4,7 @@
 	import { setSession, type Session } from '$lib/auth.svelte';
 
 	let mode = $state<'login' | 'register'>('login');
-	let email = $state('');
+	let username = $state('');
 	let password = $state('');
 	let displayName = $state('');
 	let error = $state('');
@@ -17,7 +17,7 @@
 		try {
 			const path = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
 			const payload =
-				mode === 'login' ? { email, password } : { email, password, displayName };
+				mode === 'login' ? { username, password } : { username, password, displayName };
 			const res = await api<NonNullable<Session>>(path, {
 				method: 'POST',
 				body: JSON.stringify(payload)
@@ -34,7 +34,6 @@
 
 <div class="card">
 	<h1>{mode === 'login' ? 'Accedi' : 'Registrati'}</h1>
-	<p class="hint">Solo email <code>@digitaliasistemi.it</code> o <code>@ascesa.it</code></p>
 
 	<form onsubmit={submit}>
 		{#if mode === 'register'}
@@ -44,8 +43,8 @@
 			</label>
 		{/if}
 		<label>
-			Email
-			<input type="email" bind:value={email} required autocomplete="email" />
+			Username
+			<input type="text" bind:value={username} required autocomplete="username" minlength="3" maxlength="30" />
 		</label>
 		<label>
 			Password
@@ -70,7 +69,7 @@
 			Non hai un account?
 			<button class="link" onclick={() => ((mode = 'register'), (error = ''))}>Registrati</button>
 		{:else}
-			Hai gia un account?
+			Hai già un account?
 			<button class="link" onclick={() => ((mode = 'login'), (error = ''))}>Accedi</button>
 		{/if}
 	</p>
@@ -86,10 +85,6 @@
 	}
 	h1 {
 		margin-top: 0;
-	}
-	.hint {
-		color: var(--muted);
-		font-size: 0.85rem;
 	}
 	form {
 		display: flex;

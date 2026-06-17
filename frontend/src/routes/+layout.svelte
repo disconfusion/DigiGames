@@ -22,6 +22,8 @@
 		{#if auth.session}
 			<span class="who">{auth.session.displayName}</span>
 			<a href="/lobby">Lobby</a>
+			<a href="/daily">Parola del Giorno</a>
+			<a href="/leaderboard">Classifica</a>
 			<button class="link" onclick={doLogout}>Esci</button>
 		{:else}
 			<a href="/login">Accedi</a>

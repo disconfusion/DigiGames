@@ -34,8 +34,8 @@
 	});
 
 	// ---- Derivati ----
-	const myColor   = $derived(state?.seats?.[me.email] ?? null);
-	const isMyTurn  = $derived(state?.currentTurn === me.email);
+	const myColor   = $derived(state?.seats?.[me.username] ?? null);
+	const isMyTurn  = $derived(state?.currentTurn === me.username);
 	const isPlaying = $derived(state?.status === 'PLAYING');
 
 	// ---- Azioni ----
@@ -77,7 +77,7 @@
 			<button class="c4-btn" onclick={startGame}>Inizia partita</button>
 		{:else if over}
 			{#if over.status === 'WON'}
-				{#if over.winner === me.email}
+				{#if over.winner === me.username}
 					<div class="c4-banner c4-win">Hai vinto!</div>
 				{:else}
 					<div class="c4-banner c4-lose">Hai perso!</div>
@@ -138,11 +138,11 @@
 	<!-- Legenda giocatori -->
 	{#if state}
 		<div class="c4-legend">
-			{#each Object.entries(state.seats) as [email, color] (email)}
-				<span class="c4-player" class:c4-active={state.currentTurn === email && isPlaying}>
+			{#each Object.entries(state.seats) as [uname, color] (uname)}
+				<span class="c4-player" class:c4-active={state.currentTurn === uname && isPlaying}>
 					<span class="c4-disk-inline {colorClass(color)}"></span>
-					{email === me.email ? 'Tu' : email.split('@')[0]}
-					{#if state.currentTurn === email && isPlaying}<span class="c4-arrow">◄</span>{/if}
+					{uname === me.username ? 'Tu' : uname}
+					{#if state.currentTurn === uname && isPlaying}<span class="c4-arrow">◄</span>{/if}
 				</span>
 			{/each}
 		</div>

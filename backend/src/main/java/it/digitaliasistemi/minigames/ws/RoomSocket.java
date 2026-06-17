@@ -19,31 +19,16 @@ import jakarta.inject.Inject;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Endpoint real-time per stanza. Gestisce sistema (autenticazione, presenza, chat)
- * e delega ogni altro messaggio al {@link GameEngine} del gioco della stanza.
- * Generico: aggiungere un gioco = nuovo bean GameEngine, nessuna modifica qui.
- */
 @WebSocket(path = "/ws/room/{code}")
 public class RoomSocket {
 
-    /** Email dell'utente autenticato, legata alla connessione. */
     static final UserData.TypedKey<String> USER = UserData.TypedKey.forString("user");
 
-    @Inject
-    RoomManager rooms;
-
-    @Inject
-    OpenConnections connections;
-
-    @Inject
-    ObjectMapper mapper;
-
-    @Inject
-    JWTParser jwtParser;
-
-    @Inject
-    GameEngines engines;
+    @Inject RoomManager rooms;
+    @Inject OpenConnections connections;
+    @Inject ObjectMapper mapper;
+    @Inject JWTParser jwtParser;
+    @Inject GameEngines engines;
 
     @OnTextMessage
     public void onMessage(String raw, WebSocketConnection conn) throws Exception {
@@ -60,77 +45,58 @@ public class RoomSocket {
             case "hello" -> {
                 String token = msg.path("token").asText(null);
                 try {
-                    String email = jwtParser.parse(token).getName();
-                    conn.userData().put(USER, email);
-                    room.players.add(email);
-                    broadcast(code, evt("player:joined", "email", email, "players", room.players.size()));
+                    String username = jwtParser.parse(token).getName();
+                    conn.userData().put(USER, username);
+                    room.players.add(username);
+                    broadcast(code, evt("player:joined", "username", username, "players", room.players.size()));
                     GameEngine engine = engines.get(room.gameSlug);
-                    if (engine != null) {
-                        engine.onJoin(ctx(conn, room, email));
-                    }
+                    if (engine != null) engine.onJoin(ctx(conn, room, username));
                 } catch (Exception e) {
                     conn.sendTextAndAwait(err("Token non valido"));
                     conn.closeAndAwait();
                 }
             }
             case "chat" -> {
-                String email = requireAuth(conn);
-                if (email == null) return;
-                broadcast(code, evt("chat", "from", email, "text", msg.path("text").asText("")));
+                String username = requireAuth(conn);
+                if (username == null) return;
+                broadcast(code, evt("chat", "from", username, "text", msg.path("text").asText("")));
             }
             default -> {
-                // Messaggio di gioco: delega all'engine.
-                String email = requireAuth(conn);
-                if (email == null) return;
+                String username = requireAuth(conn);
+                if (username == null) return;
                 GameEngine engine = engines.get(room.gameSlug);
                 if (engine == null) {
                     conn.sendTextAndAwait(err("Gioco non supportato: " + room.gameSlug));
                     return;
                 }
-                engine.onMessage(ctx(conn, room, email), type, msg);
+                engine.onMessage(ctx(conn, room, username), type, msg);
             }
         }
     }
 
     @OnClose
     public void onClose(WebSocketConnection conn) {
-        String email = conn.userData().get(USER);
+        String username = conn.userData().get(USER);
         String code = conn.pathParam("code");
         Room room = rooms.get(code);
-        if (email != null && room != null) {
-            room.players.remove(email);
-            broadcast(code, evt("player:left", "email", email, "players", room.players.size()));
-            if (room.players.isEmpty()) {
-                rooms.remove(code);
-            }
+        if (username != null && room != null) {
+            room.players.remove(username);
+            broadcast(code, evt("player:left", "username", username, "players", room.players.size()));
+            if (room.players.isEmpty()) rooms.remove(code);
         }
     }
 
-    /** Crea il contesto di gioco per la connessione/utente correnti. */
-    private GameContext ctx(WebSocketConnection conn, Room room, String email) {
+    private GameContext ctx(WebSocketConnection conn, Room room, String username) {
         return new GameContext() {
-            @Override
-            public Room room() {
-                return room;
-            }
-
-            @Override
-            public String senderEmail() {
-                return email;
-            }
-
-            @Override
-            public void replyToSender(Map<String, Object> message) {
+            @Override public Room room() { return room; }
+            @Override public String senderEmail() { return username; }
+            @Override public void replyToSender(Map<String, Object> message) {
                 conn.sendTextAndAwait(toJson(message));
             }
-
-            @Override
-            public void broadcast(Map<String, Object> message) {
+            @Override public void broadcast(Map<String, Object> message) {
                 RoomSocket.this.broadcast(room.code, toJson(message));
             }
-
-            @Override
-            public void sendTo(String target, Map<String, Object> message) {
+            @Override public void sendTo(String target, Map<String, Object> message) {
                 String json = toJson(message);
                 connections.stream()
                         .filter(c -> room.code.equals(c.pathParam("code")))
@@ -141,14 +107,13 @@ public class RoomSocket {
     }
 
     private String requireAuth(WebSocketConnection conn) {
-        String email = conn.userData().get(USER);
-        if (email == null) {
+        String username = conn.userData().get(USER);
+        if (username == null) {
             conn.sendTextAndAwait(err("Non autenticato: invia prima un messaggio 'hello' col token"));
         }
-        return email;
+        return username;
     }
 
-    /** Invia un messaggio a tutte le connessioni della stessa stanza. */
     private void broadcast(String code, String json) {
         connections.stream()
                 .filter(c -> code.equals(c.pathParam("code")))
@@ -158,15 +123,11 @@ public class RoomSocket {
     private String evt(String type, Object... kv) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("type", type);
-        for (int i = 0; i + 1 < kv.length; i += 2) {
-            m.put((String) kv[i], kv[i + 1]);
-        }
+        for (int i = 0; i + 1 < kv.length; i += 2) m.put((String) kv[i], kv[i + 1]);
         return toJson(m);
     }
 
-    private String err(String message) {
-        return evt("error", "message", message);
-    }
+    private String err(String message) { return evt("error", "message", message); }
 
     private String toJson(Map<String, Object> m) {
         try {

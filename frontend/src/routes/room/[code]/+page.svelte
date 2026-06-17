@@ -4,15 +4,16 @@
 	import { page } from '$app/state';
 	import { auth } from '$lib/auth.svelte';
 	import { api } from '$lib/api';
-	import { connectRoom, send, type RoomEvent } from '$lib/ws';
+	import { connectRoom, type RoomEvent, type RoomConnection } from '$lib/ws';
 	import { BOARDS } from '$lib/games/registry';
 
 	type RoomView = { code: string; gameSlug: string; players: number; maxPlayers: number };
 
 	const SYSTEM = new Set(['player:joined', 'player:left', 'chat']);
-	const code = page.params.code;
+	const code: string = page.params.code ?? '';
 
-	let ws: WebSocket | null = null;
+	let conn: RoomConnection | null = null;
+	let wsStatus = $state<'connected' | 'reconnecting' | 'closed'>('reconnecting');
 	let connected = $state(false);
 	let players = $state(0);
 	let room = $state<RoomView | null>(null);
@@ -29,12 +30,12 @@
 		switch (e.type) {
 			case 'player:joined':
 				players = Number(e.players);
-				if (e.email === auth.session?.email) connected = true;
-				push(`▶ ${e.email} è entrato`);
+				if (e.username === auth.session?.username) connected = true;
+				push(`▶ ${e.username} è entrato`);
 				break;
 			case 'player:left':
 				players = Number(e.players);
-				push(`◀ ${e.email} è uscito`);
+				push(`◀ ${e.username} è uscito`);
 				break;
 			case 'chat':
 				push(`${e.from}: ${e.text}`);
@@ -46,18 +47,18 @@
 		}
 	}
 
-	const sendMsg = (msg: Record<string, unknown>) => ws && send(ws, msg);
+	const sendMsg = (msg: Record<string, unknown>) => conn?.send(msg);
 
 	function sendChat(ev: SubmitEvent) {
 		ev.preventDefault();
-		if (ws && chatText.trim()) {
-			send(ws, { type: 'chat', text: chatText });
+		if (conn && chatText.trim()) {
+			conn.send({ type: 'chat', text: chatText });
 			chatText = '';
 		}
 	}
 
 	function leave() {
-		ws?.close();
+		conn?.close();
 		goto('/lobby');
 	}
 
@@ -66,15 +67,20 @@
 			goto('/login');
 			return;
 		}
+		const token: string = auth.session.token ?? '';
 		try {
 			room = await api<RoomView>(`/api/rooms/${code}`);
 		} catch {
 			loadError = 'Stanza non trovata o non più disponibile.';
 			return;
 		}
-		ws = connectRoom(code, auth.session.token, handle);
+		conn = connectRoom(code, token, handle, (s) => {
+			wsStatus = s;
+			if (s === 'reconnecting') push('⟳ Riconnessione in corso…');
+			if (s === 'closed') push('✖ Connessione persa. Ricarica la pagina.');
+		});
 	});
-	onDestroy(() => ws?.close());
+	onDestroy(() => conn?.close());
 </script>
 
 <div class="head">

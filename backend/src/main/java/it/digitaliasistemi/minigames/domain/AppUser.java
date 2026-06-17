@@ -5,16 +5,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-/**
- * Utente registrato. Solo email dei domini aziendali consentiti (vedi AuthService).
- * Password salvata come hash bcrypt (mai in chiaro).
- */
 @Entity
 @Table(name = "app_user")
 public class AppUser extends PanacheEntity {
 
     @Column(unique = true, nullable = false)
-    public String email;
+    public String username;
 
     @Column(nullable = false)
     public String passwordHash;
@@ -25,11 +21,11 @@ public class AppUser extends PanacheEntity {
     @Column(nullable = false)
     public String role = "user";
 
-    public static AppUser findByEmail(String email) {
-        return find("email", email).firstResult();
+    public static AppUser findByUsername(String username) {
+        return find("username", username).firstResult();
     }
 
-    public static boolean emailExists(String email) {
-        return count("email", email) > 0;
+    public static boolean usernameExists(String username) {
+        return count("username", username) > 0;
     }
 }
