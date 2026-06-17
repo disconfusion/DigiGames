@@ -13,6 +13,8 @@
 
 	const isAdmin = $derived(auth.session?.role === 'admin');
 
+	let menuOpen = $state(false);
+
 	// Modale segnalazione bug
 	let showBug = $state(false);
 	let bugGame = $state('generale');
@@ -94,7 +96,17 @@
 
 <header>
 	<a class="brand" href="/">🎮 DigiGames</a>
-	<nav>
+	{#if auth.session}
+		<button
+			class="menu-toggle"
+			onclick={() => (menuOpen = !menuOpen)}
+			aria-label="Apri/chiudi menu"
+			aria-expanded={menuOpen}
+		>
+			{menuOpen ? '✕' : '☰'}
+		</button>
+	{/if}
+	<nav class:open={menuOpen} onclick={() => (menuOpen = false)}>
 		{#if auth.session}
 			<a class="who" href="/profile">{auth.session.displayName}</a>
 			<a href="/">Home</a>
@@ -221,6 +233,16 @@
 		align-items: center;
 		gap: 1rem;
 	}
+	.menu-toggle {
+		display: none;
+		background: none;
+		border: none;
+		color: var(--text);
+		font-size: 1.5rem;
+		line-height: 1;
+		cursor: pointer;
+		padding: 0.25rem 0.5rem;
+	}
 	nav a,
 	.who {
 		color: var(--muted);
@@ -265,6 +287,17 @@
 		padding: 1.5rem 1rem;
 		width: 100%;
 	}
+	/* Su schermi grandi diamo più respiro orizzontale (evita card strette e troppo alte) */
+	@media (min-width: 1500px) {
+		main {
+			max-width: 1120px;
+		}
+	}
+	@media (min-width: 2000px) {
+		main {
+			max-width: 1320px;
+		}
+	}
 	.bug {
 		color: #fbbf24;
 	}
@@ -275,10 +308,32 @@
 		.brand {
 			font-size: 1.05rem;
 		}
+		.menu-toggle {
+			display: block;
+		}
+		/* La nav diventa un menu a tendina a tutta larghezza */
 		nav {
-			gap: 0.6rem 0.85rem;
-			font-size: 0.9rem;
+			display: none;
+			order: 3;
 			width: 100%;
+			flex-direction: column;
+			align-items: stretch;
+			gap: 0.25rem;
+			margin-top: 0.5rem;
+		}
+		nav.open {
+			display: flex;
+		}
+		nav a,
+		nav button {
+			padding: 0.6rem 0.4rem;
+			border-radius: 8px;
+			width: 100%;
+			text-align: left;
+		}
+		nav a:hover,
+		nav button:hover {
+			background: #0f172a;
 		}
 		main {
 			padding: 1rem 0.8rem;
