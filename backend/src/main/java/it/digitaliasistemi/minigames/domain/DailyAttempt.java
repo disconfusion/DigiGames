@@ -32,6 +32,10 @@ public class DailyAttempt extends PanacheEntity {
     @Column(nullable = false)
     public boolean won = false;
 
+    /** Eliminato: ha sbagliato il tentativo di parola intera. Non può più giocare oggi. */
+    @Column(nullable = false)
+    public boolean eliminated = false;
+
     public static DailyAttempt findByDateAndUser(LocalDate date, String username) {
         return find("date = ?1 and username = ?2", date, username).firstResult();
     }

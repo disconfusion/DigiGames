@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { RoomEvent } from '$lib/ws';
-	import type { HangmanGameState } from './hangman';
+	import { gallows, type HangmanGameState } from './hangman';
 
 	let {
 		send,
@@ -28,25 +28,28 @@
 	});
 
 	const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
-
-	const FRAMES = [
-		' +---+\n |   |\n     |\n     |\n     |\n     |\n=======',
-		' +---+\n |   |\n O   |\n     |\n     |\n     |\n=======',
-		' +---+\n |   |\n O   |\n |   |\n     |\n     |\n=======',
-		' +---+\n |   |\n O   |\n/|   |\n     |\n     |\n=======',
-		' +---+\n |   |\n O   |\n/|\\  |\n     |\n     |\n=======',
-		' +---+\n |   |\n O   |\n/|\\  |\n/    |\n     |\n=======',
-		' +---+\n |   |\n O   |\n/|\\  |\n/ \\  |\n     |\n======='
-	];
+	const VOWELS = new Set(['a', 'e', 'i', 'o', 'u']);
 
 	const playing  = $derived(state?.status === 'PLAYING');
 	const used     = $derived(new Set([...(state?.guessed ?? []), ...(state?.wrong ?? [])]));
-	const frame    = $derived(FRAMES[Math.min(state?.wrongCount ?? 0, FRAMES.length - 1)]);
+	const frame    = $derived(gallows(state?.wrongCount ?? 0, state?.accessories ?? [], state?.status === 'LOST'));
 	const isMyTurn = $derived(state?.currentTurn == null || state.currentTurn === me.username);
-	const canPlay  = $derived(playing && isMyTurn);
+
+	const vowelLimit      = $derived(state?.maxVowels ?? 0);
+	const vowelBudgetOver  = $derived(vowelLimit > 0 && (state?.vowelsCalled ?? 0) >= vowelLimit);
+
+	const letterLimit     = $derived(state?.lettersPerPlayer ?? 0);
+	const myLettersUsed    = $derived(state?.lettersUsed?.[me.username] ?? 0);
+	const letterBudgetOver = $derived(letterLimit > 0 && myLettersUsed >= letterLimit);
+
+	const canPlay  = $derived(playing && isMyTurn && !letterBudgetOver);
+
+	function blocked(l: string): boolean {
+		return used.has(l) || (VOWELS.has(l) && vowelBudgetOver);
+	}
 
 	function tryLetter(l: string) {
-		if (canPlay && !used.has(l)) send({ type: 'guess', letter: l });
+		if (canPlay && !blocked(l)) send({ type: 'guess', letter: l });
 	}
 	const startGame = () => send({ type: 'game:start' });
 
@@ -81,6 +84,14 @@
 			{#if state.wrong.length}— <span class="wrong">{state.wrong.join(' ').toUpperCase()}</span>{/if}
 		</p>
 
+		<!-- Limiti regole personalizzate -->
+		{#if vowelLimit > 0 || letterLimit > 0}
+			<p class="limits">
+				{#if vowelLimit > 0}<span class="chip" class:exhausted={vowelBudgetOver}>🅰 Vocali: {state.vowelsCalled}/{vowelLimit}</span>{/if}
+				{#if letterLimit > 0}<span class="chip" class:exhausted={letterBudgetOver}>✋ Tue lettere: {myLettersUsed}/{letterLimit}</span>{/if}
+			</p>
+		{/if}
+
 		<!-- Indicatore turno -->
 		{#if playing && state.currentTurn != null}
 			{#if isMyTurn}
@@ -103,7 +114,8 @@
 					class="key"
 					class:hit={state.guessed.includes(l)}
 					class:miss={state.wrong.includes(l)}
-					disabled={!canPlay || used.has(l)}
+					class:vowel={VOWELS.has(l)}
+					disabled={!canPlay || blocked(l)}
 					onclick={() => tryLetter(l)}
 				>
 					{l.toUpperCase()}
@@ -156,6 +168,29 @@
 	.wrong {
 		color: #f87171;
 		letter-spacing: 0.1em;
+	}
+	.limits {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		justify-content: center;
+		margin: 0;
+	}
+	.chip {
+		background: #1e293b;
+		border: 1px solid #334155;
+		color: var(--muted);
+		border-radius: 20px;
+		padding: 0.25rem 0.7rem;
+		font-size: 0.85rem;
+	}
+	.chip.exhausted {
+		background: #7f1d1d;
+		border-color: #dc2626;
+		color: #fecaca;
+	}
+	.key.vowel {
+		border-color: #6d28d9;
 	}
 	.turn-badge {
 		padding: 0.4rem 0.9rem;

@@ -56,13 +56,14 @@ public class RoomResource {
                     .entity(new ErrorMsg("Gioco sconosciuto: " + req.gameSlug())).build();
         }
         Room r = manager.create(req.gameSlug(), jwt.getName(),
-                Boolean.TRUE.equals(req.isPrivate()), engine.maxPlayers());
+                Boolean.TRUE.equals(req.isPrivate()), engine.maxPlayers(), req.options());
         return Response.status(Response.Status.CREATED).entity(RoomView.of(r)).build();
     }
 
     public record ErrorMsg(String message) {}
 
-    public record CreateRoomRequest(@NotBlank String gameSlug, Boolean isPrivate) {}
+    public record CreateRoomRequest(@NotBlank String gameSlug, Boolean isPrivate,
+                                    com.fasterxml.jackson.databind.JsonNode options) {}
 
     public record RoomView(String code, String gameSlug, String hostEmail, String status,
                            int players, int maxPlayers, boolean isPrivate) {

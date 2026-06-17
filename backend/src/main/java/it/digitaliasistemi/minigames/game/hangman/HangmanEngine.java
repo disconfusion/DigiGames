@@ -33,7 +33,8 @@ public class HangmanEngine implements GameEngine {
         Room room = ctx.room();
         switch (type) {
             case "game:start" -> {
-                HangmanState hs = new HangmanState(HangmanWords.random(), new ArrayList<>(room.players));
+                HangmanConfig cfg = HangmanConfig.fromJson(room.options);
+                HangmanState hs = new HangmanState(HangmanWords.random(), new ArrayList<>(room.players), cfg);
                 room.game = hs;
                 room.status = Room.Status.PLAYING;
                 ctx.broadcast(state(hs, ctx.senderEmail(), null));
@@ -74,7 +75,12 @@ public class HangmanEngine implements GameEngine {
         m.put("wrong", hs.wrong().stream().map(String::valueOf).toList());
         m.put("guessed", hs.guessed().stream().map(String::valueOf).toList());
         m.put("wrongCount", hs.wrongCount());
-        m.put("maxWrong", HangmanState.MAX_WRONG);
+        m.put("maxWrong", hs.maxWrong());
+        m.put("accessories", hs.accessories());
+        m.put("maxVowels", hs.maxVowels());
+        m.put("vowelsCalled", hs.vowelsCalled());
+        m.put("lettersPerPlayer", hs.lettersPerPlayer());
+        m.put("lettersUsed", hs.lettersUsed());
         m.put("status", hs.status().name());
         m.put("currentTurn", hs.currentTurn());
         if (by != null) m.put("lastBy", by);

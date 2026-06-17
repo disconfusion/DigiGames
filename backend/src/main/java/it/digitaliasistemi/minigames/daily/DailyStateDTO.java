@@ -16,5 +16,6 @@ public record DailyStateDTO(
     // Stato per-utente
     boolean letterUsed,
     boolean wordAttemptUsed,
-    boolean won
+    boolean won,
+    boolean eliminated
 ) {}

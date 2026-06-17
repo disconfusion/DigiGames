@@ -32,8 +32,8 @@ public class DailyHangmanService {
         DailyAttempt attempt = getOrCreateAttempt(date, username);
         String word = HangmanWords.daily(date);
 
-        // Slot già usato o partita terminata
-        if (attempt.letterUsed || !"PLAYING".equals(shared.status)) {
+        // Slot già usato, eliminato o partita terminata
+        if (attempt.letterUsed || attempt.eliminated || !"PLAYING".equals(shared.status)) {
             return toDTO(shared, attempt, word);
         }
 
@@ -73,7 +73,7 @@ public class DailyHangmanService {
         DailyAttempt attempt = getOrCreateAttempt(date, username);
         String word = HangmanWords.daily(date);
 
-        if (attempt.wordAttemptUsed || !"PLAYING".equals(shared.status)) {
+        if (attempt.wordAttemptUsed || attempt.eliminated || !"PLAYING".equals(shared.status)) {
             return toDTO(shared, attempt, word);
         }
 
@@ -84,6 +84,9 @@ public class DailyHangmanService {
             shared.winner = username;
             attempt.won = true;
             leaderboard.record(username, "daily", "WIN");
+        } else {
+            // Tentativo parola sbagliato → eliminato dall'impiccato del giorno (solo oggi)
+            attempt.eliminated = true;
         }
 
         return toDTO(shared, attempt, word);
@@ -134,7 +137,8 @@ public class DailyHangmanService {
             revealedWord,
             attempt.letterUsed,
             attempt.wordAttemptUsed,
-            attempt.won
+            attempt.won,
+            attempt.eliminated
         );
     }
 

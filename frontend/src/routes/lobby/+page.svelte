@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { api } from '$lib/api';
 	import { auth } from '$lib/auth.svelte';
+	import { ACCESSORIES, CLASSIC_OPTIONS, type HangmanOptions } from '$lib/games/hangman';
 
 	type RoomView = {
 		code: string;
@@ -29,6 +30,22 @@
 	let isPrivate = $state(false);
 	let joinCode = $state('');
 
+	// Opzioni impiccato
+	let hmPreset = $state<'classic' | 'custom'>('classic');
+	let hmOptions = $state<HangmanOptions>({ ...CLASSIC_OPTIONS, accessories: [] });
+
+	function applyClassic() {
+		hmPreset = 'classic';
+		hmOptions = { ...CLASSIC_OPTIONS, accessories: [] };
+	}
+
+	function toggleAccessory(key: string) {
+		hmPreset = 'custom';
+		hmOptions.accessories = hmOptions.accessories.includes(key)
+			? hmOptions.accessories.filter((a) => a !== key)
+			: [...hmOptions.accessories, key];
+	}
+
 	async function refresh() {
 		try {
 			rooms = await api<RoomView[]>('/api/rooms');
@@ -41,7 +58,11 @@
 		try {
 			const r = await api<RoomView>('/api/rooms', {
 				method: 'POST',
-				body: JSON.stringify({ gameSlug: newGame, isPrivate })
+				body: JSON.stringify({
+					gameSlug: newGame,
+					isPrivate,
+					options: newGame === 'hangman' ? hmOptions : undefined
+				})
 			});
 			goto(`/room/${r.code}`);
 		} catch (e) {
@@ -79,6 +100,64 @@
 		</label>
 		<button onclick={create}>Crea</button>
 	</div>
+
+	{#if newGame === 'hangman'}
+		<div class="hm-options">
+			<div class="preset-row">
+				<button class="preset" class:active={hmPreset === 'classic'} onclick={applyClassic}>
+					Classica
+				</button>
+				<button class="preset" class:active={hmPreset === 'custom'} onclick={() => (hmPreset = 'custom')}>
+					Personalizzata
+				</button>
+			</div>
+
+			<div class="opt">
+				<label for="maxVowels">Vocali max chiamabili (totali)</label>
+				<input
+					id="maxVowels"
+					type="number"
+					min="0"
+					max="5"
+					bind:value={hmOptions.maxVowels}
+					oninput={() => (hmPreset = 'custom')}
+				/>
+				<span class="hint">0 = illimitate</span>
+			</div>
+
+			<div class="opt">
+				<label for="lettersPerPlayer">Lettere a testa</label>
+				<input
+					id="lettersPerPlayer"
+					type="number"
+					min="0"
+					max="26"
+					bind:value={hmOptions.lettersPerPlayer}
+					oninput={() => (hmPreset = 'custom')}
+				/>
+				<span class="hint">0 = illimitate</span>
+			</div>
+
+			<div class="opt">
+				<span class="opt-label">Accessori (ognuno = +1 vita)</span>
+				<div class="acc-row">
+					{#each ACCESSORIES as a (a.key)}
+						<label class="acc" class:on={hmOptions.accessories.includes(a.key)}>
+							<input
+								type="checkbox"
+								checked={hmOptions.accessories.includes(a.key)}
+								onchange={() => toggleAccessory(a.key)}
+							/>
+							{a.emoji} {a.label}
+						</label>
+					{/each}
+				</div>
+				<span class="hint">
+					Errori consentiti: {6 + hmOptions.accessories.length}
+				</span>
+			</div>
+		</div>
+	{/if}
 </section>
 
 <section class="panel">
@@ -190,5 +269,67 @@
 	}
 	.error {
 		color: #f87171;
+	}
+	.hm-options {
+		margin-top: 1rem;
+		padding-top: 1rem;
+		border-top: 1px solid #334155;
+		display: flex;
+		flex-direction: column;
+		gap: 0.85rem;
+	}
+	.preset-row {
+		display: flex;
+		gap: 0.5rem;
+	}
+	.preset {
+		background: #1e293b;
+		border: 1px solid #334155;
+		color: var(--muted);
+	}
+	.preset.active {
+		background: var(--accent);
+		color: white;
+		border-color: var(--accent);
+	}
+	.opt {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		flex-wrap: wrap;
+	}
+	.opt label,
+	.opt-label {
+		font-size: 0.9rem;
+		min-width: 12rem;
+	}
+	.opt input[type='number'] {
+		width: 4.5rem;
+	}
+	.hint {
+		color: var(--muted);
+		font-size: 0.8rem;
+	}
+	.acc-row {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+	.acc {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.35rem 0.7rem;
+		border-radius: 20px;
+		background: #0f172a;
+		border: 1px solid #334155;
+		color: var(--muted);
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+	.acc.on {
+		background: #1e3a5f;
+		border-color: #3b82f6;
+		color: #93c5fd;
 	}
 </style>

@@ -18,6 +18,7 @@
 		letterUsed: boolean;
 		wordAttemptUsed: boolean;
 		won: boolean;
+		eliminated: boolean;
 	};
 
 	const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
@@ -46,8 +47,9 @@
 	);
 	const frame = $derived(FRAMES[Math.min(state?.wrongCount ?? 0, FRAMES.length - 1)]);
 	const playing = $derived(state?.status === 'PLAYING');
-	const canGuessLetter = $derived(playing && !(state?.letterUsed));
-	const canGuessWord = $derived(playing && !(state?.wordAttemptUsed));
+	const eliminated = $derived(state?.eliminated ?? false);
+	const canGuessLetter = $derived(playing && !eliminated && !(state?.letterUsed));
+	const canGuessWord = $derived(playing && !eliminated && !(state?.wordAttemptUsed));
 	const me = $derived(auth.session?.username ?? '');
 
 	async function load() {
@@ -94,7 +96,7 @@
 				body: JSON.stringify({ word: wordInput.trim() })
 			});
 			if (state?.status !== 'WON' || state.winner === prev) {
-				wordError = '✗ Parola sbagliata. Tentativo esaurito.';
+				wordError = '✗ Parola sbagliata. Sei stato eliminato dalla parola di oggi.';
 			}
 			wordInput = '';
 		} catch (e2) {
@@ -140,7 +142,9 @@
 			{/if}
 		{:else if state.status === 'LOST'}
 			<div class="banner lost">💀 Parola persa! Era: <strong>{state.word}</strong></div>
-		{/if}
+			{:else if eliminated}
+				<div class="banner lost">☠️ Sei stato eliminato: hai sbagliato il tentativo della parola. Puoi solo guardare il resto della giornata.</div>
+			{/if}
 
 		<!-- Sezione: la tua lettera -->
 		<section class="section">

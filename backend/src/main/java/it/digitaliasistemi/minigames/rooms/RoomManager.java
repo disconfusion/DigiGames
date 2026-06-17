@@ -1,5 +1,6 @@
 package it.digitaliasistemi.minigames.rooms;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.security.SecureRandom;
@@ -16,12 +17,12 @@ public class RoomManager {
 
     private final ConcurrentHashMap<String, Room> rooms = new ConcurrentHashMap<>();
 
-    public Room create(String gameSlug, String hostEmail, boolean isPrivate, int maxPlayers) {
+    public Room create(String gameSlug, String hostEmail, boolean isPrivate, int maxPlayers, JsonNode options) {
         String code;
         do {
             code = randomCode();
         } while (rooms.containsKey(code));
-        Room r = new Room(code, gameSlug, hostEmail, isPrivate, maxPlayers);
+        Room r = new Room(code, gameSlug, hostEmail, isPrivate, maxPlayers, options);
         r.players.add(hostEmail);
         rooms.put(code, r);
         return r;
