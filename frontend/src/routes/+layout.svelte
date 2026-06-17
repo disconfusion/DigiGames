@@ -1,9 +1,41 @@
 <script lang="ts">
 	import favicon from '$lib/assets/favicon.svg';
+	import { onDestroy } from 'svelte';
 	import { auth, logout } from '$lib/auth.svelte';
 	import { goto } from '$app/navigation';
+	import { api } from '$lib/api';
 
 	let { children } = $props();
+
+	let inviteCount = $state(0);
+	let timer: ReturnType<typeof setInterval> | undefined;
+
+	async function refreshInvites() {
+		if (!auth.session) {
+			inviteCount = 0;
+			return;
+		}
+		try {
+			const r = await api<{ count: number }>('/api/invites/count');
+			inviteCount = r.count;
+		} catch {
+			// silenzioso
+		}
+	}
+
+	$effect(() => {
+		// (Ri)avvia il polling quando cambia lo stato di login
+		if (auth.session && !timer) {
+			refreshInvites();
+			timer = setInterval(refreshInvites, 15_000);
+		} else if (!auth.session && timer) {
+			clearInterval(timer);
+			timer = undefined;
+			inviteCount = 0;
+		}
+	});
+
+	onDestroy(() => clearInterval(timer));
 
 	function doLogout() {
 		logout();
@@ -24,6 +56,10 @@
 			<a href="/lobby">Lobby</a>
 			<a href="/daily">Parola del Giorno</a>
 			<a href="/leaderboard">Classifica</a>
+			<a class="invites" href="/invites">
+				Inviti
+				{#if inviteCount > 0}<span class="nav-badge">{inviteCount}</span>{/if}
+			</a>
 			<button class="link" onclick={doLogout}>Esci</button>
 		{:else}
 			<a href="/login">Accedi</a>
@@ -87,6 +123,25 @@
 	}
 	.link:hover {
 		color: var(--text);
+	}
+	.invites {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+	}
+	.nav-badge {
+		background: #ef4444;
+		color: white;
+		font-size: 0.72rem;
+		font-weight: 700;
+		min-width: 1.1rem;
+		height: 1.1rem;
+		padding: 0 0.3rem;
+		border-radius: 999px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 	}
 	main {
 		max-width: 900px;
