@@ -21,7 +21,8 @@
 		{ slug: 'quiz', label: 'Quiz' },
 		{ slug: 'battleship', label: 'Battaglia navale' },
 		{ slug: 'minesweeper', label: 'Campo minato' },
-		{ slug: 'tris', label: 'Tris' }
+		{ slug: 'tris', label: 'Tris' },
+		{ slug: 'dama', label: 'Dama' }
 	];
 	const labelOf = (slug: string) => GAMES.find((g) => g.slug === slug)?.label ?? slug;
 
