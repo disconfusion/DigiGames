@@ -1,6 +1,7 @@
 package it.digitaliasistemi.minigames.daily;
 
 import io.quarkus.security.Authenticated;
+import it.digitaliasistemi.minigames.ws.NotifyBus;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -18,6 +19,7 @@ public class DailyHangmanResource {
 
     @Inject DailyHangmanService service;
     @Inject JsonWebToken jwt;
+    @Inject NotifyBus notifyBus;
 
     @GET
     public DailyStateDTO get() {
@@ -34,7 +36,9 @@ public class DailyHangmanResource {
         if (letter < 'a' || letter > 'z') {
             return Response.status(400).entity(Map.of("message", "Lettera non valida")).build();
         }
-        return Response.ok(service.guessLetter(LocalDate.now(), jwt.getSubject(), letter)).build();
+        DailyStateDTO result = service.guessLetter(LocalDate.now(), jwt.getSubject(), letter);
+        notifyBus.broadcast("daily:update");
+        return Response.ok(result).build();
     }
 
     @POST
@@ -43,7 +47,9 @@ public class DailyHangmanResource {
         if (req == null || req.word() == null || req.word().isBlank()) {
             return Response.status(400).entity(Map.of("message", "Parola non valida")).build();
         }
-        return Response.ok(service.guessWord(LocalDate.now(), jwt.getSubject(), req.word())).build();
+        DailyStateDTO result = service.guessWord(LocalDate.now(), jwt.getSubject(), req.word());
+        notifyBus.broadcast("daily:update");
+        return Response.ok(result).build();
     }
 
     public record LetterRequest(String letter) {}

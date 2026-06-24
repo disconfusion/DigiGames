@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { auth } from '$lib/auth.svelte';
 	import { api } from '$lib/api';
+	import { notifications } from '$lib/notifications.svelte';
 
 	type DailyState = {
 		// stato condiviso
@@ -40,8 +41,6 @@
 	let wordInput = $state('');
 	let wordError = $state('');
 
-	let pollTimer: ReturnType<typeof setInterval>;
-
 	const used = $derived(
 		new Set([...(state?.wrongLetters ?? []), ...(state?.revealedLetters ?? [])])
 	);
@@ -64,10 +63,14 @@
 		if (!auth.session) { goto('/login'); return; }
 		await load();
 		loading = false;
-		// Poll ogni 15s per aggiornare lo stato condiviso
-		pollTimer = setInterval(load, 15_000);
 	});
-	onDestroy(() => clearInterval(pollTimer));
+
+	// Aggiorna quando un altro utente fa una mossa (evento WS broadcast)
+	let lastSeen = 0;
+	$effect(() => {
+		const t = notifications.lastDailyUpdate;
+		if (t > lastSeen && !busy) { lastSeen = t; load(); }
+	});
 
 	async function guessLetter(letter: string) {
 		if (!canGuessLetter || busy || used.has(letter)) return;
@@ -195,7 +198,7 @@
 			{/if}
 		</section>
 
-		<p class="refresh-hint">Stato aggiornato ogni 15 secondi</p>
+		<p class="refresh-hint">Aggiornamento in tempo reale</p>
 	{/if}
 </div>
 

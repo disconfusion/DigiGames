@@ -6,6 +6,13 @@
 	import { GAME_CATALOG, gameLabel } from '$lib/games/catalog';
 	import { parseAvatar, renderAvatar } from '$lib/avatar';
 	import GameOptions from '$lib/games/GameOptions.svelte';
+	import { notifications } from '$lib/notifications.svelte';
+
+	const VERSION = __GIT_COMMIT__;
+	const FEATURES = __WHATSNEW__;
+	const SEEN_KEY = 'digiGamesSeenVersion';
+
+	let showWhatsNew = $state(false);
 
 	type RoomView = {
 		code: string;
@@ -77,6 +84,25 @@
 			return;
 		}
 		load();
+		// Mostra modal novità al primo accesso dopo una nuova versione
+		if (FEATURES.length > 0 && localStorage.getItem(SEEN_KEY) !== VERSION) {
+			showWhatsNew = true;
+		}
+	});
+
+	function closeWhatsNew() {
+		localStorage.setItem(SEEN_KEY, VERSION);
+		showWhatsNew = false;
+	}
+
+	// Aggiorna lista utenti quando qualcuno va online/offline (evento WS)
+	let lastPresenceSeen = 0;
+	$effect(() => {
+		const t = notifications.lastPresenceUpdate;
+		if (t > lastPresenceSeen) {
+			lastPresenceSeen = t;
+			api<UserView[]>('/api/users').then((u) => (users = u)).catch(() => {});
+		}
 	});
 
 	async function createHost() {
@@ -130,6 +156,25 @@
 
 	const avatarFace = (u: UserView) => renderAvatar(parseAvatar(u.avatar));
 </script>
+
+{#if showWhatsNew}
+	<div class="modal-backdrop" role="presentation" onclick={closeWhatsNew}>
+		<div class="modal" role="dialog" aria-modal="true" onclick={(e) => e.stopPropagation()}>
+			<div class="modal-head">
+				<h2>🚀 Novità</h2>
+				<button class="x" onclick={closeWhatsNew} aria-label="Chiudi">✕</button>
+			</div>
+			<ul class="features">
+				{#each FEATURES as f (f)}
+					<li>{f}</li>
+				{/each}
+			</ul>
+			<div class="modal-actions">
+				<button class="ok" onclick={closeWhatsNew}>Capito!</button>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <h1 class="title">🎮 DigiGames</h1>
 {#if error}<p class="error">{error}</p>{/if}
@@ -508,5 +553,67 @@
 			transform: translateY(8px);
 			--s: 1;
 		}
+	}
+	.modal-backdrop {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.6);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 1rem;
+		z-index: 50;
+	}
+	.modal {
+		background: var(--panel);
+		border-radius: 14px;
+		padding: 1.25rem;
+		width: 100%;
+		max-width: 460px;
+		border: 1px solid #334155;
+	}
+	.modal-head {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 0.75rem;
+	}
+	.modal-head h2 {
+		margin: 0;
+		font-size: 1.15rem;
+	}
+	.x {
+		background: none;
+		border: none;
+		color: var(--muted);
+		font-size: 1.1rem;
+		cursor: pointer;
+		width: auto;
+		margin: 0;
+		padding: 0;
+	}
+	.features {
+		margin: 0 0 1rem 1.25rem;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		color: var(--text);
+		font-size: 0.95rem;
+	}
+	.modal-actions {
+		display: flex;
+		justify-content: flex-end;
+	}
+	.ok {
+		width: auto;
+		margin: 0;
+		padding: 0.55rem 1.4rem;
+		background: var(--accent);
+		border: none;
+		border-radius: 8px;
+		color: white;
+		cursor: pointer;
+		font-size: 0.95rem;
 	}
 </style>

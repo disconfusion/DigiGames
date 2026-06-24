@@ -27,4 +27,11 @@ public class NotifyBus {
             } catch (Exception ignored) {}
         }
     }
+
+    public void broadcast(String type) {
+        String payload = "{\"type\":\"" + type + "\"}";
+        sessions.values().forEach(conn -> {
+            try { conn.sendTextAndAwait(payload); } catch (Exception ignored) {}
+        });
+    }
 }

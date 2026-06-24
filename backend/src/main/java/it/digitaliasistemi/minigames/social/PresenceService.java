@@ -35,4 +35,8 @@ public class PresenceService {
                 .map(java.util.Map.Entry::getKey)
                 .collect(Collectors.toSet());
     }
+
+    public void remove(String username) {
+        if (username != null) lastSeen.remove(username);
+    }
 }

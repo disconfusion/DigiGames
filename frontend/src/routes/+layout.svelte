@@ -6,7 +6,7 @@
 	import { api } from '$lib/api';
 	import { GAME_CATALOG } from '$lib/games/catalog';
 	import { connectNotify, type NotifyConnection } from '$lib/ws';
-	import { notifications, onInviteReceived, setInviteCount } from '$lib/notifications.svelte';
+	import { notifications, onInviteReceived, setInviteCount, onDailyUpdate, onPresenceUpdate } from '$lib/notifications.svelte';
 
 	let { children } = $props();
 
@@ -74,7 +74,11 @@
 			fetchInviteCount();
 			notifyWs = connectNotify(
 				auth.session.token,
-				(type) => { if (type === 'invite') onInviteReceived(); },
+				(type) => {
+					if (type === 'invite') onInviteReceived();
+					else if (type === 'daily:update') onDailyUpdate();
+					else if (type === 'presence:update') onPresenceUpdate();
+				},
 				() => fetchInviteCount()
 			);
 		} else {
