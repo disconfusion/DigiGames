@@ -9,11 +9,25 @@ export type Session = {
 
 const KEY = 'minigames.session';
 
+function isExpired(token: string): boolean {
+	try {
+		const payload = JSON.parse(atob(token.split('.')[1]));
+		return payload.exp * 1000 < Date.now();
+	} catch {
+		return true;
+	}
+}
+
 function load(): Session {
 	if (!browser) return null;
 	const raw = localStorage.getItem(KEY);
 	try {
-		return raw ? (JSON.parse(raw) as Session) : null;
+		const s = raw ? (JSON.parse(raw) as Session) : null;
+		if (s && isExpired(s.token)) {
+			localStorage.removeItem(KEY);
+			return null;
+		}
+		return s;
 	} catch {
 		return null;
 	}
