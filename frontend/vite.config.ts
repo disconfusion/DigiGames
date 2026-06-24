@@ -9,8 +9,8 @@ try {
 	gitCommit = execSync('git rev-parse --short HEAD').toString().trim();
 	const msgs = execSync('git log --format=%s -40').toString().trim().split('\n');
 	whatsnew = msgs
-		.filter((m) => /^feat[:(]/i.test(m))
-		.map((m) => m.replace(/^feat[:(][^)]*[):]?\s*/i, '').trim())
+		.filter((m) => /^feat/i.test(m))
+		.map((m) => m.replace(/^feat.*?:\s*/i, '').trim())
 		.filter(Boolean)
 		.slice(0, 8);
 } catch { /* git non disponibile (CI senza repo) */ }
