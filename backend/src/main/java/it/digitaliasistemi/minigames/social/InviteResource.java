@@ -7,6 +7,7 @@ import it.digitaliasistemi.minigames.game.GameEngine;
 import it.digitaliasistemi.minigames.game.GameEngines;
 import it.digitaliasistemi.minigames.rooms.Room;
 import it.digitaliasistemi.minigames.rooms.RoomManager;
+import it.digitaliasistemi.minigames.ws.NotifyBus;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
@@ -30,6 +31,7 @@ public class InviteResource {
     @Inject JsonWebToken jwt;
     @Inject RoomManager rooms;
     @Inject GameEngines engines;
+    @Inject NotifyBus notifyBus;
 
     /** Crea una stanza privata e un invito per ciascun utente selezionato. */
     @POST
@@ -62,6 +64,7 @@ public class InviteResource {
             inv.status = "PENDING";
             inv.createdAt = Instant.now();
             inv.persist();
+            notifyBus.push(username, "invite");
         }
         return Response.status(Response.Status.CREATED)
                 .entity(Map.of("roomCode", room.code)).build();

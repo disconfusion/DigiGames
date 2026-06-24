@@ -1,5 +1,45 @@
 import { wsBase } from './config';
 
+export type NotifyConnection = { close: () => void };
+
+/**
+ * Apre il canale WS di notifiche utente `/ws/notify`.
+ * Autentica con `{type:"hello",token}` e riconnette automaticamente.
+ */
+export function connectNotify(
+	token: string,
+	onEvent: (type: string) => void,
+	onReady?: () => void
+): NotifyConnection {
+	let ws: WebSocket | null = null;
+	let closed = false;
+	let retries = 0;
+
+	function connect() {
+		ws = new WebSocket(`${wsBase()}/ws/notify`);
+		ws.onopen = () => {
+			retries = 0;
+			ws!.send(JSON.stringify({ type: 'hello', token }));
+		};
+		ws.onmessage = (ev) => {
+			try {
+				const msg = JSON.parse(ev.data);
+				if (msg.type === 'connected') onReady?.();
+				else onEvent(msg.type);
+			} catch { /* ignora payload non-JSON */ }
+		};
+		ws.onclose = () => {
+			if (closed) return;
+			retries++;
+			const delay = Math.min(1000 * 2 ** (retries - 1), 30_000);
+			setTimeout(connect, delay);
+		};
+	}
+
+	connect();
+	return { close: () => { closed = true; ws?.close(); } };
+}
+
 export type RoomEvent = {
 	type: string;
 	[key: string]: unknown;

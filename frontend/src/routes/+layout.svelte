@@ -5,11 +5,13 @@
 	import { goto } from '$app/navigation';
 	import { api } from '$lib/api';
 	import { GAME_CATALOG } from '$lib/games/catalog';
+	import { connectNotify, type NotifyConnection } from '$lib/ws';
+	import { notifications, onInviteReceived, setInviteCount } from '$lib/notifications.svelte';
 
 	let { children } = $props();
 
-	let inviteCount = $state(0);
-	let timer: ReturnType<typeof setInterval> | undefined;
+	let pingTimer: ReturnType<typeof setInterval> | undefined;
+	let notifyWs: NotifyConnection | undefined;
 
 	const isAdmin = $derived(auth.session?.role === 'admin');
 
@@ -50,38 +52,44 @@
 		}
 	}
 
-	async function tick() {
-		if (!auth.session) {
-			inviteCount = 0;
-			return;
-		}
-		// Heartbeat presenza + conteggio inviti
-		try {
-			await api('/api/presence/ping', { method: 'POST' });
-		} catch {
-			// silenzioso
-		}
+	async function fetchInviteCount() {
 		try {
 			const r = await api<{ count: number }>('/api/invites/count');
-			inviteCount = r.count;
-		} catch {
-			// silenzioso
-		}
+			setInviteCount(r.count);
+		} catch { /* silenzioso */ }
+	}
+
+	async function ping() {
+		try {
+			await api('/api/presence/ping', { method: 'POST' });
+		} catch { /* silenzioso */ }
 	}
 
 	$effect(() => {
-		// (Ri)avvia il polling quando cambia lo stato di login
-		if (auth.session && !timer) {
-			tick();
-			timer = setInterval(tick, 15_000);
-		} else if (!auth.session && timer) {
-			clearInterval(timer);
-			timer = undefined;
-			inviteCount = 0;
+		if (auth.session) {
+			// Heartbeat presenza ogni 30s
+			ping();
+			pingTimer = setInterval(ping, 30_000);
+			// Fetch count iniziale + canale WS notifiche
+			fetchInviteCount();
+			notifyWs = connectNotify(
+				auth.session.token,
+				(type) => { if (type === 'invite') onInviteReceived(); },
+				() => fetchInviteCount()
+			);
+		} else {
+			clearInterval(pingTimer);
+			pingTimer = undefined;
+			notifyWs?.close();
+			notifyWs = undefined;
+			setInviteCount(0);
 		}
 	});
 
-	onDestroy(() => clearInterval(timer));
+	onDestroy(() => {
+		clearInterval(pingTimer);
+		notifyWs?.close();
+	});
 
 	function doLogout() {
 		logout();
@@ -114,7 +122,7 @@
 			<a href="/leaderboard">Classifica</a>
 			<a class="invites" href="/invites">
 				Inviti
-				{#if inviteCount > 0}<span class="nav-badge">{inviteCount}</span>{/if}
+				{#if notifications.inviteCount > 0}<span class="nav-badge">{notifications.inviteCount}</span>{/if}
 			</a>
 			{#if isAdmin}<a href="/admin">🛠 Admin</a>{/if}
 			<button class="link bug" onclick={openBug}>🐞 Segnala bug</button>

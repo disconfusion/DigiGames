@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { auth } from '$lib/auth.svelte';
 	import { api } from '$lib/api';
 	import { gameLabel } from '$lib/games/catalog';
+	import { notifications, setInviteCount } from '$lib/notifications.svelte';
 
 	type Invite = {
 		id: number;
@@ -17,11 +18,11 @@
 	let invites = $state<Invite[]>([]);
 	let error = $state('');
 	let loading = $state(true);
-	let timer: ReturnType<typeof setInterval>;
 
 	async function load() {
 		try {
 			invites = await api<Invite[]>('/api/invites');
+			setInviteCount(invites.length);
 		} catch (e) {
 			error = (e as Error).message;
 		} finally {
@@ -35,9 +36,12 @@
 			return;
 		}
 		load();
-		timer = setInterval(load, 15_000);
 	});
-	onDestroy(() => clearInterval(timer));
+
+	// Ricarica lista quando arriva un nuovo invito via WS
+	$effect(() => {
+		if (notifications.lastInvite) load();
+	});
 
 	async function accept(inv: Invite) {
 		try {
