@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Map;
 
 @Path("/api/daily")
@@ -21,9 +22,11 @@ public class DailyHangmanResource {
     @Inject JsonWebToken jwt;
     @Inject NotifyBus notifyBus;
 
+    private static final ZoneId ROME = ZoneId.of("Europe/Rome");
+
     @GET
     public DailyStateDTO get() {
-        return service.getState(LocalDate.now(), jwt.getSubject());
+        return service.getState(LocalDate.now(ROME), jwt.getSubject());
     }
 
     @POST
@@ -36,7 +39,7 @@ public class DailyHangmanResource {
         if (letter < 'a' || letter > 'z') {
             return Response.status(400).entity(Map.of("message", "Lettera non valida")).build();
         }
-        DailyStateDTO result = service.guessLetter(LocalDate.now(), jwt.getSubject(), letter);
+        DailyStateDTO result = service.guessLetter(LocalDate.now(ROME), jwt.getSubject(), letter);
         notifyBus.broadcast("daily:update");
         return Response.ok(result).build();
     }
@@ -47,7 +50,7 @@ public class DailyHangmanResource {
         if (req == null || req.word() == null || req.word().isBlank()) {
             return Response.status(400).entity(Map.of("message", "Parola non valida")).build();
         }
-        DailyStateDTO result = service.guessWord(LocalDate.now(), jwt.getSubject(), req.word());
+        DailyStateDTO result = service.guessWord(LocalDate.now(ROME), jwt.getSubject(), req.word());
         notifyBus.broadcast("daily:update");
         return Response.ok(result).build();
     }

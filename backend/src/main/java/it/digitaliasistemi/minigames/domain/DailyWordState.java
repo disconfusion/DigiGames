@@ -31,6 +31,10 @@ public class DailyWordState extends PanacheEntity {
     @Column
     public String winner;
 
+    /** Parola impostata manualmente dall'admin (sovrascrive quella automatica). */
+    @Column
+    public String customWord;
+
     public static DailyWordState findByDate(LocalDate date) {
         return find("date", date).firstResult();
     }

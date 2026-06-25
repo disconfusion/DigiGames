@@ -23,14 +23,14 @@ public class DailyHangmanService {
     public DailyStateDTO getState(LocalDate date, String username) {
         DailyWordState shared = getOrCreateShared(date);
         DailyAttempt attempt = getOrCreateAttempt(date, username);
-        return toDTO(shared, attempt, HangmanWords.daily(date));
+        return toDTO(shared, attempt, wordFor(shared, date));
     }
 
     @Transactional
     public DailyStateDTO guessLetter(LocalDate date, String username, char letter) {
         DailyWordState shared = getOrCreateShared(date);
         DailyAttempt attempt = getOrCreateAttempt(date, username);
-        String word = HangmanWords.daily(date);
+        String word = wordFor(shared, date);
 
         // Slot già usato, eliminato o partita terminata
         if (attempt.letterUsed || attempt.eliminated || !"PLAYING".equals(shared.status)) {
@@ -71,7 +71,7 @@ public class DailyHangmanService {
     public DailyStateDTO guessWord(LocalDate date, String username, String guessedWord) {
         DailyWordState shared = getOrCreateShared(date);
         DailyAttempt attempt = getOrCreateAttempt(date, username);
-        String word = HangmanWords.daily(date);
+        String word = wordFor(shared, date);
 
         if (attempt.wordAttemptUsed || attempt.eliminated || !"PLAYING".equals(shared.status)) {
             return toDTO(shared, attempt, word);
@@ -93,6 +93,32 @@ public class DailyHangmanService {
     }
 
     // -------------------------------------------------------------------------
+
+    /** Imposta parola custom e resetta la partita di oggi. */
+    @Transactional
+    public void adminSetWord(LocalDate date, String word) {
+        DailyWordState shared = getOrCreateShared(date);
+        shared.customWord = word;
+        shared.revealedLetters = "";
+        shared.wrongLetters = "";
+        shared.status = "PLAYING";
+        shared.winner = null;
+        DailyAttempt.delete("date", date);
+    }
+
+    /** Elimina stato condiviso e tentativi di oggi → riparte con parola automatica. */
+    @Transactional
+    public void adminResetDaily(LocalDate date) {
+        DailyWordState existing = DailyWordState.findByDate(date);
+        if (existing != null) existing.delete();
+        DailyAttempt.delete("date", date);
+    }
+
+    private String wordFor(DailyWordState shared, LocalDate date) {
+        return (shared.customWord != null && !shared.customWord.isBlank())
+                ? shared.customWord
+                : HangmanWords.daily(date);
+    }
 
     private DailyWordState getOrCreateShared(LocalDate date) {
         DailyWordState s = DailyWordState.findByDate(date);

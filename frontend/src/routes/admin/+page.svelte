@@ -92,6 +92,32 @@
 			error = (e as Error).message;
 		}
 	}
+
+	let customWord = $state('');
+
+	async function setDailyWord() {
+		if (!customWord.trim()) return;
+		try {
+			const r = await api<{ message: string }>('/api/admin/daily/set-word', {
+				method: 'POST',
+				body: JSON.stringify({ word: customWord.trim() })
+			});
+			flash(r.message);
+			customWord = '';
+		} catch (e) {
+			error = (e as Error).message;
+		}
+	}
+
+	async function resetDailyWord() {
+		if (!confirm('Resettare la parola del giorno? Riparte con la parola automatica.')) return;
+		try {
+			const r = await api<{ message: string }>('/api/admin/daily/reset', { method: 'POST' });
+			flash(r.message);
+		} catch (e) {
+			error = (e as Error).message;
+		}
+	}
 </script>
 
 <h1>🛠 Pannello Admin</h1>
@@ -116,6 +142,22 @@
 			{/each}
 		</ul>
 	{/if}
+</section>
+
+<section class="panel">
+	<h2>📅 Parola del Giorno</h2>
+	<div class="daily-controls">
+		<form class="word-form" onsubmit={(e) => { e.preventDefault(); setDailyWord(); }}>
+			<input
+				placeholder="Parola personalizzata (solo a-z)…"
+				bind:value={customWord}
+				autocomplete="off"
+			/>
+			<button type="submit" disabled={!customWord.trim()}>Imposta parola</button>
+		</form>
+		<button class="danger" onclick={resetDailyWord}>Reset → parola automatica</button>
+	</div>
+	<p class="muted hint">Impostare una parola resetta anche tutte le mosse di oggi. Il reset ripristina la parola automatica calcolata dalla data.</p>
 </section>
 
 <section class="panel">
@@ -209,5 +251,29 @@
 		border-color: #991b1b;
 		color: #fecaca;
 		margin-top: 0.4rem;
+	}
+	.daily-controls {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+	}
+	.word-form {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+	.word-form input {
+		flex: 1;
+		min-width: 180px;
+		padding: 0.45rem 0.7rem;
+		border-radius: 8px;
+		border: 1px solid #334155;
+		background: #0f172a;
+		color: var(--text);
+		font-size: 0.9rem;
+	}
+	.hint {
+		margin: 0.5rem 0 0;
+		font-size: 0.8rem;
 	}
 </style>
