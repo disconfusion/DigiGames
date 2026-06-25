@@ -8,9 +8,9 @@
 	import GameOptions from '$lib/games/GameOptions.svelte';
 	import { notifications } from '$lib/notifications.svelte';
 
-	const VERSION = __GIT_COMMIT__;
 	const FEATURES = __WHATSNEW__;
-	const SEEN_KEY = 'digiGamesSeenVersion';
+	const SEEN_KEY = 'digiGamesSeenDate';
+	const TODAY = new Date().toISOString().slice(0, 10);
 
 	let showWhatsNew = $state(false);
 
@@ -84,14 +84,14 @@
 			return;
 		}
 		load();
-		// Mostra modal novità al primo accesso dopo una nuova versione
-		if (FEATURES.length > 0 && localStorage.getItem(SEEN_KEY) !== VERSION) {
+		// Mostra modal novità al primo accesso del giorno
+		if (FEATURES.length > 0 && localStorage.getItem(SEEN_KEY) !== TODAY) {
 			showWhatsNew = true;
 		}
 	});
 
 	function closeWhatsNew() {
-		localStorage.setItem(SEEN_KEY, VERSION);
+		localStorage.setItem(SEEN_KEY, TODAY);
 		showWhatsNew = false;
 	}
 

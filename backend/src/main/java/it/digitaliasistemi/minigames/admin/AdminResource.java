@@ -5,6 +5,7 @@ import it.digitaliasistemi.minigames.daily.DailyHangmanService;
 import it.digitaliasistemi.minigames.domain.AppUser;
 import it.digitaliasistemi.minigames.domain.DailyAttempt;
 import it.digitaliasistemi.minigames.domain.MatchResult;
+import it.digitaliasistemi.minigames.domain.Roadmap;
 import it.digitaliasistemi.minigames.ws.NotifyBus;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -107,9 +108,27 @@ public class AdminResource {
         return Response.ok(Map.of("message", "Parola del giorno resettata (parola automatica)")).build();
     }
 
+    /** Aggiorna il testo della roadmap. */
+    @PUT
+    @Path("/roadmap")
+    @Transactional
+    public Response setRoadmap(RoadmapRequest req) {
+        Roadmap r = Roadmap.getFirst();
+        if (r == null) {
+            r = new Roadmap();
+            r.content = req.content() != null ? req.content() : "";
+            r.persist();
+        } else {
+            r.content = req.content() != null ? req.content() : "";
+        }
+        return Response.ok(Map.of("message", "Roadmap aggiornata")).build();
+    }
+
     public record UserView(String username, String displayName, String role) {}
 
     public record ResetPasswordRequest(String newPassword) {}
 
     public record DailyWordRequest(String word) {}
+
+    public record RoadmapRequest(String content) {}
 }

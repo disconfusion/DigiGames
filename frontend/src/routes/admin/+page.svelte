@@ -44,6 +44,7 @@
 			return;
 		}
 		load();
+		loadRoadmap();
 	});
 
 	async function deleteBug(id: number) {
@@ -94,6 +95,26 @@
 	}
 
 	let customWord = $state('');
+	let roadmapContent = $state('');
+
+	async function loadRoadmap() {
+		try {
+			const r = await api<{ content: string }>('/api/roadmap');
+			roadmapContent = r.content;
+		} catch { /* ignora */ }
+	}
+
+	async function saveRoadmap() {
+		try {
+			const r = await api<{ message: string }>('/api/admin/roadmap', {
+				method: 'PUT',
+				body: JSON.stringify({ content: roadmapContent })
+			});
+			flash(r.message);
+		} catch (e) {
+			error = (e as Error).message;
+		}
+	}
 
 	async function setDailyWord() {
 		if (!customWord.trim()) return;
@@ -158,6 +179,19 @@
 		<button class="danger" onclick={resetDailyWord}>Reset → parola automatica</button>
 	</div>
 	<p class="muted hint">Impostare una parola resetta anche tutte le mosse di oggi. Il reset ripristina la parola automatica calcolata dalla data.</p>
+</section>
+
+<section class="panel">
+	<h2>🗺 Roadmap</h2>
+	<form class="roadmap-form" onsubmit={(e) => { e.preventDefault(); saveRoadmap(); }}>
+		<textarea
+			placeholder="Scrivi la roadmap in testo libero o Markdown…"
+			bind:value={roadmapContent}
+			rows="14"
+		></textarea>
+		<button type="submit">Salva roadmap</button>
+	</form>
+	<p class="muted hint">Visibile a tutti gli utenti su <a href="/roadmap" target="_blank">/roadmap</a>.</p>
 </section>
 
 <section class="panel">
@@ -275,5 +309,25 @@
 	.hint {
 		margin: 0.5rem 0 0;
 		font-size: 0.8rem;
+	}
+	.roadmap-form {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+	}
+	.roadmap-form textarea {
+		width: 100%;
+		padding: 0.6rem 0.8rem;
+		border-radius: 8px;
+		border: 1px solid #334155;
+		background: #0f172a;
+		color: var(--text);
+		font-size: 0.9rem;
+		font-family: ui-monospace, monospace;
+		resize: vertical;
+		box-sizing: border-box;
+	}
+	.hint a {
+		color: var(--accent);
 	}
 </style>

@@ -124,6 +124,7 @@
 			<a href="/">Home</a>
 			<a href="/daily">Parola del Giorno</a>
 			<a href="/leaderboard">Classifica</a>
+			<a href="/roadmap">Roadmap</a>
 			<a class="invites" href="/invites">
 				Inviti
 				{#if notifications.inviteCount > 0}<span class="nav-badge">{notifications.inviteCount}</span>{/if}
