@@ -89,11 +89,11 @@
 		{:else if isPlaying}
 			{#if isMyTurn}
 				<p class="c4-info c4-your-turn">
-					Sei tu — gioca (<span class="c4-disk-inline {colorClass(myColor)}"></span> {colorLabel(myColor)})
+					▶ TOCCA A TE (<span class="c4-disk-inline {colorClass(myColor)}"></span> {colorLabel(myColor)})
 				</p>
 			{:else}
 				<p class="c4-info c4-wait">
-					Aspetta il tuo avversario… (tu sei <span class="c4-disk-inline {colorClass(myColor)}"></span> {colorLabel(myColor)})
+					Aspetta l'avversario… (tu sei <span class="c4-disk-inline {colorClass(myColor)}"></span> {colorLabel(myColor)})
 				</p>
 			{/if}
 		{/if}
@@ -159,7 +159,7 @@
 		padding: 1rem;
 		width: 100%;
 		box-sizing: border-box;
-		color: var(--text, #e2e8f0);
+		color: var(--text);
 	}
 
 	/* ---- Intestazione ---- */
@@ -173,36 +173,85 @@
 
 	.c4-info {
 		margin: 0;
-		font-size: 1rem;
-		color: var(--muted, #94a3b8);
+		font-family: var(--font-term);
+		font-size: 1.15rem;
+		color: var(--muted);
 		text-align: center;
 	}
 
-	.c4-your-turn { color: var(--text, #e2e8f0); font-weight: 600; }
+	/* "▶ TOCCA A TE" — font display ambra con glow */
+	.c4-your-turn {
+		font-family: var(--font-display);
+		font-size: 0.7rem;
+		color: var(--amber);
+		text-shadow: 0 0 8px var(--amber), 0 0 16px var(--amber);
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		animation: c4-pulse 1.4s ease-in-out infinite;
+	}
 
+	@keyframes c4-pulse {
+		0%, 100% { opacity: 1; }
+		50%       { opacity: 0.65; }
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.c4-your-turn { animation: none; }
+	}
+
+	/* Banner esito */
 	.c4-banner {
-		font-size: 1.3rem;
-		font-weight: 700;
-		padding: 0.5rem 1.2rem;
-		border-radius: 8px;
+		font-family: var(--font-display);
+		font-size: 0.9rem;
+		padding: 0.55rem 1.4rem;
+		border-radius: 6px;
 		text-align: center;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
 	}
-	.c4-win  { background: #14532d; color: #bbf7d0; }
-	.c4-lose { background: #7f1d1d; color: #fecaca; }
-	.c4-draw { background: #1e3a5f; color: #bae6fd; }
+	.c4-win {
+		background: #0d2b1a;
+		color: var(--green);
+		border: 1px solid var(--green);
+		text-shadow: 0 0 10px var(--green);
+		box-shadow: 0 0 14px rgba(61, 255, 154, 0.3);
+	}
+	.c4-lose {
+		background: #2b0d15;
+		color: var(--danger);
+		border: 1px solid var(--danger);
+		text-shadow: 0 0 10px var(--danger);
+		box-shadow: 0 0 14px rgba(255, 82, 119, 0.3);
+	}
+	.c4-draw {
+		background: var(--inset);
+		color: var(--cyan);
+		border: 1px solid var(--cyan);
+		text-shadow: 0 0 10px var(--cyan);
+		box-shadow: 0 0 14px rgba(47, 243, 255, 0.25);
+	}
 
+	/* Bottone azione */
 	.c4-btn {
-		padding: 0.55rem 1.3rem;
-		border: none;
-		border-radius: 8px;
-		background: var(--accent, #6366f1);
-		color: #fff;
-		font-size: 1rem;
-		font-weight: 600;
+		padding: 0.6rem 1.4rem;
+		min-height: 44px;
+		border: 2px solid var(--accent);
+		border-radius: 6px;
+		background: transparent;
+		color: var(--accent);
+		font-family: var(--font-ui);
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
 		cursor: pointer;
-		transition: opacity 0.15s;
+		box-shadow: 0 0 10px rgba(255, 46, 136, 0.35), inset 0 0 8px rgba(255, 46, 136, 0.08);
+		transition: box-shadow 0.2s, background 0.2s;
 	}
-	.c4-btn:hover { opacity: 0.85; }
+	.c4-btn:hover {
+		background: rgba(255, 46, 136, 0.12);
+		box-shadow: var(--glow-mag);
+	}
 
 	/* ---- Frecce colonna ---- */
 	.c4-col-buttons {
@@ -216,29 +265,35 @@
 	.c4-col-btn {
 		background: transparent;
 		border: none;
-		color: var(--accent, #6366f1);
+		color: var(--cyan);
 		font-size: 1.2rem;
 		cursor: pointer;
 		padding: 0.1rem 0;
+		min-height: 44px;
 		border-radius: 4px;
-		transition: background 0.15s;
+		text-shadow: 0 0 6px var(--cyan);
+		transition: color 0.15s, text-shadow 0.15s;
 	}
-	.c4-col-btn:hover:not(:disabled) { background: #1e293b; }
+	.c4-col-btn:hover:not(:disabled) {
+		color: var(--accent);
+		text-shadow: var(--glow-mag);
+	}
 	.c4-col-btn:disabled { color: transparent; cursor: default; }
-	.c4-col-btn-placeholder { /* same size, invisible */ height: 1.8rem; }
+	.c4-col-btn-placeholder { height: 44px; }
 
 	/* ---- Board ---- */
 	.c4-board {
 		display: grid;
 		grid-template-columns: repeat(var(--cols), 1fr);
 		gap: 6px;
-		background: var(--panel, #1e293b);
-		border: 2px solid #334155;
+		background: linear-gradient(180deg, #1d2bb0, #142080);
+		border: 3px solid var(--cyan);
 		border-radius: 12px;
 		padding: 10px;
 		width: 100%;
 		max-width: calc(var(--cols) * 64px + (var(--cols) - 1) * 6px + 20px);
 		box-sizing: border-box;
+		box-shadow: 0 0 26px rgba(47, 243, 255, 0.27);
 	}
 
 	.c4-cell {
@@ -260,12 +315,24 @@
 		height: 100%;
 		border-radius: 50%;
 		display: block;
-		transition: background 0.12s;
+		transition: box-shadow 0.15s;
 	}
 
-	.c4-disk.empty  { background: var(--bg, #0f172a); border: 2px solid #334155; }
-	.c4-disk.red    { background: radial-gradient(circle at 35% 35%, #f87171, #dc2626); }
-	.c4-disk.yellow { background: radial-gradient(circle at 35% 35%, #fde047, #ca8a04); }
+	/* Foro vuoto: fondo --bg con inset shadow */
+	.c4-disk.empty {
+		background: var(--bg);
+		box-shadow: inset 0 0 8px #000;
+	}
+
+	/* P1 = --accent (magenta), P2 = --amber */
+	.c4-disk.red {
+		background: radial-gradient(circle at 35% 35%, #ff6eb0, var(--accent));
+		box-shadow: 0 0 12px var(--accent);
+	}
+	.c4-disk.yellow {
+		background: radial-gradient(circle at 35% 35%, #ffe080, var(--amber));
+		box-shadow: 0 0 12px var(--amber);
+	}
 
 	/* ---- Disco inline (legenda / turno) ---- */
 	.c4-disk-inline {
@@ -276,9 +343,9 @@
 		vertical-align: middle;
 		margin: 0 0.15em;
 	}
-	.c4-disk-inline.red    { background: #dc2626; }
-	.c4-disk-inline.yellow { background: #ca8a04; }
-	.c4-disk-inline.empty  { background: #334155; }
+	.c4-disk-inline.red    { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+	.c4-disk-inline.yellow { background: var(--amber);  box-shadow: 0 0 6px var(--amber); }
+	.c4-disk-inline.empty  { background: var(--line); }
 
 	/* ---- Legenda giocatori ---- */
 	.c4-legend {
@@ -286,12 +353,17 @@
 		gap: 1.5rem;
 		flex-wrap: wrap;
 		justify-content: center;
-		font-size: 0.9rem;
-		color: var(--muted, #94a3b8);
+		font-family: var(--font-term);
+		font-size: 1.05rem;
+		color: var(--muted);
 	}
 	.c4-player { display: flex; align-items: center; gap: 0.3rem; }
-	.c4-player.c4-active { color: var(--text, #e2e8f0); font-weight: 600; }
-	.c4-arrow { color: var(--accent, #6366f1); font-size: 0.8rem; }
+	.c4-player.c4-active { color: var(--text); }
+	.c4-arrow {
+		color: var(--cyan);
+		font-size: 0.85rem;
+		text-shadow: 0 0 6px var(--cyan);
+	}
 
 	/* ---- Responsive ---- */
 	@media (max-width: 480px) {
@@ -302,6 +374,6 @@
 		.c4-col-buttons {
 			gap: 4px;
 		}
-		.c4-banner { font-size: 1.1rem; }
+		.c4-banner { font-size: 0.7rem; }
 	}
 </style>

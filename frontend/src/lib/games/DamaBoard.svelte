@@ -127,6 +127,13 @@
 </div>
 
 <style>
+	/* ── Animazioni ────────────────────────────────────────────────── */
+	@keyframes lampeggia-pericolo {
+		0%, 100% { color: var(--danger); text-shadow: 0 0 8px var(--danger); }
+		50%       { color: var(--amber);  text-shadow: none; }
+	}
+
+	/* ── Layout principale ─────────────────────────────────────────── */
 	.dama {
 		display: flex;
 		flex-direction: column;
@@ -134,6 +141,7 @@
 		gap: 1rem;
 		padding: 1rem;
 	}
+
 	.header {
 		display: flex;
 		flex-direction: column;
@@ -141,47 +149,91 @@
 		gap: 0.5rem;
 		min-height: 3rem;
 	}
+
+	/* ── Testi informativi ─────────────────────────────────────────── */
 	.info {
 		margin: 0;
+		font-family: var(--font-term);
+		font-size: 1.1rem;
 		color: var(--muted);
 		text-align: center;
+		letter-spacing: 0.04em;
 	}
+
 	.turn {
-		color: var(--text);
-		font-weight: 600;
+		color: var(--cyan);
+		text-shadow: var(--glow-cyan);
 	}
+
+	.wait {
+		color: var(--muted);
+	}
+
+	/* ── Banner vittoria / sconfitta ───────────────────────────────── */
 	.banner {
-		font-size: 1.3rem;
-		font-weight: 700;
-		padding: 0.5rem 1.2rem;
-		border-radius: 8px;
+		font-family: var(--font-display);
+		font-size: 0.85rem;
+		letter-spacing: 0.05em;
+		padding: 0.6rem 1.4rem;
+		border-radius: 4px;
+		text-align: center;
 	}
+
 	.win {
-		background: #14532d;
-		color: #bbf7d0;
+		background: color-mix(in srgb, var(--green) 15%, var(--inset));
+		color: var(--green);
+		border: 1px solid var(--green);
+		text-shadow: 0 0 10px var(--green);
+		box-shadow: 0 0 12px color-mix(in srgb, var(--green) 35%, transparent);
 	}
+
 	.lose {
-		background: #7f1d1d;
-		color: #fecaca;
+		background: color-mix(in srgb, var(--danger) 15%, var(--inset));
+		color: var(--danger);
+		border: 1px solid var(--danger);
+		text-shadow: 0 0 10px var(--danger);
+		box-shadow: 0 0 12px color-mix(in srgb, var(--danger) 35%, transparent);
 	}
+
+	/* ── Bottone azione ────────────────────────────────────────────── */
 	.btn {
-		padding: 0.55rem 1.3rem;
-		border: none;
-		border-radius: 8px;
-		background: var(--accent);
-		color: #fff;
-		font-weight: 600;
+		min-height: 44px;
+		padding: 0.55rem 1.4rem;
+		border: 2px solid var(--accent);
+		border-radius: 4px;
+		background: color-mix(in srgb, var(--accent) 18%, var(--panel));
+		color: var(--accent);
+		font-family: var(--font-ui);
+		font-size: 0.78rem;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
 		cursor: pointer;
+		text-shadow: var(--glow-mag);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 30%, transparent);
+		transition: background 0.15s, box-shadow 0.15s;
 	}
+
+	.btn:hover {
+		background: color-mix(in srgb, var(--accent) 32%, var(--panel));
+		box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 55%, transparent);
+	}
+
+	/* ── Griglia / tavola ──────────────────────────────────────────── */
 	.grid {
 		display: grid;
 		grid-template-columns: repeat(8, 1fr);
 		width: min(92vw, 480px);
 		aspect-ratio: 1;
-		border: 3px solid #1e293b;
-		border-radius: 6px;
+		/* Bordo tavola con glow verde */
+		border: 3px solid var(--green);
+		border-radius: 4px;
+		box-shadow: 0 0 16px color-mix(in srgb, var(--green) 45%, transparent),
+		            inset 0 0 8px color-mix(in srgb, var(--green) 15%, transparent);
 		overflow: hidden;
 	}
+
+	/* ── Caselle ───────────────────────────────────────────────────── */
 	.sq {
 		border: none;
 		padding: 0;
@@ -190,24 +242,40 @@
 		justify-content: center;
 		cursor: pointer;
 		aspect-ratio: 1;
+		/* Garantisce hit-target ≥44px su mobile (griglia 8×8 su min 92vw) */
+		min-width: 0;
+		min-height: 0;
 	}
+
+	/* Casella chiara — viola scuro */
 	.sq.light {
-		background: #e7d3b1;
+		background: #241340;
 	}
+
+	/* Casella scura — quasi nero viola */
 	.sq.dark {
-		background: #7c5a3a;
+		background: var(--inset);
 	}
+
 	.sq:disabled {
 		cursor: default;
 	}
+
+	/* Selezione pezzo attivo */
 	.sq.selected {
-		outline: 3px solid #6366f1;
+		outline: 3px solid var(--cyan);
 		outline-offset: -3px;
+		box-shadow: inset 0 0 10px color-mix(in srgb, var(--cyan) 40%, transparent);
 	}
+
+	/* Pezzo obbligato a continuare la cattura */
 	.sq.must {
-		outline: 3px solid #f59e0b;
+		outline: 3px solid var(--amber);
 		outline-offset: -3px;
+		box-shadow: inset 0 0 10px color-mix(in srgb, var(--amber) 35%, transparent);
 	}
+
+	/* ── Pedine ────────────────────────────────────────────────────── */
 	.piece {
 		width: 72%;
 		height: 72%;
@@ -218,42 +286,71 @@
 		font-size: 1.1rem;
 		line-height: 1;
 	}
+
+	/* Pedina "bianco" → cyan con glow */
 	.piece.white {
-		background: radial-gradient(circle at 35% 35%, #fefefe, #cbd5e1);
-		border: 2px solid #94a3b8;
-		color: #b45309;
+		background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--cyan) 80%, #fff), color-mix(in srgb, var(--cyan) 40%, var(--panel)));
+		border: 2px solid var(--cyan);
+		color: var(--bg);
+		box-shadow: 0 0 10px var(--cyan), inset 0 0 6px color-mix(in srgb, var(--cyan) 50%, transparent);
+		text-shadow: 0 0 6px var(--cyan);
 	}
+
+	/* Pedina "nero" → magenta con glow */
 	.piece.black {
-		background: radial-gradient(circle at 35% 35%, #475569, #1e293b);
-		border: 2px solid #0f172a;
-		color: #fbbf24;
+		background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--accent) 70%, #fff), color-mix(in srgb, var(--accent) 35%, var(--panel)));
+		border: 2px solid var(--accent);
+		color: var(--bg);
+		box-shadow: 0 0 10px var(--accent), inset 0 0 6px color-mix(in srgb, var(--accent) 50%, transparent);
+		text-shadow: var(--glow-mag);
 	}
+
+	/* ── Legenda giocatori ─────────────────────────────────────────── */
 	.legend {
 		display: flex;
 		gap: 1.5rem;
 		flex-wrap: wrap;
 		justify-content: center;
-		font-size: 0.9rem;
+		font-family: var(--font-term);
+		font-size: 1rem;
 		color: var(--muted);
+		letter-spacing: 0.03em;
 	}
+
 	.player {
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;
 	}
+
 	.player.active {
 		color: var(--text);
-		font-weight: 600;
 	}
+
+	/* Pallino colore in legenda */
 	.dot {
 		width: 0.9rem;
 		height: 0.9rem;
 		border-radius: 50%;
 	}
+
 	.dot.white {
-		background: #e2e8f0;
+		background: var(--cyan);
+		box-shadow: 0 0 6px var(--cyan);
 	}
+
 	.dot.black {
-		background: #334155;
+		background: var(--accent);
+		box-shadow: 0 0 6px var(--accent);
+	}
+
+	/* ── Riduzione movimento (accessibilità) ───────────────────────── */
+	@media (prefers-reduced-motion: reduce) {
+		@keyframes lampeggia-pericolo {
+			0%, 100% { color: var(--danger); text-shadow: none; }
+		}
+		.btn {
+			transition: none;
+		}
 	}
 </style>

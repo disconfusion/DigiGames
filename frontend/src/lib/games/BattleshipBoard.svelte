@@ -297,7 +297,7 @@
 		</div>
 
 		<div class="boards">
-			<div class="board-col">
+			<div class="board-col own-col">
 				<h4>La tua flotta</h4>
 				<div class="grid own">
 					{#each state.yourBoard as row, r (r)}
@@ -311,7 +311,7 @@
 				</div>
 			</div>
 
-			<div class="board-col">
+			<div class="board-col enemy-col">
 				<h4>Avversario</h4>
 				<div class="grid enemy">
 					{#each state.enemyBoard as row, r (r)}
@@ -332,18 +332,25 @@
 </div>
 
 <style>
+	/* ── Contenitore principale ─────────────────────────────────────────────── */
 	.battleship {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: 1rem;
 		color: var(--text);
+		font-family: var(--font-ui, sans-serif);
 	}
 	.phase-head {
 		text-align: center;
 	}
 	.phase-head h3 {
 		margin: 0;
+		font-family: var(--font-display, sans-serif);
+		font-size: 0.85rem;
+		letter-spacing: 0.08em;
+		color: var(--cyan);
+		text-shadow: var(--glow-cyan);
 	}
 
 	/* ── Selettore flotta ───────────────────────────────────────────────────── */
@@ -354,7 +361,9 @@
 		gap: 0.4rem;
 	}
 	.fleet-label {
-		font-size: 0.82rem;
+		font-size: 0.75rem;
+		font-family: var(--font-term, monospace);
+		letter-spacing: 0.06em;
 		color: var(--muted);
 	}
 	.fleet-ships {
@@ -363,33 +372,38 @@
 		flex-wrap: wrap;
 		justify-content: center;
 	}
+	/* Bottone-nave: bordo cyan inattivo, cyan pieno se selezionato */
 	.ship-btn {
 		display: flex;
 		gap: 2px;
 		align-items: center;
 		padding: 5px 7px;
-		border: 2px solid #334155;
-		border-radius: 6px;
+		min-height: 44px; /* hit target mobile */
+		border: 2px solid var(--line);
+		border-radius: 4px;
 		background: var(--panel);
 		cursor: pointer;
-		transition: border-color 0.12s, background 0.12s, opacity 0.12s;
+		transition: border-color 0.12s, background 0.12s, opacity 0.12s, box-shadow 0.12s;
 	}
 	.ship-btn.selected {
-		border-color: var(--accent);
-		background: rgba(59, 130, 246, 0.15);
+		border-color: var(--cyan);
+		background: rgba(47, 243, 255, 0.1);
+		box-shadow: var(--glow-cyan);
 	}
 	.ship-btn.placed:not(.selected) {
 		opacity: 0.35;
 	}
+	/* Segmento nave: cyan neutro, vivido se selezionato */
 	.seg {
 		display: block;
 		width: 12px;
 		height: 12px;
 		border-radius: 2px;
-		background: #64748b;
+		background: var(--muted);
 	}
 	.ship-btn.selected .seg {
-		background: var(--accent);
+		background: var(--cyan);
+		box-shadow: var(--glow-cyan);
 	}
 
 	/* ── Toggle orientamento ────────────────────────────────────────────────── */
@@ -398,19 +412,22 @@
 		gap: 0.4rem;
 	}
 	.orient-btn {
-		padding: 0.25rem 0.75rem;
-		border: 1px solid #334155;
-		border-radius: 6px;
+		padding: 0.35rem 0.9rem;
+		min-height: 44px;
+		border: 1px solid var(--line);
+		border-radius: 4px;
 		background: var(--panel);
 		color: var(--muted);
-		font-size: 0.9rem;
+		font-family: var(--font-term, monospace);
+		font-size: 1rem;
 		cursor: pointer;
-		transition: border-color 0.12s, color 0.12s, background 0.12s;
+		transition: border-color 0.12s, color 0.12s, background 0.12s, box-shadow 0.12s;
 	}
 	.orient-btn.orient-active {
-		border-color: var(--accent);
-		color: var(--accent);
-		background: rgba(59, 130, 246, 0.1);
+		border-color: var(--cyan);
+		color: var(--cyan);
+		background: rgba(47, 243, 255, 0.08);
+		box-shadow: var(--glow-cyan);
 	}
 
 	/* ── Griglie ────────────────────────────────────────────────────────────── */
@@ -427,23 +444,41 @@
 		align-items: center;
 		gap: 0.5rem;
 	}
+	/* Titolo flotta propria: cyan; nemica: magenta */
 	.board-col h4 {
 		margin: 0;
+		font-family: var(--font-term, monospace);
+		font-size: 1.1rem;
+		letter-spacing: 0.04em;
 		color: var(--muted);
 		font-weight: 600;
 	}
+	.own-col h4 {
+		color: var(--cyan);
+		text-shadow: var(--glow-cyan);
+	}
+	.enemy-col h4 {
+		color: var(--accent);
+		text-shadow: var(--glow-mag);
+	}
+	/* Griglia propria: bordo cyan */
 	.grid {
 		display: grid;
 		grid-template-columns: repeat(10, 1fr);
 		gap: 2px;
-		background: #0b1220;
+		background: var(--bg);
 		padding: 4px;
-		border-radius: 8px;
+		border-radius: 6px;
+		border: 1px solid var(--cyan);
+		box-shadow: 0 0 8px rgba(47, 243, 255, 0.18);
 		width: min(90vw, 360px);
 		aspect-ratio: 1 / 1;
 	}
+	/* Griglia nemica: bordo magenta */
 	.grid.enemy {
-		background: #111a2e;
+		background: var(--inset);
+		border-color: var(--accent);
+		box-shadow: 0 0 8px rgba(255, 46, 136, 0.18);
 	}
 	/* Cursore default sulla griglia propria */
 	.grid.own .cell {
@@ -462,9 +497,10 @@
 		width: 100%;
 		aspect-ratio: 1 / 1;
 		border: none;
-		border-radius: 3px;
+		border-radius: 2px;
 		padding: 0;
-		background: #1e293b;
+		background: #10243a; /* acqua propria */
+		transition: background 0.1s, box-shadow 0.1s;
 	}
 	div.cell {
 		cursor: default;
@@ -475,21 +511,45 @@
 	button.cell:disabled {
 		cursor: not-allowed;
 	}
+	/* Acqua propria */
 	.cell.water {
-		background: #1e293b;
+		background: #10243a;
 	}
+	/* Cella nemica ignota */
 	.cell.unknown {
-		background: #243a5e;
+		background: #1a2a44;
 	}
-	button.cell.unknown:not(:disabled):hover {
-		background: var(--accent);
+	/* Hover cella nemica tiro disponibile */
+	@media (hover: hover) {
+		button.cell.unknown:not(:disabled):hover {
+			background: var(--accent);
+			box-shadow: var(--glow-mag);
+		}
 	}
+	/* Nave (flotta propria): blu-acciaio con glow cyan */
 	.cell.ship {
-		background: #64748b;
+		background: #3a6b8c;
+		box-shadow: inset 0 0 4px rgba(47, 243, 255, 0.3);
 	}
+	/* Colpito: magenta + glow — mostra "X" via pseudo-elemento */
 	.cell.hit {
-		background: #dc2626;
+		background: var(--accent);
+		box-shadow: var(--glow-mag);
+		position: relative;
 	}
+	.cell.hit::after {
+		content: 'X';
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-family: var(--font-term, monospace);
+		font-size: clamp(0.55rem, 1.5vw, 0.85rem);
+		color: #fff;
+		line-height: 1;
+	}
+	/* Mancato: grigio scuro con pallino centrale */
 	.cell.miss {
 		background: #475569;
 		position: relative;
@@ -499,28 +559,35 @@
 		position: absolute;
 		inset: 38%;
 		border-radius: 50%;
-		background: #0b1220;
+		background: var(--bg);
 	}
-	/* Preview piazzamento manuale */
+	/* Preview piazzamento: cyan valido, rosso se invalido */
 	.cell.preview {
-		background: rgba(59, 130, 246, 0.65);
+		background: rgba(47, 243, 255, 0.55);
+		box-shadow: var(--glow-cyan);
 	}
 	.cell.preview-invalid {
-		background: rgba(220, 38, 38, 0.55);
+		background: rgba(255, 82, 119, 0.55);
+		box-shadow: 0 0 6px rgba(255, 82, 119, 0.5);
 	}
 
 	/* ── Indicatore turno ───────────────────────────────────────────────────── */
 	.turn {
-		font-size: 1.05rem;
-		font-weight: 700;
-		padding: 0.5rem 1rem;
-		border-radius: 8px;
+		font-family: var(--font-term, monospace);
+		font-size: 1.1rem;
+		letter-spacing: 0.05em;
+		padding: 0.5rem 1.2rem;
+		border-radius: 4px;
+		border: 1px solid var(--line);
 		background: var(--panel);
 		color: var(--muted);
+		transition: background 0.2s, color 0.2s, box-shadow 0.2s;
 	}
 	.turn.active {
 		background: var(--accent);
-		color: white;
+		border-color: var(--accent);
+		color: #fff;
+		box-shadow: var(--glow-mag);
 	}
 
 	/* ── Azioni e hint ──────────────────────────────────────────────────────── */
@@ -538,57 +605,101 @@
 		gap: 0.5rem;
 		flex-wrap: wrap;
 		justify-content: center;
-		font-size: 0.88rem;
+		font-family: var(--font-term, monospace);
+		font-size: 0.95rem;
+		letter-spacing: 0.03em;
 	}
 	.ok {
-		color: #4ade80;
+		color: var(--green);
+		text-shadow: 0 0 6px rgba(61, 255, 154, 0.5);
 	}
 
 	/* ── Banner fine partita ────────────────────────────────────────────────── */
 	.banner {
-		font-size: 1.3rem;
-		font-weight: 700;
+		font-family: var(--font-display, sans-serif);
+		font-size: 0.9rem;
+		letter-spacing: 0.08em;
 		padding: 0.8rem 1.5rem;
-		border-radius: 8px;
+		border-radius: 6px;
 		text-align: center;
+		border: 2px solid transparent;
 	}
 	.banner.won {
-		background: #14532d;
-		color: #bbf7d0;
+		background: rgba(61, 255, 154, 0.12);
+		border-color: var(--green);
+		color: var(--green);
+		text-shadow: 0 0 10px rgba(61, 255, 154, 0.6);
+		box-shadow: 0 0 16px rgba(61, 255, 154, 0.2);
 	}
 	.banner.lost {
-		background: #7f1d1d;
-		color: #fecaca;
+		background: rgba(255, 82, 119, 0.12);
+		border-color: var(--danger);
+		color: var(--danger);
+		text-shadow: 0 0 10px rgba(255, 82, 119, 0.6);
+		box-shadow: 0 0 16px rgba(255, 82, 119, 0.2);
 	}
 
 	/* ── Bottoni ────────────────────────────────────────────────────────────── */
 	.primary {
 		padding: 0.6rem 1.2rem;
-		border: none;
-		border-radius: 8px;
+		min-height: 44px;
+		border: 2px solid var(--accent);
+		border-radius: 4px;
 		background: var(--accent);
-		color: white;
-		font-size: 1rem;
-		font-weight: 600;
+		color: #fff;
+		font-family: var(--font-ui, sans-serif);
+		font-size: 0.85rem;
+		font-weight: 700;
+		letter-spacing: 0.05em;
 		cursor: pointer;
+		transition: box-shadow 0.15s, opacity 0.15s;
+	}
+	.primary:not(:disabled):hover {
+		box-shadow: var(--glow-mag);
 	}
 	.primary:disabled {
-		opacity: 0.6;
+		opacity: 0.5;
 		cursor: not-allowed;
 	}
 	.ghost {
 		padding: 0.6rem 1.2rem;
-		border: 1px solid #334155;
-		border-radius: 8px;
+		min-height: 44px;
+		border: 1px solid var(--line);
+		border-radius: 4px;
 		background: var(--panel);
 		color: var(--text);
-		font-size: 1rem;
+		font-family: var(--font-ui, sans-serif);
+		font-size: 0.85rem;
 		font-weight: 600;
+		letter-spacing: 0.04em;
 		cursor: pointer;
+		transition: border-color 0.15s, box-shadow 0.15s, opacity 0.15s;
+	}
+	.ghost:not(:disabled):hover {
+		border-color: var(--cyan);
+		box-shadow: var(--glow-cyan);
 	}
 	.ghost:disabled {
-		opacity: 0.5;
+		opacity: 0.4;
 		cursor: not-allowed;
+	}
+
+	/* ── Testo muted generico ───────────────────────────────────────────────── */
+	.muted {
+		color: var(--muted);
+		font-family: var(--font-term, monospace);
+	}
+
+	/* ── Rispetto prefers-reduced-motion ────────────────────────────────────── */
+	@media (prefers-reduced-motion: reduce) {
+		.cell,
+		.ship-btn,
+		.orient-btn,
+		.turn,
+		.primary,
+		.ghost {
+			transition: none;
+		}
 	}
 
 	@media (max-width: 720px) {

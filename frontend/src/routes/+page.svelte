@@ -176,7 +176,12 @@
 	</div>
 {/if}
 
-<h1 class="title">🎮 DigiGames</h1>
+<h1 class="title">SELECT YOUR GAME</h1>
+<div class="arcade-strip">
+	<span class="oneup">1UP</span>
+	<span class="hi">HIGH SCORE</span>
+	<span class="online">{onlineCount} ONLINE</span>
+</div>
 {#if error}<p class="error">{error}</p>{/if}
 
 <div class="cards">
@@ -305,10 +310,37 @@
 <style>
 	.title {
 		text-align: center;
-		margin: 0.5rem 0 1.5rem;
+		margin: 0.5rem 0 0.6rem;
+		font-family: var(--font-display);
+		font-size: clamp(1rem, 4vw, 1.6rem);
+		color: var(--amber);
+		text-shadow: 0 0 10px var(--amber), 0 0 24px rgba(255, 207, 63, 0.4);
+	}
+	.arcade-strip {
+		display: flex;
+		justify-content: center;
+		gap: 1.5rem;
+		flex-wrap: wrap;
+		font-family: var(--font-display);
+		font-size: 0.62rem;
+		margin: 0 0 1.5rem;
+	}
+	.arcade-strip .oneup {
+		color: var(--green);
+		text-shadow: 0 0 8px var(--green);
+	}
+	.arcade-strip .hi {
+		color: var(--amber);
+		text-shadow: 0 0 8px var(--amber);
+	}
+	.arcade-strip .online {
+		color: var(--cyan);
+		text-shadow: var(--glow-cyan);
 	}
 	.error {
-		color: #f87171;
+		color: var(--danger);
+		font-family: var(--font-term);
+		font-size: 1.1rem;
 		text-align: center;
 	}
 	.cards {
@@ -327,11 +359,11 @@
 		align-items: center;
 		gap: 0.75rem;
 		text-align: center;
-		border: 1px solid #334155;
+		border: 1px solid var(--line);
 	}
 	.card.center {
-		border-color: var(--accent);
-		box-shadow: 0 0 0 1px var(--accent), 0 8px 30px rgba(99, 102, 241, 0.25);
+		border: 2px solid var(--accent);
+		box-shadow: 0 0 0 1px var(--accent), 0 0 30px rgba(255, 46, 136, 0.4);
 		transform: scale(1.03);
 	}
 	.card-icon {
@@ -339,7 +371,15 @@
 	}
 	h2 {
 		margin: 0;
-		font-size: 1.15rem;
+		font-family: var(--font-display);
+		font-size: 0.85rem;
+		color: var(--cyan);
+		text-shadow: var(--glow-cyan);
+		line-height: 1.4;
+	}
+	.card.center h2 {
+		color: var(--accent);
+		text-shadow: var(--glow-mag);
 	}
 	.muted {
 		color: var(--muted);
@@ -350,35 +390,53 @@
 		font-size: 0.8rem;
 	}
 	.big-number {
-		font-size: 3rem;
-		font-weight: 800;
+		font-family: var(--font-display);
+		font-size: 2.6rem;
 		color: var(--accent);
+		text-shadow: var(--glow-mag);
 		line-height: 1;
 	}
 	select,
 	input {
 		width: 100%;
 		padding: 0.55rem;
-		border-radius: 8px;
-		border: 1px solid #334155;
-		background: #0f172a;
+		border-radius: 4px;
+		border: 2px solid var(--line);
+		background: var(--inset);
 		color: var(--text);
 		font-size: 0.95rem;
 	}
 	button {
 		width: 100%;
 		padding: 0.6rem 1rem;
-		border: none;
-		border-radius: 8px;
-		background: #475569;
-		color: white;
+		border: 2px solid rgba(47, 243, 255, 0.5);
+		border-radius: 4px;
+		background: transparent;
+		color: var(--cyan);
+		font-family: var(--font-ui);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
 		cursor: pointer;
-		font-size: 0.95rem;
+		font-size: 0.9rem;
 		margin-top: auto;
+		min-height: 44px;
+		transition: box-shadow 0.12s, border-color 0.12s;
+	}
+	button:hover {
+		border-color: var(--cyan);
+		box-shadow: var(--glow-cyan);
 	}
 	button.primary,
 	.card.center button {
-		background: var(--accent);
+		background: linear-gradient(180deg, var(--accent), #c01e63);
+		border-color: var(--amber);
+		color: #fff;
+		box-shadow: 0 0 18px rgba(255, 46, 136, 0.45);
+	}
+	button.primary:hover,
+	.card.center button:hover {
+		box-shadow: 0 0 26px rgba(255, 46, 136, 0.7);
 	}
 	button:disabled {
 		opacity: 0.5;
@@ -397,17 +455,19 @@
 		font-weight: 600;
 	}
 	.badge.ok {
-		background: #14532d;
-		color: #bbf7d0;
+		background: #10331f;
+		color: var(--green);
+		box-shadow: 0 0 10px rgba(61, 255, 154, 0.3);
 	}
 	.badge.danger {
-		background: #7f1d1d;
-		color: #fecaca;
+		background: #3a1420;
+		color: var(--danger);
+		box-shadow: 0 0 10px rgba(255, 82, 119, 0.3);
 	}
 	.badge.dim {
-		background: #1e293b;
+		background: var(--inset);
 		color: var(--muted);
-		border: 1px solid #334155;
+		border: 1px solid var(--line);
 	}
 	.users {
 		width: 100%;
@@ -424,27 +484,36 @@
 		width: 100%;
 		margin: 0;
 		padding: 0.4rem 0.6rem;
-		background: #0f172a;
-		border: 1px solid #334155;
+		background: var(--inset);
+		border: 1px solid var(--line);
 		border-radius: 8px;
 		color: var(--text);
 		cursor: pointer;
 		text-align: left;
+		text-transform: none;
+		font-family: var(--font-term);
+		letter-spacing: normal;
+		min-height: 44px;
 	}
 	.user.on {
 		border-color: var(--accent);
-		background: #1e3a5f;
+		background: #2a0f33;
+		box-shadow: 0 0 10px rgba(255, 46, 136, 0.3);
+	}
+	.user:hover {
+		border-color: var(--cyan);
+		box-shadow: none;
 	}
 	.presence {
 		width: 0.6rem;
 		height: 0.6rem;
 		border-radius: 50%;
-		background: #475569;
+		background: var(--muted);
 		flex: 0 0 auto;
 	}
 	.presence.online {
-		background: #22c55e;
-		box-shadow: 0 0 6px #22c55e;
+		background: var(--green);
+		box-shadow: 0 0 6px var(--green);
 	}
 	.mini-face {
 		font-family: ui-monospace, monospace;
@@ -458,17 +527,22 @@
 		font-size: 0.9rem;
 	}
 	.check {
-		color: #4ade80;
+		color: var(--green);
 		font-weight: 700;
+		text-shadow: 0 0 6px var(--green);
 	}
 	.panel {
 		background: var(--panel);
 		padding: 1rem 1.25rem;
 		border-radius: 12px;
 		margin-bottom: 1.25rem;
+		border: 1px solid var(--line);
 	}
 	h3 {
-		font-size: 1.05rem;
+		font-family: var(--font-display);
+		font-size: 0.8rem;
+		color: var(--cyan);
+		text-shadow: var(--glow-cyan);
 		margin: 0 0 0.75rem;
 	}
 	.row {
@@ -488,13 +562,24 @@
 	.alt {
 		width: auto;
 		margin-top: 0;
-		background: var(--accent);
+		background: linear-gradient(180deg, var(--accent), #c01e63);
+		border-color: var(--amber);
+		color: #fff;
+		box-shadow: 0 0 14px rgba(255, 46, 136, 0.4);
 	}
 	.link {
 		width: auto;
+		min-height: 0;
 		margin-top: 0;
 		background: none;
+		border: none;
 		color: var(--muted);
+		box-shadow: none;
+	}
+	.link:hover {
+		color: var(--cyan);
+		border: none;
+		box-shadow: none;
 	}
 	.rooms {
 		list-style: none;
@@ -510,7 +595,8 @@
 		align-items: center;
 		gap: 0.75rem;
 		padding: 0.6rem 0.75rem;
-		background: #0f172a;
+		background: var(--inset);
+		border-left: 4px solid var(--cyan);
 		border-radius: 8px;
 		flex-wrap: wrap;
 	}
@@ -562,7 +648,7 @@
 		align-items: center;
 		justify-content: center;
 		padding: 1rem;
-		z-index: 50;
+		z-index: 10000;
 	}
 	.modal {
 		background: var(--panel);
@@ -570,7 +656,8 @@
 		padding: 1.25rem;
 		width: 100%;
 		max-width: 460px;
-		border: 1px solid #334155;
+		border: 2px solid var(--accent);
+		box-shadow: var(--glow-mag);
 	}
 	.modal-head {
 		display: flex;
@@ -580,7 +667,10 @@
 	}
 	.modal-head h2 {
 		margin: 0;
-		font-size: 1.15rem;
+		font-family: var(--font-display);
+		font-size: 0.9rem;
+		color: var(--cyan);
+		text-shadow: var(--glow-cyan);
 	}
 	.x {
 		background: none;
@@ -599,7 +689,8 @@
 		flex-direction: column;
 		gap: 0.4rem;
 		color: var(--text);
-		font-size: 0.95rem;
+		font-family: var(--font-term);
+		font-size: 1.1rem;
 	}
 	.modal-actions {
 		display: flex;
@@ -609,11 +700,11 @@
 		width: auto;
 		margin: 0;
 		padding: 0.55rem 1.4rem;
-		background: var(--accent);
-		border: none;
-		border-radius: 8px;
-		color: white;
+		background: linear-gradient(180deg, var(--accent), #c01e63);
+		border: 2px solid var(--amber);
+		border-radius: 4px;
+		color: #fff;
 		cursor: pointer;
-		font-size: 0.95rem;
+		box-shadow: 0 0 18px rgba(255, 46, 136, 0.45);
 	}
 </style>

@@ -63,11 +63,18 @@
 		flagMode = false;
 	}
 
+	// Colori adiacenti con glow Retro/CRT: 1=cyan, 2=green, 3=magenta, 4=viola, 5=corallo, 6=teal, 7=rosa, 8=muted
 	const ADJ_COLORS: Record<number, string> = {
-		1: '#3b82f6', 2: '#22c55e', 3: '#ef4444', 4: '#7c3aed',
-		5: '#dc2626', 6: '#06b6d4', 7: '#ec4899', 8: '#94a3b8',
+		1: 'var(--cyan)',    2: 'var(--green)', 3: 'var(--accent)', 4: '#a78bfa',
+		5: '#f97362',        6: '#22d3ee',       7: '#f0abfc',       8: 'var(--muted)',
 	};
-	function adjColor(n: number): string { return ADJ_COLORS[n] ?? '#e2e8f0'; }
+	// Text-shadow glow per ogni numero adiacente
+	const ADJ_GLOWS: Record<number, string> = {
+		1: '0 0 6px var(--cyan)',    2: '0 0 6px var(--green)', 3: '0 0 6px var(--accent)', 4: '0 0 6px #a78bfa',
+		5: '0 0 6px #f97362',        6: '0 0 6px #22d3ee',       7: '0 0 6px #f0abfc',       8: '0 0 6px var(--muted)',
+	};
+	function adjColor(n: number): string { return ADJ_COLORS[n] ?? 'var(--text)'; }
+	function adjGlow(n: number): string  { return ADJ_GLOWS[n]  ?? 'none'; }
 </script>
 
 <div class="ms-wrapper">
@@ -137,7 +144,7 @@
 							{#if cell.mine}
 								💣
 							{:else if cell.adjacent && cell.adjacent > 0}
-								<span style="color: {adjColor(cell.adjacent)}; font-weight: 700;">
+								<span style="color: {adjColor(cell.adjacent)}; text-shadow: {adjGlow(cell.adjacent)}; font-weight: 700; font-family: var(--font-term);">
 									{cell.adjacent}
 								</span>
 							{/if}
@@ -155,13 +162,9 @@
 </div>
 
 <style>
-	:root {
-		--bg:     #0f172a;
-		--panel:  #1e293b;
-		--accent: #6366f1;
-		--text:   #e2e8f0;
-		--muted:  #94a3b8;
-	}
+	/* ── Campo Minato — tema Retro/CRT/Synthwave ── */
+	/* NON ridefinire i token globali: vengono da retro-crt-theme.css */
+
 	.ms-wrapper {
 		display: flex;
 		flex-direction: column;
@@ -173,6 +176,8 @@
 		min-height: 100%;
 		box-sizing: border-box;
 	}
+
+	/* ── Intestazione ── */
 	.ms-header {
 		display: flex;
 		flex-wrap: wrap;
@@ -182,55 +187,109 @@
 		max-width: 560px;
 		justify-content: space-between;
 	}
-	.mine-counter { font-size: 1.2rem; font-weight: 700; min-width: 3.5rem; }
+
+	/* Contatore mine: font terminale stile 7-segmenti */
+	.mine-counter {
+		font-family: var(--font-display);
+		font-size: 0.85rem;
+		font-weight: 700;
+		color: var(--accent);
+		text-shadow: var(--glow-mag);
+		min-width: 3.5rem;
+		letter-spacing: 0.05em;
+	}
+
+	/* Pulsante bandierina */
 	.flag-toggle {
-		padding: 0.35rem 0.7rem;
-		border-radius: 6px;
-		border: 2px solid var(--muted);
+		padding: 0.4rem 0.75rem;
+		min-height: 44px;
+		border-radius: 4px;
+		border: 1px solid var(--muted);
 		background: var(--panel);
 		color: var(--text);
+		font-family: var(--font-ui);
 		cursor: pointer;
-		font-size: 0.85rem;
-		transition: border-color 0.15s, background 0.15s;
+		font-size: 0.8rem;
+		transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 	}
-	.flag-toggle.active { border-color: #f59e0b; background: #451a03; color: #fde68a; }
+	.flag-toggle:hover { border-color: var(--amber); }
+	.flag-toggle.active {
+		border-color: var(--amber);
+		background: #1a1000;
+		color: var(--amber);
+		box-shadow: 0 0 8px var(--amber);
+	}
+
+	/* Pulsante avvia partita */
 	.btn-start {
 		padding: 0.4rem 0.9rem;
-		border: none;
-		border-radius: 8px;
-		background: var(--accent);
-		color: #fff;
-		font-size: 0.9rem;
+		min-height: 44px;
+		border: 1px solid var(--accent);
+		border-radius: 4px;
+		background: var(--panel);
+		color: var(--accent);
+		font-family: var(--font-ui);
+		font-size: 0.85rem;
 		font-weight: 600;
 		cursor: pointer;
-		transition: opacity 0.15s;
+		text-shadow: var(--glow-mag);
+		box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 40%, transparent);
+		transition: background 0.15s, box-shadow 0.15s;
 	}
-	.btn-start:hover { opacity: 0.85; }
+	.btn-start:hover {
+		background: color-mix(in srgb, var(--accent) 15%, var(--panel));
+		box-shadow: 0 0 16px var(--accent);
+	}
 
+	/* ── Badge turno ── */
 	.turn-badge {
 		width: 100%;
 		max-width: 560px;
 		padding: 0.4rem 0.9rem;
-		border-radius: 8px;
-		font-size: 0.9rem;
+		border-radius: 4px;
+		font-family: var(--font-ui);
+		font-size: 0.85rem;
 		font-weight: 600;
 		text-align: center;
 	}
-	.turn-badge.my-turn { background: #1e3a5f; color: #93c5fd; border: 1px solid #3b82f6; }
-	.turn-badge.wait { background: #1e293b; color: var(--muted); border: 1px solid #334155; }
+	.turn-badge.my-turn {
+		background: var(--inset);
+		color: var(--cyan);
+		border: 1px solid var(--cyan);
+		box-shadow: 0 0 8px color-mix(in srgb, var(--cyan) 30%, transparent);
+	}
+	.turn-badge.wait {
+		background: var(--panel);
+		color: var(--muted);
+		border: 1px solid var(--line);
+	}
 
+	/* ── Banner fine partita ── */
 	.ms-banner {
 		width: 100%;
 		max-width: 560px;
 		padding: 0.65rem 1rem;
-		border-radius: 8px;
+		border-radius: 4px;
 		text-align: center;
+		font-family: var(--font-ui);
 		font-weight: 600;
-		font-size: 1rem;
+		font-size: 0.9rem;
+		letter-spacing: 0.04em;
 	}
-	.ms-banner.won  { background: #14532d; color: #bbf7d0; }
-	.ms-banner.lost { background: #7f1d1d; color: #fecaca; }
+	.ms-banner.won {
+		background: var(--inset);
+		color: var(--green);
+		border: 1px solid var(--green);
+		box-shadow: 0 0 12px color-mix(in srgb, var(--green) 40%, transparent);
+	}
+	.ms-banner.lost {
+		background: var(--inset);
+		color: var(--danger);
+		border: 1px solid var(--danger);
+		box-shadow: 0 0 12px color-mix(in srgb, var(--danger) 40%, transparent);
+	}
 
+	/* ── Griglia celle ── */
 	.ms-grid {
 		display: grid;
 		grid-template-columns: repeat(var(--cols), 1fr);
@@ -238,35 +297,79 @@
 		width: 100%;
 		max-width: 560px;
 	}
+
+	/* Cella base (coperta) */
 	.ms-cell {
 		aspect-ratio: 1 / 1;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		border: none;
-		border-radius: 4px;
-		background: var(--panel);
+		border-radius: 3px;
+		background: #241340;
 		color: var(--text);
 		font-size: clamp(0.6rem, 2.5vw, 1rem);
 		font-weight: 700;
 		cursor: pointer;
-		transition: background 0.1s, transform 0.05s;
-		box-shadow: inset 0 0 0 1px #334155;
+		box-shadow: inset 0 0 0 1px var(--line);
 		padding: 0;
 		line-height: 1;
 		min-width: 0;
+		/* Transizione rispetta prefers-reduced-motion (vedi media query) */
+		transition: background 0.1s, transform 0.05s, box-shadow 0.1s;
 	}
-	.ms-cell:hover:not(:disabled) { background: #334155; transform: scale(1.08); }
-	.ms-cell.revealed.safe { background: #0f172a; box-shadow: inset 0 0 0 1px #1e293b; cursor: default; }
-	.ms-cell.revealed.mine { background: #7f1d1d; box-shadow: inset 0 0 0 1px #dc2626; cursor: default; }
-	.ms-cell.flagged { background: #1c1917; box-shadow: inset 0 0 0 1px #f59e0b; }
+
+	/* Hover cella coperta */
+	.ms-cell:hover:not(:disabled) {
+		background: color-mix(in srgb, var(--accent) 20%, #241340);
+		box-shadow: inset 0 0 0 1px var(--accent);
+		transform: scale(1.06);
+	}
+
+	/* Cella rivelata sicura */
+	.ms-cell.revealed.safe {
+		background: var(--inset);
+		box-shadow: inset 0 0 0 1px var(--line);
+		cursor: default;
+	}
+
+	/* Cella con mina esplosa */
+	.ms-cell.revealed.mine {
+		background: #3a1420;
+		box-shadow: inset 0 0 0 1px var(--accent), 0 0 8px color-mix(in srgb, var(--accent) 50%, transparent);
+		cursor: default;
+	}
+
+	/* Cella con bandierina */
+	.ms-cell.flagged {
+		background: #1a1000;
+		box-shadow: inset 0 0 0 1px var(--amber);
+	}
+
 	.ms-cell:disabled { cursor: default; }
 	.ms-cell:disabled:not(.revealed) { opacity: 0.7; }
-	.ms-empty { color: var(--muted); text-align: center; padding: 2rem; max-width: 400px; }
 
+	/* Messaggio partita non avviata */
+	.ms-empty {
+		color: var(--muted);
+		font-family: var(--font-ui);
+		text-align: center;
+		padding: 2rem;
+		max-width: 400px;
+	}
+
+	/* ── Responsive ── */
 	@media (max-width: 480px) {
 		.ms-header { justify-content: center; }
 		.ms-grid { gap: 1px; }
 		.ms-cell { border-radius: 2px; }
+		.mine-counter { font-size: 0.7rem; }
+	}
+
+	/* Rispetta prefers-reduced-motion */
+	@media (prefers-reduced-motion: reduce) {
+		.ms-cell { transition: none; }
+		.ms-cell:hover:not(:disabled) { transform: none; }
+		.flag-toggle, .btn-start { transition: none; }
 	}
 </style>

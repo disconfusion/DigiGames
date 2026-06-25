@@ -48,7 +48,7 @@
 </script>
 
 <div class="lb">
-	<h1>🏆 Classifica Globale</h1>
+	<h1>★ HIGH SCORES ★</h1>
 	<p class="sub">Vittorie cumulative su tutte le partite completate</p>
 
 	{#if loading}
@@ -74,7 +74,7 @@
 				</thead>
 				<tbody>
 					{#each rows as row, i (row.username)}
-						<tr class:podium={i < 3}>
+						<tr class:podium={i < 3} class:gold={i === 0} class:silver={i === 1} class:bronze={i === 2}>
 							<td class="rank">
 								{#if i === 0}🥇{:else if i === 1}🥈{:else if i === 2}🥉{:else}{i + 1}{/if}
 							</td>
@@ -115,9 +115,15 @@
 		align-items: center;
 		gap: 1rem;
 	}
-	h1 { margin: 0; }
+	h1 {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: clamp(1rem, 4vw, 1.5rem);
+		color: var(--amber);
+		text-shadow: 0 0 10px var(--amber), 0 0 24px rgba(255, 207, 63, 0.4);
+	}
 	.sub, .muted { color: var(--muted); margin: 0; }
-	.err { color: #f87171; }
+	.err { color: var(--danger); font-family: var(--font-term); font-size: 1.1rem; }
 
 	.table-wrap {
 		width: 100%;
@@ -126,24 +132,32 @@
 	table {
 		width: 100%;
 		border-collapse: collapse;
-		font-size: 0.9rem;
+		font-size: 0.95rem;
 	}
 	th {
 		text-align: left;
 		padding: 0.5rem 0.75rem;
 		color: var(--muted);
-		border-bottom: 1px solid #334155;
+		font-family: var(--font-ui);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		font-size: 0.72rem;
+		border-bottom: 1px solid var(--line);
 		white-space: nowrap;
 	}
 	td {
 		padding: 0.55rem 0.75rem;
-		border-bottom: 1px solid #1e293b;
+		border-bottom: 1px solid var(--line);
 		vertical-align: middle;
 	}
-	tr.podium td { background: #1a2540; }
-	tr:hover td { background: #1e293b; }
+	tr.podium td { background: rgba(255, 207, 63, 0.05); }
+	tr:hover td { background: var(--inset); }
+	/* Cornici podio: oro / argento / bronzo (bordo sinistro luminoso) */
+	tr.gold td:first-child { box-shadow: inset 4px 0 0 #ffcf3f; }
+	tr.silver td:first-child { box-shadow: inset 4px 0 0 #cdd6e3; }
+	tr.bronze td:first-child { box-shadow: inset 4px 0 0 #d98a4a; }
 
-	.rank { font-size: 1.1rem; text-align: center; width: 2.5rem; }
+	.rank { font-size: 1.2rem; text-align: center; width: 2.5rem; }
 	.player-cell { display: flex; align-items: center; gap: 0.6rem; }
 	.mini-face {
 		font-family: ui-monospace, monospace;
@@ -154,7 +168,12 @@
 	}
 	.name { display: block; font-weight: 600; }
 	.uname { display: block; font-size: 0.78rem; color: var(--muted); }
-	.wins { font-weight: 700; color: #86efac; }
+	.wins {
+		font-family: var(--font-display);
+		font-size: 0.85rem;
+		color: var(--green);
+		text-shadow: 0 0 8px rgba(61, 255, 154, 0.5);
+	}
 	.rate { color: var(--muted); }
 	.game-col { text-align: center; }
 

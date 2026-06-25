@@ -147,7 +147,8 @@
 	</p>
 
 	{#snippet seat(username: string, side: 'left' | 'right')}
-		<div class="seat {side}">
+		<div class="seat {side}" class:me-seat={username === meUsername}>
+			<span class="pnum">{side === 'left' ? 'P1' : 'P2'}</span>
 			<div class="avatar-box">
 				{#if bubbles[username]}
 					<div class="bubble {side}">{bubbles[username].text}</div>
@@ -185,12 +186,13 @@
 		</div>
 	</div>
 
-	<section class="panel">
-		<h2>Eventi & chat</h2>
+	<section class="panel term-panel">
+		<h2>&gt; EVENTI &amp; CHAT</h2>
 		<ul class="log">
 			{#each log as line, i (i)}
 				<li>{line}</li>
 			{/each}
+			<li class="cursor-line">&gt;&nbsp;<span class="caret">▮</span></li>
 		</ul>
 		<form onsubmit={sendChat}>
 			<input placeholder="Scrivi un messaggio…" bind:value={chatText} disabled={!connected} />
@@ -207,16 +209,35 @@
 		flex-wrap: wrap;
 		gap: 0.5rem;
 	}
+	.head h1 {
+		font-family: var(--font-display);
+		font-size: clamp(0.85rem, 3.5vw, 1.25rem);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--cyan);
+		text-shadow: var(--glow-cyan);
+	}
 	.leave {
-		background: #475569;
-		color: white;
-		border: none;
-		border-radius: 8px;
+		background: transparent;
+		color: var(--danger);
+		border: 2px solid var(--danger);
+		border-radius: 4px;
 		padding: 0.5rem 0.9rem;
+		font-family: var(--font-ui);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 		cursor: pointer;
+		min-height: 44px;
+		transition: box-shadow 0.12s;
+	}
+	.leave:hover {
+		box-shadow: 0 0 14px rgba(255, 82, 119, 0.5);
 	}
 	.status {
 		color: var(--muted);
+		font-family: var(--font-term);
+		font-size: 1.05rem;
 	}
 	.arena {
 		display: flex;
@@ -243,14 +264,31 @@
 		gap: 0.3rem;
 		width: 5.5rem;
 	}
+	.pnum {
+		font-family: var(--font-display);
+		font-size: 0.6rem;
+		color: var(--amber);
+		text-shadow: 0 0 8px var(--amber);
+	}
+	.me-seat .pnum {
+		color: var(--accent);
+		text-shadow: var(--glow-mag);
+	}
 	.avatar-box {
 		position: relative;
 		background: var(--panel);
-		border: 1px solid #334155;
+		border: 2px solid var(--amber);
 		border-radius: 12px;
 		padding: 0.4rem 0.5rem;
+		box-shadow: 0 0 12px rgba(255, 207, 63, 0.3);
+	}
+	.me-seat .avatar-box {
+		border-color: var(--accent);
+		box-shadow: 0 0 12px rgba(255, 46, 136, 0.4);
 	}
 	.avatar-box.dim {
+		border-color: var(--line);
+		box-shadow: none;
 		opacity: 0.4;
 	}
 	.face {
@@ -315,10 +353,21 @@
 		padding: 1rem 1.25rem;
 		border-radius: 12px;
 		margin-bottom: 1.25rem;
+		border: 1px solid var(--line);
 	}
 	h2 {
-		font-size: 1.05rem;
+		font-family: var(--font-display);
+		font-size: 0.8rem;
+		color: var(--cyan);
+		text-shadow: var(--glow-cyan);
 		margin: 0 0 0.5rem;
+	}
+	/* Pannello eventi+chat in stile terminale CRT */
+	.term-panel .log {
+		background: var(--inset);
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		padding: 0.6rem 0.8rem;
 	}
 	.log {
 		list-style: none;
@@ -328,8 +377,21 @@
 		overflow-y: auto;
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
-		font-size: 0.9rem;
+		gap: 0.2rem;
+		font-family: var(--font-term);
+		font-size: 1.05rem;
+		color: var(--green);
+	}
+	.cursor-line {
+		color: var(--cyan);
+	}
+	.caret {
+		animation: blink 1.05s steps(1) infinite;
+	}
+	@keyframes blink {
+		50% {
+			opacity: 0;
+		}
 	}
 	form {
 		display: flex;
@@ -338,18 +400,30 @@
 	form input {
 		flex: 1;
 		padding: 0.55rem;
-		border-radius: 8px;
-		border: 1px solid #334155;
-		background: #0f172a;
+		border-radius: 4px;
+		border: 2px solid var(--line);
+		background: var(--inset);
 		color: var(--text);
+		font-family: var(--font-term);
+		font-size: 1.1rem;
+	}
+	form input:focus {
+		outline: none;
+		border-color: var(--cyan);
+		box-shadow: var(--glow-cyan);
 	}
 	form button {
-		background: var(--accent);
-		color: white;
-		border: none;
-		border-radius: 8px;
+		background: linear-gradient(180deg, var(--accent), #c01e63);
+		color: #fff;
+		border: 2px solid var(--amber);
+		border-radius: 4px;
 		padding: 0.55rem 1rem;
+		font-family: var(--font-ui);
+		font-weight: 700;
+		text-transform: uppercase;
 		cursor: pointer;
+		min-height: 44px;
+		box-shadow: 0 0 14px rgba(255, 46, 136, 0.4);
 	}
 	button:disabled {
 		opacity: 0.5;
@@ -359,7 +433,14 @@
 		color: var(--muted);
 	}
 	.error {
-		color: #f87171;
+		color: var(--danger);
+		font-family: var(--font-term);
+		font-size: 1.1rem;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.caret {
+			animation: none;
+		}
 	}
 	@media (max-width: 680px) {
 		.arena {

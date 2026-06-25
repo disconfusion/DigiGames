@@ -98,6 +98,7 @@
 </div>
 
 <style>
+	/* ── Contenitore principale ── */
 	.tris {
 		display: flex;
 		flex-direction: column;
@@ -105,6 +106,8 @@
 		gap: 1rem;
 		padding: 1rem;
 	}
+
+	/* ── Header con stato partita ── */
 	.header {
 		display: flex;
 		flex-direction: column;
@@ -112,97 +115,180 @@
 		gap: 0.5rem;
 		min-height: 3rem;
 	}
+
 	.info {
 		margin: 0;
 		color: var(--muted);
+		font-family: var(--font-ui, 'Orbitron', sans-serif);
+		font-size: 0.85rem;
 		text-align: center;
+		letter-spacing: 0.05em;
 	}
+
 	.turn {
-		color: var(--text);
-		font-weight: 600;
+		color: var(--cyan);
+		text-shadow: var(--glow-cyan);
 	}
+
+	/* ── Banner risultato ── */
 	.banner {
-		font-size: 1.3rem;
-		font-weight: 700;
-		padding: 0.5rem 1.2rem;
-		border-radius: 8px;
+		font-family: var(--font-display, 'Press Start 2P', monospace);
+		font-size: 0.9rem;
+		padding: 0.6rem 1.4rem;
+		border-radius: 4px;
+		text-align: center;
+		letter-spacing: 0.05em;
 	}
+
 	.win {
-		background: #14532d;
-		color: #bbf7d0;
+		background: color-mix(in srgb, var(--green) 15%, var(--bg));
+		color: var(--green);
+		border: 1px solid var(--green);
+		text-shadow: 0 0 8px var(--green), 0 0 16px var(--green);
 	}
+
 	.lose {
-		background: #7f1d1d;
-		color: #fecaca;
+		background: color-mix(in srgb, var(--danger) 15%, var(--bg));
+		color: var(--danger);
+		border: 1px solid var(--danger);
+		text-shadow: 0 0 8px var(--danger);
 	}
+
 	.draw {
-		background: #1e3a5f;
-		color: #bae6fd;
+		background: color-mix(in srgb, var(--amber) 15%, var(--bg));
+		color: var(--amber);
+		border: 1px solid var(--amber);
+		text-shadow: 0 0 8px var(--amber);
 	}
+
+	/* ── Pulsante azione ── */
 	.btn {
-		padding: 0.55rem 1.3rem;
-		border: none;
-		border-radius: 8px;
-		background: var(--accent);
-		color: #fff;
-		font-size: 1rem;
-		font-weight: 600;
+		min-height: 44px;
+		padding: 0.55rem 1.4rem;
+		border: 2px solid var(--accent);
+		border-radius: 4px;
+		background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+		color: var(--accent);
+		font-family: var(--font-ui, 'Orbitron', sans-serif);
+		font-size: 0.8rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
 		cursor: pointer;
+		text-shadow: var(--glow-mag);
+		box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 40%, transparent);
+		transition: background 0.15s, box-shadow 0.15s;
 	}
+
+	.btn:hover:not(:disabled) {
+		background: color-mix(in srgb, var(--accent) 22%, var(--panel));
+		box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 60%, transparent);
+	}
+
+	/* ── Griglia 3×3 ── */
 	.grid {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
-		gap: 8px;
-		background: #334155;
-		padding: 8px;
-		border-radius: 12px;
+		gap: 6px;
+		/* Gabbia con bordo e glow cyan */
+		background: var(--line);
+		padding: 6px;
+		border-radius: 6px;
+		border: 2px solid var(--cyan);
+		box-shadow:
+			0 0 10px color-mix(in srgb, var(--cyan) 50%, transparent),
+			inset 0 0 8px color-mix(in srgb, var(--cyan) 20%, transparent);
 	}
+
+	/* ── Cella singola ── */
 	.cell {
 		width: 5.5rem;
 		height: 5.5rem;
+		min-height: 44px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 3rem;
-		font-weight: 800;
-		background: var(--bg);
-		border: none;
-		border-radius: 8px;
-		cursor: pointer;
-		color: var(--text);
+		/* Font display per i glifi X/O */
+		font-family: var(--font-display, 'Press Start 2P', monospace);
+		font-size: 2rem;
 		line-height: 1;
+		/* Fondo scuro della cella */
+		background: var(--bg);
+		border: 1px solid color-mix(in srgb, var(--cyan) 35%, transparent);
+		border-radius: 4px;
+		cursor: pointer;
+		color: var(--muted);
+		transition: border-color 0.15s, background 0.15s;
 	}
+
+	.cell:not(:disabled):not(.x):not(.o):hover {
+		border-color: var(--cyan);
+		background: color-mix(in srgb, var(--cyan) 8%, var(--bg));
+	}
+
 	.cell:disabled {
 		cursor: default;
 	}
+
+	/* Glifo X — var(--cyan) con glow cyan */
 	.cell.x {
-		color: #60a5fa;
+		color: var(--cyan);
+		text-shadow: var(--glow-cyan);
+		border-color: color-mix(in srgb, var(--cyan) 50%, transparent);
 	}
+
+	/* Glifo O — var(--accent) con glow magenta */
 	.cell.o {
-		color: #f87171;
+		color: var(--accent);
+		text-shadow: var(--glow-mag);
+		border-color: color-mix(in srgb, var(--accent) 50%, transparent);
 	}
+
+	/* ── Legenda giocatori ── */
 	.legend {
 		display: flex;
 		gap: 1.5rem;
 		flex-wrap: wrap;
 		justify-content: center;
-		font-size: 0.9rem;
+		font-family: var(--font-ui, 'Orbitron', sans-serif);
+		font-size: 0.75rem;
 		color: var(--muted);
+		letter-spacing: 0.05em;
 	}
+
 	.player {
 		display: flex;
 		align-items: center;
 		gap: 0.35rem;
 	}
+
 	.player.active {
 		color: var(--text);
-		font-weight: 600;
 	}
+
+	/* Giocatore attivo: strong (il simbolo) eredita il glow dal colore */
+	.player.active strong {
+		text-shadow: var(--glow-cyan);
+	}
+
+	/* ── Ridotto moto per accessibilità ── */
+	@media (prefers-reduced-motion: reduce) {
+		.btn,
+		.cell {
+			transition: none;
+		}
+	}
+
+	/* ── Responsive mobile ── */
 	@media (max-width: 480px) {
 		.cell {
-			width: 4.2rem;
-			height: 4.2rem;
-			font-size: 2.4rem;
+			width: 4.5rem;
+			height: 4.5rem;
+			font-size: 1.6rem;
+		}
+
+		.banner {
+			font-size: 0.75rem;
 		}
 	}
 </style>

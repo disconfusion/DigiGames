@@ -126,49 +126,73 @@
 </div>
 
 <style>
+	/* === Layout principale === */
 	.hangman {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: 1rem;
 	}
+
+	/* === Patibolo ASCII — verde neon con glow === */
 	.gallows {
-		font-family: ui-monospace, monospace;
-		font-size: 1rem;
+		font-family: var(--font-term), ui-monospace, monospace;
+		font-size: 1.1rem;
 		line-height: 1.15;
-		background: #0f172a;
+		color: var(--green);
+		text-shadow: var(--glow-cyan);
+		background: var(--inset);
+		border: 1px solid var(--line);
 		padding: 0.75rem 1rem;
 		border-radius: 8px;
 		margin: 0;
 	}
+
+	/* === Parola da indovinare — slot con bordo cyan === */
 	.word {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.4rem;
+		gap: 0.5rem;
 		justify-content: center;
 	}
+
 	.slot {
-		width: 1.6rem;
-		height: 2.2rem;
+		width: 2rem;
+		height: 2.75rem;
+		min-width: 44px; /* hit target mobile */
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 1.5rem;
+		font-family: var(--font-display), monospace;
+		font-size: 1.2rem;
 		font-weight: 700;
 		text-transform: uppercase;
-		border-bottom: 3px solid #475569;
+		color: var(--text);
+		border-bottom: 4px solid var(--cyan);
 	}
+
 	.slot.filled {
+		color: var(--cyan);
+		text-shadow: var(--glow-cyan);
 		border-bottom-color: var(--accent);
 	}
+
+	/* === Errori e lettere sbagliate === */
 	.errors {
 		color: var(--muted);
 		margin: 0;
+		font-family: var(--font-ui), sans-serif;
+		font-size: 0.85rem;
+		letter-spacing: 0.05em;
 	}
+
 	.wrong {
-		color: #f87171;
-		letter-spacing: 0.1em;
+		color: var(--danger);
+		letter-spacing: 0.15em;
+		text-shadow: 0 0 6px var(--danger);
 	}
+
+	/* === Chip limiti regole === */
 	.limits {
 		display: flex;
 		gap: 0.5rem;
@@ -176,46 +200,81 @@
 		justify-content: center;
 		margin: 0;
 	}
+
 	.chip {
-		background: #1e293b;
-		border: 1px solid #334155;
+		background: var(--panel);
+		border: 1px solid var(--line);
 		color: var(--muted);
 		border-radius: 20px;
 		padding: 0.25rem 0.7rem;
-		font-size: 0.85rem;
+		font-size: 0.82rem;
+		font-family: var(--font-ui), sans-serif;
 	}
+
 	.chip.exhausted {
-		background: #7f1d1d;
-		border-color: #dc2626;
-		color: #fecaca;
+		background: color-mix(in srgb, var(--danger) 20%, var(--inset));
+		border-color: var(--danger);
+		color: var(--text);
+		text-shadow: 0 0 4px var(--danger);
 	}
-	.key.vowel {
-		border-color: #6d28d9;
-	}
+
+	/* === Indicatore turno === */
 	.turn-badge {
 		padding: 0.4rem 0.9rem;
 		border-radius: 20px;
-		font-size: 0.9rem;
+		font-size: 0.85rem;
+		font-family: var(--font-ui), sans-serif;
 		font-weight: 600;
+		letter-spacing: 0.04em;
+		min-height: 44px;
+		display: flex;
+		align-items: center;
 	}
+
 	.turn-badge.my-turn {
-		background: #1e3a5f;
-		color: #93c5fd;
-		border: 1px solid #3b82f6;
+		background: color-mix(in srgb, var(--cyan) 15%, var(--inset));
+		color: var(--cyan);
+		border: 1px solid var(--cyan);
+		text-shadow: var(--glow-cyan);
 	}
+
 	.turn-badge.wait {
-		background: #1e293b;
+		background: var(--panel);
 		color: var(--muted);
-		border: 1px solid #334155;
+		border: 1px solid var(--line);
 	}
+
+	/* === Risultato partita === */
 	.result {
-		font-size: 1.1rem;
+		font-family: var(--font-display), monospace;
+		font-size: 0.95rem;
 		padding: 0.6rem 1rem;
 		border-radius: 8px;
 		text-align: center;
+		letter-spacing: 0.03em;
 	}
-	.result.won { background: #14532d; color: #bbf7d0; }
-	.result.lost { background: #7f1d1d; color: #fecaca; }
+
+	.result.won {
+		background: color-mix(in srgb, var(--green) 15%, var(--inset));
+		color: var(--green);
+		border: 1px solid var(--green);
+		text-shadow: 0 0 8px var(--green);
+	}
+
+	.result.lost {
+		background: color-mix(in srgb, var(--danger) 15%, var(--inset));
+		color: var(--danger);
+		border: 1px solid var(--danger);
+		text-shadow: 0 0 8px var(--danger);
+	}
+
+	/* === Tasto messaggio iniziale === */
+	.muted {
+		color: var(--muted);
+		font-family: var(--font-ui), sans-serif;
+	}
+
+	/* === Tastiera lettere — stile ghost neon === */
 	.keyboard {
 		display: flex;
 		flex-wrap: wrap;
@@ -223,30 +282,97 @@
 		justify-content: center;
 		max-width: 520px;
 	}
+
 	.key {
-		width: 2.4rem;
-		height: 2.4rem;
-		border: 1px solid #334155;
-		border-radius: 8px;
-		background: #1e293b;
-		color: var(--text);
-		font-size: 1rem;
-		font-weight: 600;
+		width: 2.75rem;
+		height: 2.75rem;
+		min-width: 44px;
+		min-height: 44px;
+		border: 1px solid var(--cyan);
+		border-radius: 6px;
+		background: transparent;
+		color: var(--cyan);
+		font-family: var(--font-ui), sans-serif;
+		font-size: 0.9rem;
+		font-weight: 700;
+		letter-spacing: 0.03em;
 		cursor: pointer;
+		transition: background 0.1s, box-shadow 0.1s;
 	}
-	.key.hit { background: #14532d; border-color: #16a34a; color: #bbf7d0; }
-	.key.miss { background: #7f1d1d; border-color: #dc2626; color: #fecaca; opacity: 0.85; }
+
+	/* Vocali: bordo magenta per distinguerle */
+	.key.vowel {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+
+	/* Lettera indovinata → verde neon */
+	.key.hit {
+		background: color-mix(in srgb, var(--green) 20%, var(--inset));
+		border-color: var(--green);
+		color: var(--green);
+		text-shadow: 0 0 6px var(--green);
+		box-shadow: 0 0 8px color-mix(in srgb, var(--green) 40%, transparent);
+		cursor: default;
+	}
+
+	/* Lettera sbagliata → rosso/magenta spento */
+	.key.miss {
+		background: color-mix(in srgb, var(--danger) 15%, var(--inset));
+		border-color: var(--danger);
+		color: var(--danger);
+		opacity: 0.7;
+		cursor: default;
+	}
+
+	/* Tasto disabilitato ma non usato (es. turno bloccato) */
+	.key:disabled:not(.hit):not(.miss) {
+		opacity: 0.35;
+		cursor: not-allowed;
+	}
+
+	/* Hover solo se abilitato e non già usato */
+	@media (hover: hover) {
+		.key:not(:disabled):not(.hit):not(.miss):hover {
+			background: color-mix(in srgb, var(--cyan) 15%, var(--inset));
+			box-shadow: 0 0 8px color-mix(in srgb, var(--cyan) 50%, transparent);
+		}
+	}
+
+	/* === Pulsante avvio === */
 	.start {
-		padding: 0.6rem 1.2rem;
-		border: none;
+		padding: 0.6rem 1.4rem;
+		border: 2px solid var(--accent);
 		border-radius: 8px;
-		background: var(--accent);
-		color: white;
-		font-size: 1rem;
+		background: transparent;
+		color: var(--accent);
+		font-family: var(--font-ui), sans-serif;
+		font-size: 0.95rem;
+		font-weight: 700;
+		letter-spacing: 0.05em;
 		cursor: pointer;
+		text-shadow: var(--glow-mag);
+		transition: background 0.15s, box-shadow 0.15s;
+		min-height: 44px;
 	}
+
+	.start:hover {
+		background: color-mix(in srgb, var(--accent) 20%, transparent);
+		box-shadow: var(--glow-mag);
+	}
+
+	/* === Responsive mobile === */
 	@media (max-width: 480px) {
-		.key { width: 2rem; height: 2rem; font-size: 0.9rem; }
-		.slot { width: 1.3rem; font-size: 1.2rem; }
+		.key { width: 2.5rem; height: 2.5rem; font-size: 0.8rem; }
+		.slot { width: 1.6rem; min-width: 36px; font-size: 1rem; }
+		.gallows { font-size: 0.9rem; }
+	}
+
+	/* === Riduzione movimento per accessibilità === */
+	@media (prefers-reduced-motion: reduce) {
+		.key,
+		.start {
+			transition: none;
+		}
 	}
 </style>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import '$lib/retro-crt-theme.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { onDestroy } from 'svelte';
 	import { auth, logout } from '$lib/auth.svelte';
@@ -184,25 +185,17 @@
 {/if}
 
 <style>
-	:global(:root) {
-		--bg: #0f172a;
-		--panel: #1e293b;
-		--accent: #6366f1;
-		--text: #e2e8f0;
-		--muted: #94a3b8;
-	}
+	/* Token palette/font/scanline definiti in $lib/retro-crt-theme.css (import nel <script>). */
 	:global(*, *::before, *::after) {
 		box-sizing: border-box;
 	}
 	:global(html) {
 		/* Scrollbar a tema (Firefox) */
 		scrollbar-width: thin;
-		scrollbar-color: #475569 transparent;
+		scrollbar-color: var(--line) transparent;
 	}
 	:global(body) {
 		margin: 0;
-		font-family: system-ui, sans-serif;
-		background: var(--bg);
 		color: var(--text);
 		overflow-x: hidden;
 		-webkit-text-size-adjust: 100%;
@@ -312,7 +305,7 @@
 		}
 	}
 	.bug {
-		color: #fbbf24;
+		color: var(--amber);
 	}
 	@media (max-width: 640px) {
 		header {
@@ -346,7 +339,7 @@
 		}
 		nav a:hover,
 		nav button:hover {
-			background: #0f172a;
+			background: var(--inset);
 		}
 		main {
 			padding: 1rem 0.8rem;
@@ -360,7 +353,8 @@
 		align-items: center;
 		justify-content: center;
 		padding: 1rem;
-		z-index: 50;
+		/* sopra le scanline globali (z-index 9998 in retro-crt-theme.css) */
+		z-index: 10000;
 	}
 	.modal {
 		background: var(--panel);
@@ -368,7 +362,8 @@
 		padding: 1.25rem;
 		width: 100%;
 		max-width: 460px;
-		border: 1px solid #334155;
+		border: 2px solid var(--accent);
+		box-shadow: var(--glow-mag);
 	}
 	.modal-head {
 		display: flex;
@@ -418,8 +413,8 @@
 		font-size: 0.95rem;
 	}
 	.cancel {
-		background: #475569;
-		color: white;
+		background: var(--line);
+		color: var(--text);
 	}
 	.send {
 		background: var(--accent);
@@ -430,11 +425,11 @@
 		cursor: default;
 	}
 	.bug-err {
-		color: #f87171;
+		color: var(--danger);
 		margin: 0 0 0.5rem;
 	}
 	.bug-ok {
-		color: #4ade80;
+		color: var(--green);
 		margin: 0 0 0.5rem;
 	}
 </style>

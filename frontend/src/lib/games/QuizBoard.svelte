@@ -246,13 +246,10 @@
 </div>
 
 <style>
-	:root {
-		--bg: #0f172a;
-		--panel: #1e293b;
-		--accent: #6366f1;
-		--text: #e2e8f0;
-		--muted: #94a3b8;
-	}
+	/* ================================================================
+	 * QuizBoard — tema Retro/CRT/Synthwave
+	 * Usa esclusivamente i token da retro-crt-theme.css via var(...)
+	 * ================================================================ */
 
 	.quiz {
 		display: flex;
@@ -261,10 +258,11 @@
 		min-height: 100%;
 		padding: 1.5rem 1rem;
 		color: var(--text);
-		font-family: inherit;
+		font-family: var(--font-ui, inherit);
+		background: var(--bg);
 	}
 
-	/* ---- Start screen ---- */
+	/* ---- Start screen / Game over ---- */
 	.start-screen,
 	.over-screen {
 		display: flex;
@@ -275,37 +273,52 @@
 		width: 100%;
 	}
 
+	/* Titolo con font display retro e glow magenta */
 	.title {
-		font-size: 1.8rem;
-		font-weight: 700;
+		font-family: var(--font-display);
+		font-size: 1.4rem;
+		font-weight: 400;
 		margin: 0;
-		color: var(--text);
+		color: var(--accent);
+		text-shadow: var(--glow-mag);
+		text-align: center;
+		line-height: 1.6;
 	}
 
 	.subtitle {
+		font-family: var(--font-ui);
 		color: var(--muted);
 		margin: 0;
 		text-align: center;
+		font-size: 0.9rem;
 	}
 
-	/* ---- Buttons ---- */
+	/* ---- Pulsante principale ---- */
 	.btn-primary {
-		padding: 0.7rem 1.6rem;
-		border: none;
-		border-radius: 10px;
-		background: var(--accent);
-		color: #fff;
-		font-size: 1rem;
-		font-weight: 600;
+		min-height: 44px; /* hit target mobile */
+		padding: 0.7rem 1.8rem;
+		border: 2px solid var(--accent);
+		border-radius: 6px;
+		background: transparent;
+		color: var(--accent);
+		font-family: var(--font-display);
+		font-size: 0.75rem;
 		cursor: pointer;
-		transition: opacity 0.15s;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		text-shadow: var(--glow-mag);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 30%, transparent);
+		transition: background 0.15s, box-shadow 0.15s, color 0.15s;
 	}
 
-	.btn-primary:hover {
-		opacity: 0.88;
+	.btn-primary:hover,
+	.btn-primary:focus-visible {
+		background: color-mix(in srgb, var(--accent) 15%, transparent);
+		box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 55%, transparent);
+		outline: none;
 	}
 
-	/* ---- Question / Reveal shared ---- */
+	/* ---- Schermate domanda / reveal ---- */
 	.question-screen,
 	.reveal-screen {
 		display: flex;
@@ -323,48 +336,67 @@
 		gap: 0.4rem;
 	}
 
+	/* Chip categoria — fondo cyan con testo scuro */
 	.category {
-		font-size: 0.8rem;
-		font-weight: 600;
+		font-family: var(--font-display);
+		font-size: 0.6rem;
+		font-weight: 400;
 		text-transform: uppercase;
-		letter-spacing: 0.06em;
-		color: var(--accent);
-		background: rgba(99, 102, 241, 0.15);
-		padding: 0.2rem 0.6rem;
+		letter-spacing: 0.08em;
+		color: var(--bg);
+		background: var(--cyan);
+		padding: 0.3rem 0.8rem;
 		border-radius: 20px;
+		box-shadow: 0 0 8px color-mix(in srgb, var(--cyan) 50%, transparent);
+		line-height: 1.8;
 	}
 
 	.progress {
-		font-size: 0.85rem;
+		font-family: var(--font-ui);
+		font-size: 0.82rem;
 		color: var(--muted);
 	}
 
+	/* ---- Barra progresso con gradiente neon e glow ---- */
 	.progress-bar-wrap {
 		width: 100%;
-		height: 4px;
-		background: var(--panel);
+		height: 6px;
+		background: var(--inset);
 		border-radius: 4px;
 		overflow: hidden;
+		border: 1px solid var(--line);
 	}
 
 	.progress-bar {
 		height: 100%;
-		background: var(--accent);
+		background: linear-gradient(90deg, var(--accent), var(--cyan));
 		border-radius: 4px;
+		box-shadow: 0 0 8px color-mix(in srgb, var(--cyan) 70%, transparent);
 		transition: width 0.4s ease;
 	}
 
-	.question-text {
-		font-size: 1.15rem;
-		font-weight: 600;
-		line-height: 1.5;
-		margin: 0;
-		background: var(--panel);
-		padding: 1rem 1.2rem;
-		border-radius: 12px;
+	/* Disabilita animazione se l'utente preferisce ridotta */
+	@media (prefers-reduced-motion: reduce) {
+		.progress-bar {
+			transition: none;
+		}
 	}
 
-	/* ---- Options ---- */
+	/* ---- Card testo domanda su fondo inset ---- */
+	.question-text {
+		font-family: var(--font-ui);
+		font-size: 1.1rem;
+		font-weight: 600;
+		line-height: 1.6;
+		margin: 0;
+		background: var(--inset);
+		border: 1px solid var(--line);
+		border-radius: 10px;
+		padding: 1rem 1.2rem;
+		color: var(--text);
+	}
+
+	/* ---- Opzioni risposta ---- */
 	.options {
 		display: flex;
 		flex-direction: column;
@@ -376,25 +408,30 @@
 		align-items: center;
 		gap: 0.75rem;
 		width: 100%;
+		min-height: 44px; /* hit target mobile */
 		padding: 0.8rem 1rem;
-		border: 2px solid #334155;
-		border-radius: 12px;
+		border: 2px solid var(--line);
+		border-radius: 10px;
 		background: var(--panel);
 		color: var(--text);
-		font-size: 1rem;
+		font-family: var(--font-ui);
+		font-size: 0.95rem;
 		text-align: left;
 		cursor: pointer;
-		transition: border-color 0.15s, background 0.15s;
+		transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 	}
 
 	.option:not(:disabled):hover {
-		border-color: var(--accent);
-		background: rgba(99, 102, 241, 0.1);
+		border-color: var(--cyan);
+		background: color-mix(in srgb, var(--cyan) 8%, var(--panel));
+		box-shadow: 0 0 10px color-mix(in srgb, var(--cyan) 25%, transparent);
 	}
 
+	/* Opzione selezionata in fase QUESTION */
 	.option.selected {
 		border-color: var(--accent);
-		background: rgba(99, 102, 241, 0.2);
+		background: color-mix(in srgb, var(--accent) 15%, var(--panel));
+		box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 35%, transparent);
 	}
 
 	.option.disabled,
@@ -403,81 +440,111 @@
 		opacity: 0.75;
 	}
 
+	/* Risposta corretta — verde neon */
 	.option.correct {
-		border-color: #16a34a;
-		background: #14532d;
+		border-color: var(--green);
+		background: color-mix(in srgb, var(--green) 12%, var(--inset));
+		box-shadow: 0 0 14px color-mix(in srgb, var(--green) 40%, transparent);
 		opacity: 1;
 	}
 
+	/* Risposta sbagliata — rosso/magenta */
 	.option.wrong {
-		border-color: #dc2626;
-		background: #7f1d1d;
+		border-color: var(--danger);
+		background: color-mix(in srgb, var(--danger) 12%, var(--inset));
+		box-shadow: 0 0 14px color-mix(in srgb, var(--danger) 40%, transparent);
 		opacity: 1;
 	}
 
+	/* ---- Pasticca/badge lettera opzione ---- */
 	.option-letter {
 		flex-shrink: 0;
-		width: 1.8rem;
-		height: 1.8rem;
+		width: 2rem;
+		height: 2rem;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		border-radius: 50%;
-		background: #334155;
-		font-size: 0.85rem;
-		font-weight: 700;
+		background: var(--line);
+		font-family: var(--font-display); /* 'Press Start 2P' */
+		font-size: 0.6rem;
+		font-weight: 400;
+		color: var(--text);
+		letter-spacing: 0;
+		line-height: 1;
 	}
 
 	.option.correct .option-letter {
-		background: #16a34a;
+		background: var(--green);
+		color: var(--bg);
+		box-shadow: 0 0 8px color-mix(in srgb, var(--green) 60%, transparent);
 	}
 
 	.option.wrong .option-letter {
-		background: #dc2626;
+		background: var(--danger);
+		color: var(--bg);
+		box-shadow: 0 0 8px color-mix(in srgb, var(--danger) 60%, transparent);
+	}
+
+	.option.selected .option-letter {
+		background: var(--accent);
+		color: var(--bg);
 	}
 
 	.option-text {
 		flex: 1;
 	}
 
+	/* ---- Badge inline (Corretta / La tua risposta) ---- */
 	.badge {
 		flex-shrink: 0;
-		font-size: 0.75rem;
-		font-weight: 600;
-		padding: 0.15rem 0.5rem;
+		font-family: var(--font-ui);
+		font-size: 0.7rem;
+		font-weight: 700;
+		padding: 0.2rem 0.6rem;
 		border-radius: 20px;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 	}
 
 	.correct-badge {
-		background: #16a34a;
-		color: #bbf7d0;
+		background: color-mix(in srgb, var(--green) 20%, transparent);
+		color: var(--green);
+		border: 1px solid var(--green);
 	}
 
 	.wrong-badge {
-		background: #dc2626;
-		color: #fecaca;
+		background: color-mix(in srgb, var(--danger) 20%, transparent);
+		color: var(--danger);
+		border: 1px solid var(--danger);
 	}
 
-	/* ---- Waiting ---- */
+	/* ---- Attesa altri giocatori ---- */
 	.waiting {
 		text-align: center;
 		color: var(--muted);
-		font-size: 0.9rem;
+		font-family: var(--font-ui);
+		font-size: 0.88rem;
 		margin: 0;
 		animation: pulse 1.5s ease-in-out infinite;
 	}
 
 	@keyframes pulse {
 		0%, 100% { opacity: 1; }
-		50% { opacity: 0.5; }
+		50%       { opacity: 0.4; }
 	}
 
-	/* ---- Scores mini (question phase) ---- */
+	@media (prefers-reduced-motion: reduce) {
+		.waiting { animation: none; }
+	}
+
+	/* ---- Punteggi mini (fase domanda) ---- */
 	.scores-mini {
 		display: flex;
 		flex-direction: column;
 		gap: 0.3rem;
-		background: var(--panel);
+		background: var(--inset);
+		border: 1px solid var(--line);
 		border-radius: 10px;
 		padding: 0.75rem 1rem;
 	}
@@ -486,13 +553,15 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		font-size: 0.85rem;
+		font-family: var(--font-ui);
+		font-size: 0.82rem;
 		color: var(--muted);
 	}
 
 	.score-row.me {
-		color: var(--text);
-		font-weight: 600;
+		color: var(--cyan);
+		font-weight: 700;
+		text-shadow: var(--glow-cyan);
 	}
 
 	.score-email {
@@ -506,19 +575,21 @@
 		flex-shrink: 0;
 	}
 
-	/* ---- Scores table (reveal / game over) ---- */
+	/* ---- Tabella punteggi (reveal / fine partita) ---- */
 	.scores-table {
-		background: var(--panel);
-		border-radius: 12px;
+		background: var(--inset);
+		border: 1px solid var(--line);
+		border-radius: 10px;
 		padding: 1rem;
 	}
 
 	.scores-title {
 		margin: 0 0 0.6rem;
-		font-size: 0.9rem;
+		font-family: var(--font-display);
+		font-size: 0.65rem;
 		color: var(--muted);
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
+		letter-spacing: 0.08em;
 	}
 
 	.ranking-table {
@@ -529,22 +600,23 @@
 	table {
 		width: 100%;
 		border-collapse: collapse;
-		font-size: 0.95rem;
+		font-family: var(--font-ui);
+		font-size: 0.92rem;
 	}
 
 	thead th {
 		text-align: left;
 		color: var(--muted);
-		font-size: 0.8rem;
+		font-size: 0.72rem;
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
+		letter-spacing: 0.07em;
 		padding: 0 0.5rem 0.5rem;
-		border-bottom: 1px solid #334155;
+		border-bottom: 1px solid var(--line);
 	}
 
 	tbody td {
 		padding: 0.5rem;
-		border-bottom: 1px solid #1e293b;
+		border-bottom: 1px solid var(--line);
 	}
 
 	tbody tr:last-child td {
@@ -571,13 +643,14 @@
 	}
 
 	tbody tr.me .email {
-		color: var(--text);
+		color: var(--cyan);
+		text-shadow: var(--glow-cyan);
 	}
 
 	.score {
 		text-align: right;
 		font-weight: 700;
-		color: var(--accent);
+		color: var(--amber);
 		white-space: nowrap;
 	}
 
@@ -588,22 +661,22 @@
 		}
 
 		.title {
-			font-size: 1.4rem;
+			font-size: 1rem;
 		}
 
 		.question-text {
-			font-size: 1rem;
+			font-size: 0.95rem;
 		}
 
 		.option {
 			padding: 0.65rem 0.75rem;
-			font-size: 0.95rem;
+			font-size: 0.9rem;
 		}
 
 		.option-letter {
-			width: 1.5rem;
-			height: 1.5rem;
-			font-size: 0.8rem;
+			width: 1.7rem;
+			height: 1.7rem;
+			font-size: 0.55rem;
 		}
 
 		.email {

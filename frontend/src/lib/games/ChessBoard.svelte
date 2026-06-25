@@ -308,6 +308,7 @@
 </div>
 
 <style>
+	/* ── Contenitore principale ── */
 	.chess {
 		display: flex;
 		flex-direction: column;
@@ -315,6 +316,8 @@
 		gap: 0.85rem;
 		padding: 0.5rem;
 	}
+
+	/* ── Header / info turno ── */
 	.header {
 		min-height: 2.5rem;
 		display: flex;
@@ -324,47 +327,80 @@
 	}
 	.info {
 		margin: 0;
+		font-family: var(--font-ui, 'Orbitron', sans-serif);
+		font-size: 0.85rem;
 		color: var(--muted);
+		letter-spacing: 0.05em;
 	}
 	.info.turn {
-		color: var(--text);
+		color: var(--cyan);
+		text-shadow: var(--glow-cyan);
 		font-weight: 600;
 	}
+
+	/* ── Badge scacco ── */
 	.check-badge {
-		background: #7f1d1d;
-		color: #fecaca;
+		background: var(--danger);
+		color: var(--bg);
 		padding: 0.1rem 0.5rem;
-		border-radius: 6px;
-		font-size: 0.8rem;
+		border-radius: 4px;
+		font-family: var(--font-display, 'Press Start 2P', monospace);
+		font-size: 0.65rem;
 		margin-left: 0.4rem;
+		text-shadow: none;
+		box-shadow: 0 0 8px var(--danger);
 	}
+
+	/* ── Banner fine partita ── */
 	.banner {
-		font-size: 1.2rem;
+		font-family: var(--font-display, 'Press Start 2P', monospace);
+		font-size: 0.85rem;
 		font-weight: 700;
-		padding: 0.5rem 1.1rem;
-		border-radius: 8px;
+		padding: 0.6rem 1.2rem;
+		border-radius: 6px;
+		letter-spacing: 0.05em;
+		text-align: center;
 	}
-	.win { background: #14532d; color: #bbf7d0; }
-	.lose { background: #7f1d1d; color: #fecaca; }
-	.draw { background: #1e3a5f; color: #bae6fd; }
+	.win  { background: color-mix(in srgb, var(--green) 18%, var(--inset)); color: var(--green);  border: 1px solid var(--green);  box-shadow: 0 0 10px color-mix(in srgb, var(--green) 40%, transparent); }
+	.lose { background: color-mix(in srgb, var(--danger) 18%, var(--inset)); color: var(--danger); border: 1px solid var(--danger); box-shadow: 0 0 10px color-mix(in srgb, var(--danger) 40%, transparent); }
+	.draw { background: color-mix(in srgb, var(--amber) 18%, var(--inset)); color: var(--amber);  border: 1px solid var(--amber);  box-shadow: 0 0 10px color-mix(in srgb, var(--amber) 40%, transparent); }
+
+	/* ── Bottone primario ── */
 	.btn {
-		padding: 0.55rem 1.3rem;
-		border: none;
-		border-radius: 8px;
-		background: var(--accent);
-		color: #fff;
-		font-weight: 600;
+		min-height: 44px;
+		padding: 0.55rem 1.4rem;
+		border: 1px solid var(--accent);
+		border-radius: 6px;
+		background: color-mix(in srgb, var(--accent) 18%, var(--panel));
+		color: var(--accent);
+		font-family: var(--font-ui, 'Orbitron', sans-serif);
+		font-size: 0.82rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
 		cursor: pointer;
+		text-shadow: var(--glow-mag);
+		box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 35%, transparent);
+		transition: box-shadow 0.2s;
 	}
+	.btn:hover {
+		box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 60%, transparent);
+	}
+
+	/* ── Griglia scacchiera ── */
 	.grid {
 		display: grid;
 		grid-template-columns: repeat(8, 1fr);
 		width: min(92vw, 460px);
 		aspect-ratio: 1;
-		border: 3px solid #1e293b;
+		/* Bordo neon cyan come da specifica */
+		border: 3px solid var(--cyan);
+		box-shadow: 0 0 12px color-mix(in srgb, var(--cyan) 50%, transparent),
+		            0 0 24px color-mix(in srgb, var(--cyan) 25%, transparent);
 		border-radius: 4px;
 		overflow: hidden;
 	}
+
+	/* ── Caselle ── */
 	.sq {
 		position: relative;
 		border: none;
@@ -374,78 +410,128 @@
 		justify-content: center;
 		cursor: pointer;
 		aspect-ratio: 1;
+		/* Hit target ≥44px garantito dalla dimensione della griglia (460/8≈57px) */
 	}
-	.sq.light { background: #e7d3b1; }
-	.sq.dark { background: #7c5a3a; }
+	/* Casella chiara → viola scuro, casella scura → quasi-nero */
+	.sq.light { background: #241340; }
+	.sq.dark  { background: var(--inset); }
 	.sq:disabled { cursor: default; }
-	.sq.sel { outline: 3px solid #6366f1; outline-offset: -3px; }
+
+	/* Selezione → outline neon cyan */
+	.sq.sel {
+		outline: 3px solid var(--cyan);
+		outline-offset: -3px;
+		box-shadow: inset 0 0 10px color-mix(in srgb, var(--cyan) 30%, transparent);
+	}
+
+	/* ── Pezzi ── */
 	.piece {
 		font-size: clamp(1.3rem, 6vw, 2rem);
 		line-height: 1;
 	}
+	/* Pezzi bianchi → neon cyan */
 	.piece.white {
-		color: #f8fafc;
-		text-shadow: 0 0 2px #000, 0 0 2px #000;
+		color: var(--cyan);
+		text-shadow: 0 0 10px var(--cyan), 0 0 4px var(--cyan);
 	}
+	/* Pezzi neri → neon magenta */
 	.piece.black {
-		color: #0f172a;
-		text-shadow: 0 0 1px #94a3b8;
+		color: var(--accent);
+		text-shadow: var(--glow-mag), 0 0 4px var(--accent);
 	}
+
+	/* ── Suggerimenti mosse legali ── */
+	/* Punto centrale per mossa libera */
 	.hint {
 		position: absolute;
 		width: 28%;
 		height: 28%;
 		border-radius: 50%;
-		background: rgba(99, 102, 241, 0.7);
+		background: color-mix(in srgb, var(--cyan) 65%, transparent);
+		box-shadow: 0 0 6px var(--cyan);
+		pointer-events: none;
 	}
+	/* Anello per cattura */
 	.hint.capture {
 		width: 86%;
 		height: 86%;
 		background: transparent;
-		border: 4px solid rgba(99, 102, 241, 0.7);
+		border: 4px solid color-mix(in srgb, var(--cyan) 70%, transparent);
+		box-shadow: 0 0 6px var(--cyan);
 		border-radius: 50%;
 	}
+
+	/* ── Promozione pedone ── */
 	.promo {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
 		background: var(--panel);
+		border: 1px solid var(--line);
 		padding: 0.5rem 0.8rem;
-		border-radius: 10px;
+		border-radius: 8px;
 		color: var(--muted);
+		font-family: var(--font-ui, 'Orbitron', sans-serif);
+		font-size: 0.8rem;
 	}
 	.promo-btn {
 		width: 2.6rem;
 		height: 2.6rem;
-		border: 1px solid #334155;
-		border-radius: 8px;
-		background: #7c5a3a;
+		min-height: 44px;
+		min-width: 44px;
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		background: var(--inset);
 		cursor: pointer;
+		transition: border-color 0.15s, box-shadow 0.15s;
 	}
+	.promo-btn:hover {
+		border-color: var(--cyan);
+		box-shadow: 0 0 8px color-mix(in srgb, var(--cyan) 40%, transparent);
+	}
+
+	/* ── Orologi ── */
 	.clock {
-		font-family: ui-monospace, monospace;
-		font-size: 1.2rem;
+		font-family: ui-monospace, 'VT323', monospace;
+		font-size: 1.25rem;
 		font-weight: 700;
-		background: #1e293b;
-		border: 1px solid #334155;
-		border-radius: 8px;
+		background: var(--inset);
+		border: 1px solid var(--line);
+		border-radius: 6px;
 		padding: 0.3rem 0.8rem;
 		color: var(--muted);
+		letter-spacing: 0.06em;
+		transition: border-color 0.3s, color 0.3s, box-shadow 0.3s;
 	}
+	/* Orologio in corso → bordo + testo neon */
 	.clock.running {
 		color: var(--text);
-		border-color: var(--accent);
+		border-color: var(--cyan);
+		box-shadow: 0 0 8px color-mix(in srgb, var(--cyan) 40%, transparent);
 	}
+	/* Tempo basso (< 30s) → lampeggio rosso */
 	.clock.running.low {
-		color: #fecaca;
-		border-color: #ef4444;
-		animation: blink 1s steps(2, start) infinite;
+		color: var(--danger);
+		border-color: var(--danger);
+		box-shadow: 0 0 8px color-mix(in srgb, var(--danger) 50%, transparent);
+		animation: blink-danger 1s steps(2, start) infinite;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.clock.running.low {
+			animation: none;
+			/* Usa solo colore statico per indicare urgenza */
+			border-color: var(--danger);
+			color: var(--danger);
+		}
 	}
 	.clock-who {
-		font-size: 0.75rem;
+		font-size: 0.72rem;
 		font-weight: 400;
-		opacity: 0.7;
+		opacity: 0.65;
+		font-family: var(--font-ui, 'Orbitron', sans-serif);
 	}
+
+	/* ── Barra giocatori ── */
 	.player-bar {
 		display: flex;
 		align-items: center;
@@ -453,6 +539,8 @@
 		width: min(92vw, 460px);
 		flex-wrap: wrap;
 	}
+
+	/* ── Pezzi catturati ── */
 	.captured {
 		display: flex;
 		flex-wrap: wrap;
@@ -460,62 +548,101 @@
 		font-size: 1.1rem;
 		line-height: 1;
 	}
+	/* Pezzi catturati di colore bianco → cyan */
 	.cap.white {
-		color: #f8fafc;
-		text-shadow: 0 0 2px #000;
+		color: var(--cyan);
+		text-shadow: 0 0 6px var(--cyan);
 	}
+	/* Pezzi catturati di colore nero → accent sfumato */
 	.cap.black {
-		color: #475569;
+		color: var(--muted);
 	}
-	@keyframes blink {
-		50% {
-			opacity: 0.55;
-		}
+
+	/* ── Animazione lampeggio pericolo ── */
+	@keyframes blink-danger {
+		50% { opacity: 0.45; }
 	}
+
+	/* ── Controlli partita ── */
 	.controls {
 		display: flex;
 		gap: 0.6rem;
+		flex-wrap: wrap;
+		justify-content: center;
 	}
 	.ctrl {
+		min-height: 44px;
 		padding: 0.45rem 1rem;
-		border: 1px solid #334155;
-		border-radius: 8px;
-		background: #1e293b;
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		background: var(--panel);
 		color: var(--text);
+		font-family: var(--font-ui, 'Orbitron', sans-serif);
+		font-size: 0.8rem;
+		letter-spacing: 0.04em;
 		cursor: pointer;
-		font-size: 0.9rem;
+		transition: border-color 0.2s, box-shadow 0.2s;
+	}
+	.ctrl:hover:not(:disabled) {
+		border-color: var(--cyan);
+		box-shadow: 0 0 8px color-mix(in srgb, var(--cyan) 35%, transparent);
 	}
 	.ctrl:disabled {
-		opacity: 0.6;
+		opacity: 0.5;
 		cursor: default;
 	}
+	/* Bottone abbandona → tono danger */
 	.ctrl.resign {
-		background: #7f1d1d;
-		border-color: #991b1b;
-		color: #fecaca;
+		background: color-mix(in srgb, var(--danger) 15%, var(--panel));
+		border-color: var(--danger);
+		color: var(--danger);
+		box-shadow: 0 0 6px color-mix(in srgb, var(--danger) 30%, transparent);
 	}
+	.ctrl.resign:hover:not(:disabled) {
+		box-shadow: 0 0 14px color-mix(in srgb, var(--danger) 55%, transparent);
+	}
+
+	/* ── Offerta di patta ── */
 	.draw-offer {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
-		background: #1e3a5f;
-		border: 1px solid #3b82f6;
+		background: color-mix(in srgb, var(--amber) 12%, var(--inset));
+		border: 1px solid var(--amber);
 		border-radius: 8px;
 		padding: 0.4rem 0.8rem;
-		font-size: 0.9rem;
+		font-size: 0.85rem;
+		color: var(--amber);
+		font-family: var(--font-ui, 'Orbitron', sans-serif);
+		box-shadow: 0 0 8px color-mix(in srgb, var(--amber) 25%, transparent);
 	}
 	.mini {
-		padding: 0.3rem 0.7rem;
-		border: none;
+		min-height: 44px;
+		padding: 0.35rem 0.75rem;
+		border: 1px solid transparent;
 		border-radius: 6px;
 		cursor: pointer;
-		color: white;
-		font-size: 0.82rem;
+		font-family: var(--font-ui, 'Orbitron', sans-serif);
+		font-size: 0.78rem;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		transition: box-shadow 0.2s;
 	}
 	.mini.accept {
-		background: #16a34a;
+		background: color-mix(in srgb, var(--green) 20%, var(--panel));
+		border-color: var(--green);
+		color: var(--green);
+	}
+	.mini.accept:hover {
+		box-shadow: 0 0 10px color-mix(in srgb, var(--green) 45%, transparent);
 	}
 	.mini.decline {
-		background: #475569;
+		background: color-mix(in srgb, var(--muted) 20%, var(--panel));
+		border-color: var(--muted);
+		color: var(--muted);
+	}
+	.mini.decline:hover {
+		border-color: var(--text);
+		color: var(--text);
 	}
 </style>
