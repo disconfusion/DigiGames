@@ -21,6 +21,17 @@ public class LeaderboardService {
         r.result = result;
         r.playedAt = Instant.now();
         r.persist();
+
+        // Token guadagnati: vittoria 10 (Impiccato del giorno 50), pareggio 5, sconfitta 0.
+        // user è gestito da Panache nella transazione → l'incremento persiste al flush.
+        if (user != null) {
+            int reward = switch (result) {
+                case "WIN" -> "daily".equals(game) ? 50 : 10;
+                case "DRAW" -> 5;
+                default -> 0;
+            };
+            user.tokens += reward;
+        }
     }
 
     /** Statistiche personali di un utente: totali, per-gioco e ultime partite. */

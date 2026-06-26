@@ -22,6 +22,7 @@
 	const isAdmin = $derived(auth.session?.role === 'admin');
 
 	let menuOpen = $state(false);
+	let tokens = $state(0);
 
 	// Modale segnalazione bug
 	let showBug = $state(false);
@@ -71,11 +72,22 @@
 		} catch { /* silenzioso */ }
 	}
 
+	async function fetchTokens() {
+		try {
+			const r = await api<{ balance: number }>('/api/tokens');
+			tokens = r.balance;
+		} catch { /* silenzioso */ }
+	}
+
 	$effect(() => {
 		if (auth.session) {
-			// Heartbeat presenza ogni 30s
+			// Heartbeat presenza + refresh saldo Token ogni 30s
 			ping();
-			pingTimer = setInterval(ping, 30_000);
+			fetchTokens();
+			pingTimer = setInterval(() => {
+				ping();
+				fetchTokens();
+			}, 30_000);
 			// Fetch count iniziale + canale WS notifiche
 			fetchInviteCount();
 			notifyWs = connectNotify(
@@ -106,6 +118,7 @@
 			notifyWs?.close();
 			notifyWs = undefined;
 			setInviteCount(0);
+			tokens = 0;
 		}
 	});
 
@@ -128,6 +141,7 @@
 <header>
 	<a class="brand" href="/">🎮 DigiGames</a>
 	{#if auth.session}
+		<span class="token-badge" title="I tuoi Token">🪙 {tokens}</span>
 		<button
 			class="menu-toggle"
 			onclick={() => (menuOpen = !menuOpen)}
@@ -253,6 +267,23 @@
 		font-size: 1.2rem;
 		color: var(--text);
 		text-decoration: none;
+	}
+	/* Badge saldo Token: spinto a destra (margin auto), resta sempre visibile anche su mobile */
+	.token-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		margin-left: auto;
+		padding: 0.25rem 0.65rem;
+		border-radius: 999px;
+		background: var(--inset);
+		border: 1px solid var(--amber);
+		color: var(--amber);
+		font-family: var(--font-ui);
+		font-weight: 700;
+		font-size: 0.8rem;
+		white-space: nowrap;
+		text-shadow: 0 0 6px rgba(255, 207, 63, 0.5);
 	}
 	nav {
 		display: flex;

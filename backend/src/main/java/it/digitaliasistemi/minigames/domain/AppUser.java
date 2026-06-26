@@ -25,6 +25,10 @@ public class AppUser extends PanacheEntity {
     @Column(columnDefinition = "text")
     public String avatar;
 
+    /** Saldo Token: valuta interna guadagnata giocando e spendibile nello shop. */
+    @Column(nullable = false)
+    public int tokens = 0;
+
     public static AppUser findByUsername(String username) {
         return find("username", username).firstResult();
     }
