@@ -49,3 +49,5 @@ Frontend: board in `frontend/src/lib/games/<X>Board.svelte`, registrato in `regi
 
 ## Stato / roadmap
 Giochi: forza4, impiccato (+ parola del giorno), quiz, battaglia navale, campo minato, tris, dama, scacchi. Mancano: **briscola, scopa**. Vedi anche la memoria di sessione per il backlog dettagliato.
+
+⚠️ **Roadmap = `backend/src/main/resources/roadmap.md` (fonte di verità).** È mostrata nel sito alla pagina `/roadmap`: `DataInitializer` riallinea la tabella `roadmap` al file a ogni avvio (anche cold-start Render), e `/api/roadmap` la serve al frontend. **Ogni volta che si marca un punto come fatto (`[ ]` → `[x]`) o si modifica la roadmap, aggiornare SEMPRE `roadmap.md` nel repo**, così il default del sito resta sincronizzato col codice.
