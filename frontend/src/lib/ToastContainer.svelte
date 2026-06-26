@@ -61,6 +61,10 @@
 		border-left-color: var(--cyan);
 		box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5), 0 0 12px color-mix(in srgb, var(--cyan) 30%, transparent);
 	}
+	.toast.error {
+		border-left-color: var(--danger);
+		box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5), 0 0 12px color-mix(in srgb, var(--danger) 35%, transparent);
+	}
 
 	.msg {
 		flex: 1;

@@ -1,4 +1,4 @@
-export type ToastKind = 'info' | 'success' | 'invite';
+export type ToastKind = 'info' | 'success' | 'invite' | 'error';
 export type Toast = { id: number; message: string; kind: ToastKind };
 
 // Stato condiviso per notifiche real-time (badge nav + trigger refresh pagine + coda toast).

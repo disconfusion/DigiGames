@@ -4,6 +4,7 @@
 	import { auth } from '$lib/auth.svelte';
 	import { api } from '$lib/api';
 	import { gameLabel } from '$lib/games/catalog';
+	import { showToast } from '$lib/notifications.svelte';
 
 	type Bug = {
 		id: number;
@@ -17,12 +18,21 @@
 
 	let bugs = $state<Bug[]>([]);
 	let users = $state<AdminUser[]>([]);
-	let error = $state('');
-	let notice = $state('');
+	/** Azioni in corso (chiave → true): disabilita il bottone ed evita doppi click. */
+	let busy = $state<Record<string, boolean>>({});
 
-	function flash(msg: string) {
-		notice = msg;
-		setTimeout(() => (notice = ''), 2500);
+	/** Esegue un'azione admin con feedback uniforme via toast + guardia anti doppio-click. */
+	async function run<T>(key: string, fn: () => Promise<T>, onOk?: (r: T) => void) {
+		if (busy[key]) return;
+		busy = { ...busy, [key]: true };
+		try {
+			const r = await fn();
+			onOk?.(r);
+		} catch (e) {
+			showToast((e as Error).message, 'error');
+		} finally {
+			busy = { ...busy, [key]: false };
+		}
 	}
 
 	async function load() {
@@ -30,7 +40,7 @@
 			bugs = await api<Bug[]>('/api/bugs');
 			users = await api<AdminUser[]>('/api/admin/users');
 		} catch (e) {
-			error = (e as Error).message;
+			showToast((e as Error).message, 'error');
 		}
 	}
 
@@ -47,51 +57,42 @@
 		loadRoadmap();
 	});
 
-	async function deleteBug(id: number) {
-		try {
-			await api(`/api/bugs/${id}`, { method: 'DELETE' });
+	function deleteBug(id: number) {
+		run(`bug-${id}`, () => api(`/api/bugs/${id}`, { method: 'DELETE' }), () => {
 			bugs = bugs.filter((b) => b.id !== id);
-			flash('Bug eliminato');
-		} catch (e) {
-			error = (e as Error).message;
-		}
+			showToast('Bug eliminato', 'success');
+		});
 	}
 
-	async function resetStats(u: AdminUser) {
+	function resetStats(u: AdminUser) {
 		if (!confirm(`Azzerare le statistiche di ${u.displayName}?`)) return;
-		try {
-			const r = await api<{ message: string }>(`/api/admin/users/${u.username}/reset-stats`, {
-				method: 'POST'
-			});
-			flash(r.message);
-		} catch (e) {
-			error = (e as Error).message;
-		}
+		run(
+			`stats-${u.username}`,
+			() => api<{ message: string }>(`/api/admin/users/${u.username}/reset-stats`, { method: 'POST' }),
+			(r) => showToast(r.message, 'success')
+		);
 	}
 
-	async function dailyReset(u: AdminUser) {
-		try {
-			const r = await api<{ message: string }>(`/api/admin/users/${u.username}/daily-reset`, {
-				method: 'POST'
-			});
-			flash(r.message);
-		} catch (e) {
-			error = (e as Error).message;
-		}
+	function dailyReset(u: AdminUser) {
+		run(
+			`daily-${u.username}`,
+			() => api<{ message: string }>(`/api/admin/users/${u.username}/daily-reset`, { method: 'POST' }),
+			(r) => showToast(r.message, 'success')
+		);
 	}
 
-	async function resetPassword(u: AdminUser) {
+	function resetPassword(u: AdminUser) {
 		const np = prompt(`Nuova password per ${u.username} (min 6):`);
 		if (!np) return;
-		try {
-			const r = await api<{ message: string }>(`/api/admin/users/${u.username}/reset-password`, {
-				method: 'POST',
-				body: JSON.stringify({ newPassword: np })
-			});
-			flash(r.message);
-		} catch (e) {
-			error = (e as Error).message;
-		}
+		run(
+			`pwd-${u.username}`,
+			() =>
+				api<{ message: string }>(`/api/admin/users/${u.username}/reset-password`, {
+					method: 'POST',
+					body: JSON.stringify({ newPassword: np })
+				}),
+			(r) => showToast(r.message, 'success')
+		);
 	}
 
 	let customWord = $state('');
@@ -104,46 +105,45 @@
 		} catch { /* ignora */ }
 	}
 
-	async function saveRoadmap() {
-		try {
-			const r = await api<{ message: string }>('/api/admin/roadmap', {
-				method: 'PUT',
-				body: JSON.stringify({ content: roadmapContent })
-			});
-			flash(r.message);
-		} catch (e) {
-			error = (e as Error).message;
-		}
+	function saveRoadmap() {
+		run(
+			'roadmap',
+			() =>
+				api<{ message: string }>('/api/admin/roadmap', {
+					method: 'PUT',
+					body: JSON.stringify({ content: roadmapContent })
+				}),
+			(r) => showToast(r.message, 'success')
+		);
 	}
 
-	async function setDailyWord() {
+	function setDailyWord() {
 		if (!customWord.trim()) return;
-		try {
-			const r = await api<{ message: string }>('/api/admin/daily/set-word', {
-				method: 'POST',
-				body: JSON.stringify({ word: customWord.trim() })
-			});
-			flash(r.message);
-			customWord = '';
-		} catch (e) {
-			error = (e as Error).message;
-		}
+		run(
+			'setword',
+			() =>
+				api<{ message: string }>('/api/admin/daily/set-word', {
+					method: 'POST',
+					body: JSON.stringify({ word: customWord.trim() })
+				}),
+			(r) => {
+				showToast(r.message, 'success');
+				customWord = '';
+			}
+		);
 	}
 
-	async function resetDailyWord() {
+	function resetDailyWord() {
 		if (!confirm('Resettare la parola del giorno? Riparte con la parola automatica.')) return;
-		try {
-			const r = await api<{ message: string }>('/api/admin/daily/reset', { method: 'POST' });
-			flash(r.message);
-		} catch (e) {
-			error = (e as Error).message;
-		}
+		run(
+			'resetword',
+			() => api<{ message: string }>('/api/admin/daily/reset', { method: 'POST' }),
+			(r) => showToast(r.message, 'success')
+		);
 	}
 </script>
 
 <h1>🛠 Pannello Admin</h1>
-{#if error}<p class="err">{error}</p>{/if}
-{#if notice}<p class="ok">{notice}</p>{/if}
 
 <section class="panel">
 	<h2>🐞 Segnalazioni bug ({bugs.length})</h2>
@@ -158,7 +158,7 @@
 						<span class="muted">@{b.username} · {gameLabel(b.game)} · {b.createdAt.slice(0, 16).replace('T', ' ')}</span>
 					</div>
 					<p class="bug-desc">{b.description}</p>
-					<button class="danger" onclick={() => deleteBug(b.id)}>Elimina</button>
+					<button class="danger" disabled={busy[`bug-${b.id}`]} onclick={() => deleteBug(b.id)}>Elimina</button>
 				</li>
 			{/each}
 		</ul>
@@ -174,9 +174,9 @@
 				bind:value={customWord}
 				autocomplete="off"
 			/>
-			<button type="submit" disabled={!customWord.trim()}>Imposta parola</button>
+			<button type="submit" disabled={!customWord.trim() || busy['setword']}>Imposta parola</button>
 		</form>
-		<button class="danger" onclick={resetDailyWord}>Reset → parola automatica</button>
+		<button class="danger" disabled={busy['resetword']} onclick={resetDailyWord}>Reset → parola automatica</button>
 	</div>
 	<p class="muted hint">Impostare una parola resetta anche tutte le mosse di oggi. Il reset ripristina la parola automatica calcolata dalla data.</p>
 </section>
@@ -189,7 +189,7 @@
 			bind:value={roadmapContent}
 			rows="14"
 		></textarea>
-		<button type="submit">Salva roadmap</button>
+		<button type="submit" disabled={busy['roadmap']}>Salva roadmap</button>
 	</form>
 	<p class="muted hint">Visibile a tutti gli utenti su <a href="/roadmap" target="_blank">/roadmap</a>.</p>
 </section>
@@ -204,9 +204,9 @@
 					<span class="muted">@{u.username}{u.role === 'admin' ? ' · admin' : ''}</span>
 				</div>
 				<div class="actions">
-					<button onclick={() => dailyReset(u)}>Reset parola del giorno</button>
-					<button onclick={() => resetStats(u)}>Azzera stats</button>
-					<button onclick={() => resetPassword(u)}>Reset password</button>
+					<button disabled={busy[`daily-${u.username}`]} onclick={() => dailyReset(u)}>Reset parola del giorno</button>
+					<button disabled={busy[`stats-${u.username}`]} onclick={() => resetStats(u)}>Azzera stats</button>
+					<button disabled={busy[`pwd-${u.username}`]} onclick={() => resetPassword(u)}>Reset password</button>
 				</div>
 			</li>
 		{/each}
@@ -228,11 +228,9 @@
 		color: var(--muted);
 		font-size: 0.85rem;
 	}
-	.err {
-		color: #f87171;
-	}
-	.ok {
-		color: #4ade80;
+	button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 	.bugs,
 	.users {
