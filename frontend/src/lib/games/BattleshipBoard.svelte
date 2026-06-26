@@ -24,12 +24,49 @@
 	let state = $state<BattleshipState | null>(null);
 	let over = $state<{ status: string; winner: string | null } | null>(null);
 
+	// Celle che hanno appena cambiato esito → animazione esplosione/schizzo una sola volta.
+	// Chiave: "own-r-c" | "enemy-r-c" → 'hit' | 'miss'.
+	let flashes = $state<Record<string, 'hit' | 'miss'>>({});
+	// Snapshot precedente per il confronto (plain, non reattivo: non deve ri-triggerare l'effect).
+	let prevSnapshot: BattleshipState | null = null;
+
+	// Confronta board vecchia e nuova: marca le celle appena diventate X/O per animarle.
+	// Salta al primo snapshot/reload (prev null) per non far esplodere tutto insieme.
+	function detectFlashes(prev: BattleshipState | null, next: BattleshipState) {
+		if (!prev) return;
+		const add: Record<string, 'hit' | 'miss'> = {};
+		const scan = (prevB: Cell[][] | undefined, nextB: Cell[][] | undefined, side: 'own' | 'enemy') => {
+			if (!prevB || !nextB) return;
+			for (let r = 0; r < nextB.length; r++) {
+				for (let c = 0; c < nextB[r].length; c++) {
+					const after = nextB[r][c];
+					if (after === prevB[r]?.[c]) continue;
+					if (after === 'X') add[`${side}-${r}-${c}`] = 'hit';
+					else if (after === 'O') add[`${side}-${r}-${c}`] = 'miss';
+				}
+			}
+		};
+		scan(prev.yourBoard, next.yourBoard, 'own');
+		scan(prev.enemyBoard, next.enemyBoard, 'enemy');
+		const keys = Object.keys(add);
+		if (keys.length === 0) return;
+		flashes = { ...flashes, ...add };
+		setTimeout(() => {
+			const copy = { ...flashes };
+			for (const k of keys) delete copy[k];
+			flashes = copy;
+		}, 650);
+	}
+
 	// Reagisce agli snapshot personalizzati ricevuti dal server (l'ultimo è autoritativo).
 	$effect(() => {
 		const e = event;
 		if (!e) return;
 		if (e.type === 'game:state') {
-			state = e as unknown as BattleshipState;
+			const next = e as unknown as BattleshipState;
+			detectFlashes(prevSnapshot, next);
+			prevSnapshot = next;
+			state = next;
 			if ((e as { status?: string }).status === 'PLAYING') over = null;
 		} else if (e.type === 'game:over') {
 			over = { status: String(e.status), winner: (e.winner as string) ?? null };
@@ -322,6 +359,8 @@
 						{#each row as cell, c (c)}
 							<div
 								class="cell {cell === 'S' ? 'ship' : cell === 'X' ? 'hit' : cell === 'O' ? 'miss' : 'water'}"
+								class:just-hit={flashes[`own-${r}-${c}`] === 'hit'}
+								class:just-miss={flashes[`own-${r}-${c}`] === 'miss'}
 								title={cellTitle(cell, false)}
 							></div>
 						{/each}
@@ -340,6 +379,8 @@
 						{#each row as cell, c (c)}
 							<button
 								class="cell {cell === 'X' ? 'hit' : cell === 'O' ? 'miss' : 'unknown'}"
+								class:just-hit={flashes[`enemy-${r}-${c}`] === 'hit'}
+								class:just-miss={flashes[`enemy-${r}-${c}`] === 'miss'}
 								disabled={cell !== '?' || !state.yourTurn}
 								onclick={() => fire(r, c)}
 								title={cellTitle(cell, true)}
@@ -588,6 +629,46 @@
 		border-radius: 50%;
 		background: var(--bg);
 	}
+
+	/* ── Animazioni colpo: esplosione (hit) e schizzo d'acqua (miss) ─────────── */
+	/* Applicate solo alla cella appena cambiata (classe temporanea), una volta sola */
+	.cell.just-hit {
+		animation: hit-pop 0.5s ease-out;
+		z-index: 2;
+	}
+	.cell.just-hit::before {
+		content: '';
+		position: absolute;
+		inset: -4px;
+		border-radius: 50%;
+		background: radial-gradient(circle, rgba(255, 207, 63, 0.95) 0%, rgba(255, 46, 136, 0.7) 45%, transparent 72%);
+		animation: shockwave 0.55s ease-out forwards;
+		pointer-events: none;
+		z-index: 3;
+	}
+	.cell.just-miss::before {
+		content: '';
+		position: absolute;
+		inset: 26%;
+		border-radius: 50%;
+		border: 2px solid rgba(47, 243, 255, 0.9);
+		animation: splash 0.6s ease-out forwards;
+		pointer-events: none;
+		z-index: 3;
+	}
+	@keyframes hit-pop {
+		0% { transform: scale(1); }
+		28% { transform: scale(1.35); box-shadow: 0 0 18px 6px var(--amber); }
+		100% { transform: scale(1); }
+	}
+	@keyframes shockwave {
+		0% { transform: scale(0.2); opacity: 1; }
+		100% { transform: scale(2.4); opacity: 0; }
+	}
+	@keyframes splash {
+		0% { transform: scale(0.3); opacity: 0.95; }
+		100% { transform: scale(2.3); opacity: 0; }
+	}
 	/* Preview piazzamento: cyan valido, rosso se invalido */
 	.cell.preview {
 		background: rgba(47, 243, 255, 0.55);
@@ -752,6 +833,14 @@
 		.primary,
 		.ghost {
 			transition: none;
+		}
+		/* Niente esplosioni/schizzi: stato finale statico */
+		.cell.just-hit {
+			animation: none;
+		}
+		.cell.just-hit::before,
+		.cell.just-miss::before {
+			display: none;
 		}
 	}
 
