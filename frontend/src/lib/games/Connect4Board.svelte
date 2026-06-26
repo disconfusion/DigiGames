@@ -19,12 +19,36 @@
 	let state = $state<GameState | null>(null);
 	let over  = $state<{ status: GameStatus; winner: string | null } | null>(null);
 
+	// Cella appena riempita → animazione di caduta ("r-c"); null quando finita.
+	let dropping = $state<string | null>(null);
+	// Board precedente per il confronto (plain, non reattivo: non deve ri-triggerare l'effect).
+	let prevBoard: (string | null)[][] | null = null;
+
+	// Trova la cella appena passata da vuota a piena e ne avvia la caduta (una per mossa).
+	// Salta al primo snapshot (prev null) per non far "cadere" tutto al reload.
+	function detectDrop(prev: (string | null)[][] | null, next: (string | null)[][]) {
+		if (!prev) return;
+		for (let r = 0; r < next.length; r++) {
+			for (let c = 0; c < next[r].length; c++) {
+				if (next[r][c] && !prev[r]?.[c]) {
+					const key = `${r}-${c}`;
+					dropping = key;
+					setTimeout(() => { if (dropping === key) dropping = null; }, 550);
+					return;
+				}
+			}
+		}
+	}
+
 	// ---- Reazione agli eventi WebSocket ----
 	$effect(() => {
 		const e = event;
 		if (!e) return;
 		if (e.type === 'game:state') {
-			state = e as unknown as GameState;
+			const next = e as unknown as GameState;
+			detectDrop(prevBoard, next.board);
+			prevBoard = next.board;
+			state = next;
 			if ((e as { status?: string }).status === 'PLAYING') over = null;
 		} else if (e.type === 'game:over') {
 			over = {
@@ -67,6 +91,30 @@
 	const EMPTY_BOARD: (null)[][] = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
 
 	const displayBoard = $derived(state?.board ?? EMPTY_BOARD);
+
+	// Calcola lato client le 4 celle vincenti (il server invia solo winner/status).
+	function findWinningCells(board: (string | null)[][]): string[] {
+		const dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
+		for (let r = 0; r < ROWS; r++) {
+			for (let c = 0; c < COLS; c++) {
+				const color = board[r]?.[c];
+				if (!color) continue;
+				for (const [dr, dc] of dirs) {
+					const line: string[] = [];
+					for (let k = 0; k < 4; k++) {
+						const rr = r + dr * k, cc = c + dc * k;
+						if (board[rr]?.[cc] === color) line.push(`${rr}-${cc}`);
+						else break;
+					}
+					if (line.length === 4) return line;
+				}
+			}
+		}
+		return [];
+	}
+	const winSet = $derived(
+		state?.status === 'WON' ? new Set(findWinningCells(displayBoard)) : new Set<string>()
+	);
 </script>
 
 <div class="c4-wrap">
@@ -124,7 +172,12 @@
 					disabled={!isPlaying || !isMyTurn || !!over}
 					aria-label="Riga {r + 1} colonna {c + 1}{cell ? ': ' + colorLabel(cell) : ''}"
 				>
-					<span class="c4-disk {colorClass(cell)}"></span>
+					<span
+							class="c4-disk {colorClass(cell)}"
+							class:c4-dropping={dropping === `${r}-${c}`}
+							class:c4-win-disk={winSet.has(`${r}-${c}`)}
+							style="--drop: {r + 1}"
+						></span>
 				</button>
 			{/each}
 		{/each}
@@ -192,6 +245,12 @@
 
 	@media (prefers-reduced-motion: reduce) {
 		.c4-your-turn { animation: none; }
+		.c4-disk.c4-dropping { animation: none; }
+		/* Niente pulsazione: evidenziazione statica della quaterna */
+		.c4-disk.c4-win-disk {
+			animation: none;
+			box-shadow: 0 0 10px var(--green), 0 0 0 3px var(--green);
+		}
 	}
 
 	/* Banner esito */
@@ -289,6 +348,8 @@
 		max-width: calc(var(--cols) * 64px + (var(--cols) - 1) * 6px + 20px);
 		box-sizing: border-box;
 		box-shadow: 0 0 26px rgba(47, 243, 255, 0.27);
+		/* Clippa la caduta dei gettoni: partono sopra la board ma si vedono solo al suo interno */
+		overflow: hidden;
 	}
 
 	.c4-cell {
@@ -327,6 +388,31 @@
 	.c4-disk.yellow {
 		background: radial-gradient(circle at 35% 35%, #ffe080, var(--amber));
 		box-shadow: 0 0 12px var(--amber);
+	}
+
+	/* ---- Caduta del gettone ---- */
+	/* Parte da sopra la board (proporzionale alla riga) e atterra a posto con micro-rimbalzo */
+	.c4-disk.c4-dropping {
+		position: relative;
+		z-index: 2;
+		animation: c4-drop 0.42s cubic-bezier(0.4, 0, 0.7, 1);
+	}
+	@keyframes c4-drop {
+		0%   { transform: translateY(calc(var(--drop, 1) * -120%)); }
+		75%  { transform: translateY(0); }
+		86%  { transform: translateY(-7%); }
+		100% { transform: translateY(0); }
+	}
+
+	/* ---- Quaterna vincente: anello verde pulsante ---- */
+	.c4-disk.c4-win-disk {
+		position: relative;
+		z-index: 1;
+		animation: c4-win-pulse 0.9s ease-in-out infinite;
+	}
+	@keyframes c4-win-pulse {
+		0%, 100% { box-shadow: 0 0 10px var(--green), 0 0 0 2px var(--green); transform: scale(1); }
+		50%      { box-shadow: 0 0 22px var(--green), 0 0 0 3px var(--green); transform: scale(1.08); }
 	}
 
 	/* ---- Disco inline (legenda / turno) ---- */
