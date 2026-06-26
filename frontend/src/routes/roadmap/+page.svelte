@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { auth } from '$lib/auth.svelte';
 	import { api } from '$lib/api';
+	import Markdown from '$lib/Markdown.svelte';
 
 	let content = $state('');
 	let loading = $state(true);
@@ -33,7 +34,7 @@
 {:else if !content.trim()}
 	<p class="muted">Nessuna roadmap disponibile al momento.</p>
 {:else}
-	<div class="roadmap-content">{content}</div>
+	<div class="roadmap-content"><Markdown source={content} /></div>
 {/if}
 
 <style>
@@ -47,15 +48,10 @@
 		color: #f87171;
 	}
 	.roadmap-content {
-		white-space: pre-wrap;
 		background: var(--panel);
 		padding: 1.5rem 1.75rem;
 		border-radius: 12px;
-		border: 1px solid #334155;
-		font-size: 0.95rem;
-		line-height: 1.75;
-		max-width: 760px;
-		color: var(--text);
-		font-family: inherit;
+		border: 1px solid var(--line);
+		max-width: 860px;
 	}
 </style>
