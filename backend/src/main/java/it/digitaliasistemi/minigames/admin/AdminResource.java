@@ -6,6 +6,7 @@ import it.digitaliasistemi.minigames.domain.AppUser;
 import it.digitaliasistemi.minigames.domain.DailyAttempt;
 import it.digitaliasistemi.minigames.domain.MatchResult;
 import it.digitaliasistemi.minigames.domain.Roadmap;
+import it.digitaliasistemi.minigames.shop.ShopService;
 import it.digitaliasistemi.minigames.ws.NotifyBus;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -30,6 +31,7 @@ public class AdminResource {
 
     @Inject DailyHangmanService dailyService;
     @Inject NotifyBus notifyBus;
+    @Inject ShopService shop;
 
     @GET
     @Path("/users")
@@ -124,7 +126,29 @@ public class AdminResource {
         return Response.ok(Map.of("message", "Roadmap aggiornata")).build();
     }
 
+    /** Elenco poteri con prezzo corrente e default (gestione prezzi shop). */
+    @GET
+    @Path("/power-prices")
+    public List<Map<String, Object>> powerPrices() {
+        return shop.prices();
+    }
+
+    /** Imposta il prezzo (in Token) di un potere. */
+    @PUT
+    @Path("/power-prices/{id}")
+    public Response setPowerPrice(@PathParam("id") String id, PowerPriceRequest req) {
+        if (req == null || req.cost() == null || req.cost() < 0) {
+            return Response.status(400).entity(Map.of("message", "Prezzo non valido")).build();
+        }
+        if (!shop.setPrice(id, req.cost())) {
+            return Response.status(404).entity(Map.of("message", "Potere inesistente: " + id)).build();
+        }
+        return Response.ok(Map.of("message", "Prezzo aggiornato (" + req.cost() + " Token)")).build();
+    }
+
     public record UserView(String username, String displayName, String role) {}
+
+    public record PowerPriceRequest(Integer cost) {}
 
     public record ResetPasswordRequest(String newPassword) {}
 
