@@ -628,6 +628,15 @@
 			opacity: 0.5;
 		}
 	}
+	/* Più aria tra le card sui monitor larghi (il container è più ampio da 1200px in su) */
+	@media (min-width: 1200px) {
+		.cards {
+			gap: 1.75rem;
+		}
+		.users {
+			max-height: 300px;
+		}
+	}
 	@media (max-width: 760px) {
 		.cards {
 			grid-template-columns: 1fr;

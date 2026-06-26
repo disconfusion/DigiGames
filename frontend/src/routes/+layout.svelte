@@ -308,20 +308,25 @@
 		justify-content: center;
 	}
 	main {
-		max-width: 900px;
+		max-width: 960px;
 		margin: 0 auto;
 		padding: 1.5rem 1rem;
 		width: 100%;
 	}
 	/* Su schermi grandi diamo più respiro orizzontale (evita card strette e troppo alte) */
-	@media (min-width: 1500px) {
+	@media (min-width: 1200px) {
 		main {
-			max-width: 1120px;
+			max-width: 1100px;
 		}
 	}
-	@media (min-width: 2000px) {
+	@media (min-width: 1500px) {
 		main {
-			max-width: 1320px;
+			max-width: 1280px;
+		}
+	}
+	@media (min-width: 1920px) {
+		main {
+			max-width: 1440px;
 		}
 	}
 	.bug {

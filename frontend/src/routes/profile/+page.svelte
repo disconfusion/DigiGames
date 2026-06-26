@@ -128,6 +128,7 @@
 {#if profile}
 	<p class="sub">@{profile.username}</p>
 
+	<div class="profile-grid">
 	<section class="panel">
 		<h2>🙂 Avatar</h2>
 		<div class="avatar-builder">
@@ -190,7 +191,7 @@
 	</section>
 
 	{#if stats}
-		<section class="panel">
+		<section class="panel stats-panel">
 			<h2>📊 Le tue statistiche</h2>
 			{#if stats.total === 0}
 				<p class="hint">Nessuna partita registrata. Gioca qualcosa dalla home!</p>
@@ -234,6 +235,7 @@
 			{/if}
 		</section>
 	{/if}
+	</div>
 {/if}
 
 <style>
@@ -246,6 +248,21 @@
 		padding: 1rem 1.25rem;
 		border-radius: 12px;
 		margin-bottom: 1.25rem;
+	}
+	/* Dashboard responsive: su schermi larghi i pannelli avatar/nome/password
+	   si affiancano (auto-fit), le statistiche restano a tutta larghezza sotto.
+	   Su mobile collassa naturalmente a una colonna. */
+	.profile-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		gap: 1.25rem;
+		align-items: start;
+	}
+	.profile-grid .panel {
+		margin-bottom: 0;
+	}
+	.stats-panel {
+		grid-column: 1 / -1;
 	}
 	h2 {
 		font-size: 1.05rem;

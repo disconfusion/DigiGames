@@ -52,6 +52,6 @@
 		padding: 1.5rem 1.75rem;
 		border-radius: 12px;
 		border: 1px solid var(--line);
-		max-width: 860px;
+		max-width: 1000px;
 	}
 </style>
