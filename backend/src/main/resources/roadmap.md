@@ -5,7 +5,7 @@
 - [x] Toast quando arrivano notifiche
 - [x] Scritta di game over e win con animazioni annesse
 - [ ] Visibili tutte le mosse dell'utente nella sezione "Impiccato del giorno"
-- [ ] Regole dell'Impiccato del giorno visibili nella view
+- [x] Regole dell'Impiccato del giorno visibili nella view
 - [x] Feedback al click dei pulsanti nella sezione Admin, uniformato alle altre interazioni
 - [ ] Card e view troppo compresse: più responsive per schermi grandi
 - [x] View della roadmap con anteprima Markdown

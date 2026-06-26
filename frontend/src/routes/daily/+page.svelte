@@ -114,6 +114,19 @@
 	<h1>🗓 Parola del Giorno</h1>
 	<p class="sub">Uno slot lettera + un tentativo parola a testa. Chi indovina vince 10 punti!</p>
 
+	<details class="rules">
+		<summary>📖 Come si gioca</summary>
+		<ul>
+			<li>🌍 Ogni giorno <strong>una sola parola</strong>, uguale per tutti i colleghi.</li>
+			<li>🔤 Hai <strong>una lettera</strong> e <strong>un tentativo di parola intera</strong> per tutta la giornata.</li>
+			<li>🤝 Gli errori sono <strong>condivisi</strong>: a {state?.maxWrong ?? 6} errori totali la parola è persa per tutti.</li>
+			<li>🎉 Indovini la parola → <strong>vinci +10 punti</strong>.</li>
+			<li>☠️ Sbagli il tentativo di parola → <strong>eliminato</strong> per oggi: puoi solo guardare.</li>
+			<li>🔄 Aggiornamento <strong>in tempo reale</strong> quando gli altri giocano.</li>
+			<li>🕛 Nuova parola a <strong>mezzanotte (ora di Roma)</strong>.</li>
+		</ul>
+	</details>
+
 	{#if loading}
 		<p class="muted">Caricamento…</p>
 	{:else if loadError}
@@ -222,6 +235,52 @@
 	.sub { color: var(--muted); margin: 0; text-align: center; }
 	.muted { color: var(--muted); }
 	.err { color: var(--danger); font-family: var(--font-term); font-size: 1.1rem; }
+
+	/* ── Pannello regole (collassabile) ─────────────────────────────── */
+	.rules {
+		width: 100%;
+		background: var(--panel);
+		border: 1px solid var(--line);
+		border-radius: 12px;
+		padding: 0.5rem 1rem;
+	}
+	.rules summary {
+		cursor: pointer;
+		font-family: var(--font-ui);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		font-size: 0.85rem;
+		color: var(--cyan);
+		padding: 0.4rem 0;
+		list-style: none;
+		user-select: none;
+	}
+	.rules summary::-webkit-details-marker { display: none; }
+	.rules summary::before {
+		content: '▸ ';
+		display: inline-block;
+		transition: transform 0.15s;
+	}
+	.rules[open] summary::before {
+		content: '▾ ';
+	}
+	.rules ul {
+		margin: 0.4rem 0 0.6rem;
+		padding-left: 1.2rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+	.rules li {
+		font-family: var(--font-term);
+		font-size: 1rem;
+		line-height: 1.4;
+		color: var(--text);
+	}
+	.rules strong { color: var(--amber); }
+	@media (prefers-reduced-motion: reduce) {
+		.rules summary::before { transition: none; }
+	}
 
 	.gallows {
 		font-family: ui-monospace, monospace;
