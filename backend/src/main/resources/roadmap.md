@@ -9,6 +9,7 @@
 - [x] Feedback al click dei pulsanti nella sezione Admin, uniformato alle altre interazioni
 - [x] Card e view troppo compresse: più responsive per schermi grandi
 - [x] View della roadmap con anteprima Markdown
+- [ ] Sezione "Partite in corso" nella home: rientrare nelle partite attive con altri utenti (ora restano sospese, si rientra solo col codice invito)
 
 ## Nuove animazioni
 
