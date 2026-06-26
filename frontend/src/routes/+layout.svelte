@@ -9,10 +9,14 @@
 	import { connectNotify, type NotifyConnection } from '$lib/ws';
 	import { notifications, onInviteReceived, setInviteCount, onDailyUpdate, onPresenceUpdate, showToast } from '$lib/notifications.svelte';
 	import ToastContainer from '$lib/ToastContainer.svelte';
+	import GamePicker from '$lib/games/GamePicker.svelte';
 
 	// Etichetta gioco da slug (per i toast invito)
 	const gameLabel = (slug: unknown): string =>
 		GAME_CATALOG.find((g) => g.slug === slug)?.label ?? 'una partita';
+
+	// Aree selezionabili nella segnalazione bug: "Generale" + tutti i giochi
+	const BUG_AREAS = [{ slug: 'generale', label: 'Generale / Altro' }, ...GAME_CATALOG];
 
 	let { children } = $props();
 
@@ -189,15 +193,10 @@
 				<h2>🐞 Segnala un bug</h2>
 				<button class="x" onclick={() => (showBug = false)} aria-label="Chiudi">✕</button>
 			</div>
-			<label class="field">
-				Gioco / area interessata
-				<select bind:value={bugGame}>
-					<option value="generale">Generale / Altro</option>
-					{#each GAME_CATALOG as g (g.slug)}
-						<option value={g.slug}>{g.emoji} {g.label}</option>
-					{/each}
-				</select>
-			</label>
+			<div class="field">
+				<span class="field-label">Gioco / area interessata</span>
+				<GamePicker bind:value={bugGame} items={BUG_AREAS} iconSize={28} />
+			</div>
 			<label class="field">
 				Descrizione del problema
 				<textarea

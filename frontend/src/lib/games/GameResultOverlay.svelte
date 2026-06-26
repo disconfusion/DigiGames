@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { scale } from 'svelte/transition';
 	import type { Snippet } from 'svelte';
+	import Icon from '$lib/icons/Icon.svelte';
 
 	export type GameResult = 'win' | 'lose' | 'draw';
 
@@ -25,12 +26,11 @@
 		lose: 'HAI PERSO',
 		draw: 'PAREGGIO'
 	};
-	const EMOJI: Record<GameResult, string> = { win: '🏆', lose: '💀', draw: '🤝' };
 </script>
 
 <div class="result {result}" role="status" aria-live="assertive">
 	<div class="card" in:scale={{ duration: 320, start: 0.8 }}>
-		<div class="emoji" aria-hidden="true">{EMOJI[result]}</div>
+		<div class="icon" aria-hidden="true"><Icon name={result} size={64} /></div>
 		<h2 class="title">{title ?? DEFAULT_TITLE[result]}</h2>
 		{#if message}<p class="msg">{message}</p>{/if}
 		{#if children}
@@ -62,9 +62,8 @@
 		max-width: 92vw;
 	}
 
-	.emoji {
-		font-size: clamp(2.2rem, 8vw, 3.2rem);
-		line-height: 1;
+	.icon {
+		line-height: 0;
 		animation: pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 	}
 
@@ -96,9 +95,6 @@
 	.win .title {
 		color: var(--green);
 		animation: glow-pulse-green 1.6s ease-in-out infinite;
-	}
-	.win .emoji {
-		animation: pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both, bob 1.4s ease-in-out 0.5s infinite;
 	}
 
 	.lose .card {
@@ -149,10 +145,6 @@
 		from { transform: scale(0); opacity: 0; }
 		to { transform: scale(1); opacity: 1; }
 	}
-	@keyframes bob {
-		0%, 100% { transform: translateY(0); }
-		50% { transform: translateY(-8px); }
-	}
 	@keyframes glow-pulse-green {
 		0%, 100% { text-shadow: 0 0 8px color-mix(in srgb, var(--green) 45%, transparent); }
 		50% { text-shadow: 0 0 18px var(--green), 0 0 30px color-mix(in srgb, var(--green) 60%, transparent); }
@@ -166,9 +158,8 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.emoji,
+		.icon,
 		.win .title,
-		.win .emoji,
 		.lose .card,
 		.card {
 			animation: none !important;

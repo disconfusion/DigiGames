@@ -3,9 +3,10 @@
 	import { goto } from '$app/navigation';
 	import { auth } from '$lib/auth.svelte';
 	import { api } from '$lib/api';
-	import { GAME_CATALOG, gameLabel } from '$lib/games/catalog';
+	import { gameLabel } from '$lib/games/catalog';
 	import { parseAvatar, renderAvatar } from '$lib/avatar';
 	import GameOptions from '$lib/games/GameOptions.svelte';
+	import GamePicker from '$lib/games/GamePicker.svelte';
 	import { notifications } from '$lib/notifications.svelte';
 
 	const FEATURES = __WHATSNEW__;
@@ -190,11 +191,7 @@
 		<div class="card-icon">🏠</div>
 		<h2>Ospita partita</h2>
 		<p class="muted">Apri una stanza pubblica: chiunque può entrare.</p>
-		<select bind:value={hostGame}>
-			{#each GAME_CATALOG as g (g.slug)}
-				<option value={g.slug}>{g.emoji} {g.label}</option>
-			{/each}
-		</select>
+		<GamePicker bind:value={hostGame} />
 		<GameOptions game={hostGame} bind:options={hostOptions} />
 		<button onclick={createHost} disabled={hosting}>
 			{hosting ? 'Creo…' : 'Crea partita pubblica'}
@@ -242,11 +239,7 @@
 		<h2>Invita un amico</h2>
 		<p class="muted">Scegli un gioco e invita una o più persone.</p>
 		<p class="muted small">🟢 {onlineCount} online ora</p>
-		<select bind:value={inviteGame}>
-			{#each GAME_CATALOG as g (g.slug)}
-				<option value={g.slug}>{g.emoji} {g.label}</option>
-			{/each}
-		</select>
+		<GamePicker bind:value={inviteGame} />
 		<GameOptions game={inviteGame} bind:options={inviteOptions} />
 		<div class="users">
 			{#if users.length === 0}
