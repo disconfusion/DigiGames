@@ -20,6 +20,8 @@
 		wordAttemptUsed: boolean;
 		won: boolean;
 		eliminated: boolean;
+		myLetter: string | null;
+		wordGuess: string | null;
 	};
 
 	const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
@@ -50,6 +52,10 @@
 	const canGuessLetter = $derived(playing && !eliminated && !(state?.letterUsed));
 	const canGuessWord = $derived(playing && !eliminated && !(state?.wordAttemptUsed));
 	const me = $derived(auth.session?.username ?? '');
+	// Esito della mia lettera: era presente nella parola? (revealedLetters/myLetter sono minuscoli)
+	const myLetterCorrect = $derived(
+		!!state?.myLetter && (state?.revealedLetters?.includes(state.myLetter) ?? false)
+	);
 
 	async function load() {
 		try {
@@ -171,6 +177,15 @@
 					🔤 Scegli la tua lettera
 				{/if}
 			</h2>
+			{#if state.letterUsed && state.myLetter}
+				<p class="my-move">
+					La tua lettera:
+					<span class="chip" class:hit={myLetterCorrect} class:miss={!myLetterCorrect}>
+						{state.myLetter.toUpperCase()}
+					</span>
+					{#if myLetterCorrect}— presente nella parola{:else}— non c'era{/if}
+				</p>
+			{/if}
 			<div class="keyboard">
 				{#each ALPHABET as l (l)}
 					<button
@@ -195,6 +210,12 @@
 					💬 Indovina la parola
 				{/if}
 			</h2>
+			{#if state.wordAttemptUsed && state.wordGuess}
+				<p class="my-move">
+					Hai tentato:
+					<span class="chip" class:hit={state.won} class:miss={!state.won}>{state.wordGuess.toUpperCase()}</span>
+				</p>
+			{/if}
 			{#if !state.wordAttemptUsed && playing}
 				<form class="word-form" onsubmit={guessWord}>
 					<input
@@ -317,6 +338,42 @@
 	}
 	.errors { color: var(--muted); margin: 0; font-size: 0.95rem; }
 	.wrong { color: var(--danger); letter-spacing: 0.1em; }
+
+	/* Riepilogo delle mosse personali dell'utente (lettera giocata / parola tentata) */
+	.my-move {
+		color: var(--muted);
+		margin: 0 0 0.75rem;
+		font-size: 0.95rem;
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		flex-wrap: wrap;
+	}
+	.chip {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 1.8rem;
+		max-width: 100%;
+		padding: 0.15rem 0.55rem;
+		border-radius: 4px;
+		font-family: var(--font-ui);
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		border: 2px solid var(--line);
+		overflow-wrap: anywhere;
+	}
+	.chip.hit {
+		color: var(--green);
+		border-color: var(--green);
+		background: #10331f;
+		box-shadow: 0 0 8px rgba(61, 255, 154, 0.35);
+	}
+	.chip.miss {
+		color: var(--danger);
+		border-color: var(--danger);
+		background: #3a1420;
+	}
 
 	.banner {
 		width: 100%;

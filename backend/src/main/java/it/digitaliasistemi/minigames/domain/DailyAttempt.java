@@ -24,9 +24,17 @@ public class DailyAttempt extends PanacheEntity {
     @Column(nullable = false)
     public boolean letterUsed = false;
 
+    /** La lettera che ha giocato (null finché non usa lo slot). Per mostrare la mossa personale. */
+    @Column(length = 1)
+    public String myLetter;
+
     /** Ha già usato il suo tentativo di indovinare la parola intera. */
     @Column(nullable = false)
     public boolean wordAttemptUsed = false;
+
+    /** La parola che ha tentato (null finché non usa il tentativo). Per mostrare la mossa personale. */
+    @Column
+    public String wordGuess;
 
     /** Ha indovinato la parola intera (vinto). */
     @Column(nullable = false)

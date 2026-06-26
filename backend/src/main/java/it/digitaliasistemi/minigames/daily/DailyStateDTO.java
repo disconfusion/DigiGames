@@ -17,5 +17,7 @@ public record DailyStateDTO(
     boolean letterUsed,
     boolean wordAttemptUsed,
     boolean won,
-    boolean eliminated
+    boolean eliminated,
+    String myLetter,    // la lettera giocata dall'utente (null se non ancora usata)
+    String wordGuess    // la parola tentata dall'utente (null se non ancora tentata)
 ) {}

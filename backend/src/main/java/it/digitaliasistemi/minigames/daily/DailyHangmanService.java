@@ -38,6 +38,7 @@ public class DailyHangmanService {
         }
 
         attempt.letterUsed = true;
+        attempt.myLetter = String.valueOf(letter);
 
         Set<Character> revealed = parseLetters(shared.revealedLetters);
         Set<Character> wrong = parseLetters(shared.wrongLetters);
@@ -78,6 +79,7 @@ public class DailyHangmanService {
         }
 
         attempt.wordAttemptUsed = true;
+        attempt.wordGuess = guessedWord.trim();
 
         if (word.equalsIgnoreCase(guessedWord.trim())) {
             shared.status = "WON";
@@ -164,7 +166,9 @@ public class DailyHangmanService {
             attempt.letterUsed,
             attempt.wordAttemptUsed,
             attempt.won,
-            attempt.eliminated
+            attempt.eliminated,
+            attempt.myLetter,
+            attempt.wordGuess
         );
     }
 
