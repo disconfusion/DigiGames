@@ -2,7 +2,7 @@
 
 - [x] Monitoraggio dei pezzi persi/conquistati (scacchi, dama, battaglia navale)
 - [ ] Restyling header
-- [ ] Toast quando arrivano notifiche
+- [x] Toast quando arrivano notifiche
 - [ ] Scritta di game over e win con animazioni annesse
 - [ ] Visibili tutte le mosse dell'utente nella sezione "Impiccato del giorno"
 - [ ] Regole dell'Impiccato del giorno visibili nella view

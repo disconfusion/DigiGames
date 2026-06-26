@@ -2,13 +2,16 @@ import { wsBase } from './config';
 
 export type NotifyConnection = { close: () => void };
 
+/** Messaggio del canale notifiche: `type` + eventuali dati extra (es. mittente invito). */
+export type NotifyMessage = { type: string; [key: string]: unknown };
+
 /**
  * Apre il canale WS di notifiche utente `/ws/notify`.
  * Autentica con `{type:"hello",token}` e riconnette automaticamente.
  */
 export function connectNotify(
 	token: string,
-	onEvent: (type: string) => void,
+	onEvent: (msg: NotifyMessage) => void,
 	onReady?: () => void
 ): NotifyConnection {
 	let ws: WebSocket | null = null;
@@ -25,7 +28,7 @@ export function connectNotify(
 			try {
 				const msg = JSON.parse(ev.data);
 				if (msg.type === 'connected') onReady?.();
-				else onEvent(msg.type);
+				else onEvent(msg);
 			} catch { /* ignora payload non-JSON */ }
 		};
 		ws.onclose = () => {

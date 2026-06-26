@@ -64,7 +64,7 @@ public class InviteResource {
             inv.status = "PENDING";
             inv.createdAt = Instant.now();
             inv.persist();
-            notifyBus.push(username, "invite");
+            notifyBus.push(username, "invite", Map.of("from", myDisplay, "game", req.gameSlug()));
         }
         return Response.status(Response.Status.CREATED)
                 .entity(Map.of("roomCode", room.code)).build();

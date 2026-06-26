@@ -7,7 +7,12 @@
 	import { api } from '$lib/api';
 	import { GAME_CATALOG } from '$lib/games/catalog';
 	import { connectNotify, type NotifyConnection } from '$lib/ws';
-	import { notifications, onInviteReceived, setInviteCount, onDailyUpdate, onPresenceUpdate } from '$lib/notifications.svelte';
+	import { notifications, onInviteReceived, setInviteCount, onDailyUpdate, onPresenceUpdate, showToast } from '$lib/notifications.svelte';
+	import ToastContainer from '$lib/ToastContainer.svelte';
+
+	// Etichetta gioco da slug (per i toast invito)
+	const gameLabel = (slug: unknown): string =>
+		GAME_CATALOG.find((g) => g.slug === slug)?.label ?? 'una partita';
 
 	let { children } = $props();
 
@@ -75,10 +80,23 @@
 			fetchInviteCount();
 			notifyWs = connectNotify(
 				auth.session.token,
-				(type) => {
-					if (type === 'invite') onInviteReceived();
-					else if (type === 'daily:update') onDailyUpdate();
-					else if (type === 'presence:update') onPresenceUpdate();
+				(msg) => {
+					if (msg.type === 'invite') {
+						onInviteReceived();
+						const from = typeof msg.from === 'string' ? msg.from : null;
+						showToast(
+							from
+								? `📨 ${from} ti ha invitato a ${gameLabel(msg.game)}`
+								: '📨 Hai ricevuto un nuovo invito',
+							'invite'
+						);
+					} else if (msg.type === 'daily:update') {
+						onDailyUpdate();
+						showToast('🗓 La parola del giorno è stata aggiornata', 'info');
+					} else if (msg.type === 'presence:update') {
+						// Aggiorna solo lo stato presenze (niente toast: troppo frequente)
+						onPresenceUpdate();
+					}
 				},
 				() => fetchInviteCount()
 			);
@@ -142,6 +160,8 @@
 <main>
 	{@render children()}
 </main>
+
+<ToastContainer />
 
 {#if showBug}
 	<div
