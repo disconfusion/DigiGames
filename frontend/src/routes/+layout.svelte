@@ -141,7 +141,7 @@
 <header>
 	<a class="brand" href="/">🎮 DigiGames</a>
 	{#if auth.session}
-		<span class="token-badge" title="I tuoi Token">🪙 {tokens}</span>
+		<a class="token-badge" href="/shop" title="Vai allo shop">🪙 {tokens}</a>
 		<button
 			class="menu-toggle"
 			onclick={() => (menuOpen = !menuOpen)}
@@ -157,6 +157,7 @@
 			<a href="/">Home</a>
 			<a href="/daily">Parola del Giorno</a>
 			<a href="/leaderboard">Classifica</a>
+			<a href="/shop">🛒 Shop</a>
 			<a href="/roadmap">Roadmap</a>
 			<a class="invites" href="/invites">
 				Inviti
@@ -283,7 +284,11 @@
 		font-weight: 700;
 		font-size: 0.8rem;
 		white-space: nowrap;
+		text-decoration: none;
 		text-shadow: 0 0 6px rgba(255, 207, 63, 0.5);
+	}
+	.token-badge:hover {
+		box-shadow: 0 0 10px rgba(255, 207, 63, 0.45);
 	}
 	nav {
 		display: flex;
