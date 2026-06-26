@@ -4,18 +4,18 @@
 - [ ] Restyling header
 - [x] Toast quando arrivano notifiche
 - [x] Scritta di game over e win con animazioni annesse
-- [ ] Visibili tutte le mosse dell'utente nella sezione "Impiccato del giorno"
+- [x] Visibili tutte le mosse dell'utente nella sezione "Impiccato del giorno"
 - [x] Regole dell'Impiccato del giorno visibili nella view
 - [x] Feedback al click dei pulsanti nella sezione Admin, uniformato alle altre interazioni
-- [ ] Card e view troppo compresse: più responsive per schermi grandi
+- [x] Card e view troppo compresse: più responsive per schermi grandi
 - [x] View della roadmap con anteprima Markdown
 
 ## Nuove animazioni
 
 - [ ] Restyling animazioni dei pezzi di scacchi e dama
-- [ ] Esplosioni e buchi nell'acqua in Battaglia navale
+- [x] Esplosioni e buchi nell'acqua in Battaglia navale
 - [ ] Campo minato
-- [ ] Forza 4
+- [x] Forza 4
 
 # Game Loop / Game design
 
