@@ -20,7 +20,7 @@
 
 # Game Loop / Game design
 
-- [ ] Alpha test: sistema di crediti con acquisto di "poteri" usabili in partita
+- [x] Alpha test: sistema di crediti (Token) con acquisto di "poteri" usabili in partita
 - [ ] Alpha test: pack opening di carte a tema inside joke interni
 - [ ] Accessori avatar comprabili con i crediti — invio doni fra utenti
 - [ ] Companion acquistabili dallo shop (animati a mano)
