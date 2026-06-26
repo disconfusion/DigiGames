@@ -30,12 +30,19 @@ public class DataInitializer {
             LOG.info("Account admin creato (username: admin)");
         }
 
-        // Seed roadmap di default da classpath: l'admin può poi modificarla.
-        if (Roadmap.getFirst() == null) {
-            Roadmap r = new Roadmap();
-            r.content = loadDefaultRoadmap();
+        // Roadmap repo-driven: roadmap.md è la fonte di verità.
+        // A ogni avvio (incl. cold-start Render) il DB viene allineato al file,
+        // così git e prod restano sempre sincronizzati.
+        String fileContent = loadDefaultRoadmap();
+        Roadmap r = Roadmap.getFirst();
+        if (r == null) {
+            r = new Roadmap();
+            r.content = fileContent;
             r.persist();
-            LOG.info("Roadmap di default seedata da roadmap.md");
+            LOG.info("Roadmap creata da roadmap.md");
+        } else if (!fileContent.equals(r.content)) {
+            r.content = fileContent;
+            LOG.info("Roadmap allineata a roadmap.md");
         }
     }
 
