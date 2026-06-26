@@ -3,12 +3,16 @@ package it.digitaliasistemi.minigames.admin;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import io.quarkus.runtime.StartupEvent;
 import it.digitaliasistemi.minigames.domain.AppUser;
+import it.digitaliasistemi.minigames.domain.Roadmap;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.transaction.Transactional;
 import org.jboss.logging.Logger;
 
-/** Crea l'account admin all'avvio se non esiste. */
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
+/** Crea l'account admin e la roadmap di default all'avvio se non esistono. */
 @ApplicationScoped
 public class DataInitializer {
 
@@ -24,6 +28,27 @@ public class DataInitializer {
             admin.role = "admin";
             admin.persist();
             LOG.info("Account admin creato (username: admin)");
+        }
+
+        // Seed roadmap di default da classpath: l'admin può poi modificarla.
+        if (Roadmap.getFirst() == null) {
+            Roadmap r = new Roadmap();
+            r.content = loadDefaultRoadmap();
+            r.persist();
+            LOG.info("Roadmap di default seedata da roadmap.md");
+        }
+    }
+
+    private String loadDefaultRoadmap() {
+        try (InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("roadmap.md")) {
+            if (in == null) {
+                LOG.warn("roadmap.md non trovata nel classpath: roadmap di default vuota");
+                return "";
+            }
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            LOG.warn("Errore lettura roadmap.md di default", e);
+            return "";
         }
     }
 }
