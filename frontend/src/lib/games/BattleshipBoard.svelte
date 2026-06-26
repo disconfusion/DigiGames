@@ -15,6 +15,9 @@
 		winner: string | null;
 		yourBoard: Cell[][];
 		enemyBoard: Cell[][];
+		fleetSize?: number;
+		yourSunk?: number;
+		enemySunk?: number;
 	};
 
 	let state = $state<BattleshipState | null>(null);
@@ -35,6 +38,20 @@
 	const phase = $derived(state?.phase ?? null);
 	const inBattle = $derived(phase === 'BATTLE');
 	const inPlacement = $derived(phase === 'PLACEMENT');
+
+	// ── Monitoraggio flotte (derivato dalle board + conteggi affondamenti dal server) ──
+	function countCells(board: Cell[][] | undefined, v: string): number {
+		if (!board) return 0;
+		let n = 0;
+		for (const row of board) for (const cell of row) if (cell === v) n++;
+		return n;
+	}
+	const fleetSize = $derived(state?.fleetSize ?? 5);
+	const enemySunk = $derived(state?.enemySunk ?? 0); // navi nemiche affondate da te
+	const yourSunk = $derived(state?.yourSunk ?? 0); // tue navi affondate
+	const myHits = $derived(countCells(state?.enemyBoard, 'X')); // tuoi colpi a segno
+	const myMisses = $derived(countCells(state?.enemyBoard, 'O')); // tuoi colpi mancati
+	const hitsTaken = $derived(countCells(state?.yourBoard, 'X')); // tue celle colpite
 
 	// ── Piazzamento manuale ────────────────────────────────────────────────────
 	const FLEET = [5, 4, 3, 3, 2]; // deve corrispondere a BattleshipState.FLEET
@@ -309,6 +326,10 @@
 						{/each}
 					{/each}
 				</div>
+				<div class="stats own-stats">
+					<span class="stat" class:danger={yourSunk > 0}>🚢 Affondate {yourSunk}/{fleetSize}</span>
+					<span class="stat">🎯 Colpita {hitsTaken}×</span>
+				</div>
 			</div>
 
 			<div class="board-col enemy-col">
@@ -325,6 +346,11 @@
 							></button>
 						{/each}
 					{/each}
+				</div>
+				<div class="stats enemy-stats">
+					<span class="stat" class:good={enemySunk > 0}>🔥 Affondate {enemySunk}/{fleetSize}</span>
+					<span class="stat">🎯 A segno {myHits}</span>
+					<span class="stat muted-stat">💧 Mancati {myMisses}</span>
 				</div>
 			</div>
 		</div>
@@ -612,6 +638,32 @@
 	.ok {
 		color: var(--green);
 		text-shadow: 0 0 6px rgba(61, 255, 154, 0.5);
+	}
+
+	/* ── Monitoraggio flotte (affondamenti / colpi) ─────────────────────────── */
+	.stats {
+		display: flex;
+		gap: 0.5rem 0.9rem;
+		flex-wrap: wrap;
+		justify-content: center;
+		font-family: var(--font-term, monospace);
+		font-size: 0.95rem;
+		letter-spacing: 0.03em;
+	}
+	.stat {
+		color: var(--muted);
+		white-space: nowrap;
+	}
+	.stat.good {
+		color: var(--green);
+		text-shadow: 0 0 6px rgba(61, 255, 154, 0.45);
+	}
+	.stat.danger {
+		color: var(--danger);
+		text-shadow: 0 0 6px rgba(255, 82, 119, 0.45);
+	}
+	.stat.muted-stat {
+		opacity: 0.7;
 	}
 
 	/* ── Banner fine partita ────────────────────────────────────────────────── */

@@ -327,6 +327,15 @@ public class BattleshipState {
         return grid;
     }
 
+    /** Numero di navi del giocatore già affondate (tutte le celle colpite). */
+    public synchronized int sunkCount(String player) {
+        PlayerState ps = states.get(player);
+        if (ps == null) return 0;
+        int n = 0;
+        for (Ship s : ps.ships) if (s.isSunk()) n++;
+        return n;
+    }
+
     public synchronized boolean isReady(String player) {
         PlayerState ps = states.get(player);
         return ps != null && ps.ready;

@@ -167,6 +167,10 @@ public class BattleshipEngine implements GameEngine {
         m.put("winner", bs.winner());
         m.put("yourBoard", bs.viewBoardOwn(player));
         m.put("enemyBoard", bs.viewBoardEnemy(player));
+        // Monitoraggio flotte: navi affondate per lato (totale flotta = FLEET.length).
+        m.put("fleetSize", BattleshipState.FLEET.length);
+        m.put("yourSunk", bs.sunkCount(player));                      // tue navi affondate
+        m.put("enemySunk", bs.sunkCount(bs.opponent(player)));        // navi nemiche affondate da te
         return m;
     }
 

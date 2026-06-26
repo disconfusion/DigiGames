@@ -36,6 +36,19 @@
 	const isPlaying = $derived(state?.status === 'PLAYING');
 	const mustPos = $derived(state?.mustContinue ?? null);
 
+	// ── Monitoraggio pedine: 12 iniziali per lato, catturate = 12 − rimaste ──
+	const PIECES_PER_SIDE = 12;
+	function countColor(col: 'W' | 'B'): number {
+		const b = state?.board;
+		if (!b) return 0;
+		let n = 0;
+		for (const row of b) for (const cell of row) if (cell?.color === col) n++;
+		return n;
+	}
+	const oppColor = $derived<'W' | 'B' | null>(myColor === 'W' ? 'B' : myColor === 'B' ? 'W' : null);
+	const myCaptured = $derived(oppColor ? PIECES_PER_SIDE - countColor(oppColor) : 0); // pedine avversarie prese
+	const oppCaptured = $derived(myColor ? PIECES_PER_SIDE - countColor(myColor as 'W' | 'B') : 0); // mie pedine perse
+
 	function cellAt(r: number, c: number): Cell {
 		return state?.board?.[r]?.[c] ?? null;
 	}
@@ -114,6 +127,31 @@
 				{/each}
 			{/each}
 		</div>
+
+		{#if myColor}
+			<div class="captured-tray">
+				<div class="cap-side">
+					<span class="cap-label">Catturate</span>
+					<span class="cap-pieces">
+						{#each { length: myCaptured } as _, i (i)}
+							<span class="cap-pill" class:white={oppColor === 'W'} class:black={oppColor === 'B'}></span>
+						{/each}
+						{#if myCaptured === 0}<span class="cap-zero">—</span>{/if}
+					</span>
+					<span class="cap-count win-count">{myCaptured}</span>
+				</div>
+				<div class="cap-side">
+					<span class="cap-label">Perse</span>
+					<span class="cap-pieces">
+						{#each { length: oppCaptured } as _, i (i)}
+							<span class="cap-pill" class:white={myColor === 'W'} class:black={myColor === 'B'}></span>
+						{/each}
+						{#if oppCaptured === 0}<span class="cap-zero">—</span>{/if}
+					</span>
+					<span class="cap-count lose-count">{oppCaptured}</span>
+				</div>
+			</div>
+		{/if}
 
 		<div class="legend">
 			{#each Object.entries(state.seats) as [uname, color] (uname)}
@@ -303,6 +341,78 @@
 		color: var(--bg);
 		box-shadow: 0 0 10px var(--accent), inset 0 0 6px color-mix(in srgb, var(--accent) 50%, transparent);
 		text-shadow: var(--glow-mag);
+	}
+
+	/* ── Pannello catture (pedine prese / perse) ───────────────────── */
+	.captured-tray {
+		display: flex;
+		gap: 1.5rem;
+		flex-wrap: wrap;
+		justify-content: center;
+		font-family: var(--font-term);
+		letter-spacing: 0.03em;
+	}
+
+	.cap-side {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.cap-label {
+		font-size: 0.85rem;
+		color: var(--muted);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+	}
+
+	.cap-pieces {
+		display: flex;
+		align-items: center;
+		gap: 3px;
+		flex-wrap: wrap;
+		max-width: 14rem;
+	}
+
+	/* Mini pedina nel vassoio catture */
+	.cap-pill {
+		width: 0.85rem;
+		height: 0.85rem;
+		border-radius: 50%;
+	}
+
+	.cap-pill.white {
+		background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--cyan) 80%, #fff), color-mix(in srgb, var(--cyan) 40%, var(--panel)));
+		border: 1px solid var(--cyan);
+		box-shadow: 0 0 5px var(--cyan);
+	}
+
+	.cap-pill.black {
+		background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--accent) 70%, #fff), color-mix(in srgb, var(--accent) 35%, var(--panel)));
+		border: 1px solid var(--accent);
+		box-shadow: 0 0 5px var(--accent);
+	}
+
+	.cap-zero {
+		color: var(--muted);
+		opacity: 0.6;
+	}
+
+	.cap-count {
+		font-size: 1.1rem;
+		font-weight: 700;
+		min-width: 1.2rem;
+		text-align: center;
+	}
+
+	.win-count {
+		color: var(--green);
+		text-shadow: 0 0 6px color-mix(in srgb, var(--green) 50%, transparent);
+	}
+
+	.lose-count {
+		color: var(--danger);
+		text-shadow: 0 0 6px color-mix(in srgb, var(--danger) 50%, transparent);
 	}
 
 	/* ── Legenda giocatori ─────────────────────────────────────────── */

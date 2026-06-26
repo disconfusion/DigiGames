@@ -1,6 +1,6 @@
 # FIX UI/UX
 
-- [ ] Monitoraggio dei pezzi persi/conquistati nei vari giochi
+- [x] Monitoraggio dei pezzi persi/conquistati (scacchi, dama, battaglia navale)
 - [ ] Restyling header
 - [ ] Toast quando arrivano notifiche
 - [ ] Scritta di game over e win con animazioni annesse
