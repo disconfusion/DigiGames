@@ -9,7 +9,9 @@
 		username: string;
 		displayName: string;
 		avatar: string | null;
+		points: number;
 		wins: number;
+		draws: number;
 		total: number;
 		games: Record<string, GameStats>;
 	};
@@ -49,7 +51,7 @@
 
 <div class="lb">
 	<h1>★ HIGH SCORES ★</h1>
-	<p class="sub">Vittorie cumulative su tutte le partite completate</p>
+	<p class="sub">Punti cumulativi (vittoria 3 · pareggio 1 · sconfitta 0)</p>
 
 	{#if loading}
 		<p class="muted">Caricamento…</p>
@@ -64,6 +66,7 @@
 					<tr>
 						<th>#</th>
 						<th>Giocatore</th>
+						<th>Punti</th>
 						<th>Vittorie</th>
 						<th>Partite</th>
 						<th>% Vinte</th>
@@ -87,6 +90,7 @@
 									</span>
 								</div>
 							</td>
+							<td class="points">{row.points}</td>
 							<td class="wins">{row.wins}</td>
 							<td class="total">{row.total}</td>
 							<td class="rate">{winRate(row.wins, row.total)}</td>
@@ -168,6 +172,12 @@
 	}
 	.name { display: block; font-weight: 600; }
 	.uname { display: block; font-size: 0.78rem; color: var(--muted); }
+	.points {
+		font-family: var(--font-display);
+		font-size: 0.95rem;
+		color: var(--amber);
+		text-shadow: 0 0 8px rgba(255, 207, 63, 0.55);
+	}
 	.wins {
 		font-family: var(--font-display);
 		font-size: 0.85rem;

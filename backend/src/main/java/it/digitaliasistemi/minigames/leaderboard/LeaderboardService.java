@@ -82,6 +82,7 @@ public class LeaderboardService {
             UserStats s = stats.computeIfAbsent(r.username, k -> new UserStats(r.username, r.displayName));
             s.total++;
             if ("WIN".equals(r.result)) s.wins++;
+            else if ("DRAW".equals(r.result)) s.draws++;
             s.gameStats.computeIfAbsent(r.game, k -> new int[2]);
             s.gameStats.get(r.game)[0]++;
             if ("WIN".equals(r.result)) s.gameStats.get(r.game)[1]++;
@@ -91,7 +92,7 @@ public class LeaderboardService {
         for (AppUser u : AppUser.<AppUser>listAll()) avatars.put(u.username, u.avatar);
 
         return stats.values().stream()
-            .sorted(Comparator.comparingInt((UserStats u) -> u.wins).reversed())
+            .sorted(Comparator.comparingInt((UserStats u) -> u.points()).thenComparingInt(u -> u.wins).reversed())
             .map(u -> {
                 Map<String, Object> m = u.toMap();
                 m.put("avatar", avatars.get(u.username));
@@ -104,6 +105,7 @@ public class LeaderboardService {
         final String username;
         final String displayName;
         int wins;
+        int draws;
         int total;
         final Map<String, int[]> gameStats = new LinkedHashMap<>();
 
@@ -112,11 +114,16 @@ public class LeaderboardService {
             this.displayName = displayName;
         }
 
+        /** Punti accumulati: vittoria=3, pareggio=1, sconfitta=0. */
+        int points() { return wins * 3 + draws; }
+
         Map<String, Object> toMap() {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("username", username);
             m.put("displayName", displayName);
+            m.put("points", points());
             m.put("wins", wins);
+            m.put("draws", draws);
             m.put("total", total);
             Map<String, Object> games = new LinkedHashMap<>();
             for (var e : gameStats.entrySet()) {

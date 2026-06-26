@@ -22,7 +22,7 @@
 - [ ] Alpha test: sistema di crediti con acquisto di "poteri" usabili in partita
 - [ ] Alpha test: pack opening di carte a tema inside joke interni
 - [ ] Accessori avatar comprabili con i crediti — invio doni fra utenti
-- [ ] Leaderboard coi punti accumulati al posto della colonna vittorie (che passa in seconda posizione)
+- [x] Leaderboard coi punti accumulati al posto della colonna vittorie (che passa in seconda posizione)
 - [ ] Alpha test: clan/casate (temporaneamente le 4 di Hogwarts), badge casata personalizzabile nella sezione personale
 
 ## Altre fix
