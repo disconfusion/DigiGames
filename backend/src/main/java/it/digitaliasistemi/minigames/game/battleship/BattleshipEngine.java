@@ -5,6 +5,8 @@ import it.digitaliasistemi.minigames.game.GameContext;
 import it.digitaliasistemi.minigames.game.GameEngine;
 import it.digitaliasistemi.minigames.leaderboard.LeaderboardService;
 import it.digitaliasistemi.minigames.rooms.Room;
+import it.digitaliasistemi.minigames.shop.InventoryService;
+import it.digitaliasistemi.minigames.shop.PowerCatalog;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -14,32 +16,21 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Battaglia Navale: 2 giocatori, board 10x10, flotta [5,4,3,3,2], informazione nascosta.
- *
- * <p>Protocollo a SNAPSHOT completi MA per-giocatore: lo stato NON va mai in broadcast
- * (rivelerebbe le navi). Ad ogni cambiamento si invia con {@link GameContext#sendTo} a
- * CIASCUNO dei due giocatori la SUA vista personalizzata (le navi avversarie non colpite
- * non sono mai incluse).
+ * Battaglia Navale con poteri (cyberdeck). 2 giocatori, informazione nascosta.
+ * Snapshot per-giocatore via {@link GameContext#sendTo}: lo stato non va mai in broadcast.
  */
 @ApplicationScoped
 public class BattleshipEngine implements GameEngine {
 
-    @Inject
-    LeaderboardService leaderboard;
+    @Inject LeaderboardService leaderboard;
+    @Inject InventoryService inventory;
 
-    @Override
-    public String slug() {
-        return "battleship";
-    }
+    @Override public String slug() { return "battleship"; }
 
-    @Override
-    public int maxPlayers() {
-        return 2;
-    }
+    @Override public int maxPlayers() { return 2; }
 
     @Override
     public void onJoin(GameContext ctx) {
-        // Allinea il nuovo arrivato allo stato corrente inviandogli la SUA vista.
         if (ctx.room().game instanceof BattleshipState bs) {
             ctx.replyToSender(viewFor(bs, ctx.senderEmail()));
         }
@@ -103,16 +94,124 @@ public class BattleshipEngine implements GameEngine {
                     return;
                 }
                 sendStateToBoth(ctx, bs);
-                if (bs.status() == BattleshipState.Status.WON) {
-                    room.status = Room.Status.DONE;
-                    sendOverToBoth(ctx, bs);
-                    leaderboard.record(bs.winner(), "battleship", "WIN");
-                    leaderboard.record(bs.opponent(bs.winner()), "battleship", "LOSE");
-                }
+                finishIfWon(ctx, bs);
             }
+            case "power:use" -> usePower(ctx, payload);
             default -> ctx.replyToSender(error("Azione sconosciuta: " + type));
         }
     }
+
+    // ---- Poteri ----
+
+    private void usePower(GameContext ctx, JsonNode payload) {
+        BattleshipState bs = require(ctx);
+        if (bs == null) return;
+        String user = ctx.senderEmail();
+        String powerId = payload.path("powerId").asText("");
+        var defOpt = PowerCatalog.byId(powerId);
+        if (defOpt.isEmpty() || !"battleship".equals(defOpt.get().game())) {
+            ctx.replyToSender(error("Potere non valido"));
+            return;
+        }
+        if (inventory.quantity(user, powerId) <= 0) {
+            ctx.replyToSender(error("Non possiedi questo potere"));
+            return;
+        }
+
+        boolean applied = false;
+        switch (powerId) {
+            case "bs_torpedo" -> {
+                int r = payload.path("r").asInt(-1);
+                int c = payload.path("c").asInt(-1);
+                BattleshipState.FireOutcome out = bs.fireProximity(user, r, c);
+                if (out.result() == BattleshipState.FireResult.INVALID) {
+                    ctx.replyToSender(error("Siluro non valido: turno, fase o cella già colpita"));
+                    return;
+                }
+                applied = true;
+                ctx.replyToSender(torpedoEvent(r, c, out));
+                sendStateToBoth(ctx, bs);
+                finishIfWon(ctx, bs);
+            }
+            case "bs_radar" -> {
+                int r = payload.path("r").asInt(-1);
+                int c = payload.path("c").asInt(-1);
+                List<int[]> cells = bs.radarPeek(user, r, c);
+                if (cells.isEmpty()) {
+                    ctx.replyToSender(error("Radar non utilizzabile qui"));
+                    return;
+                }
+                applied = true;
+                ctx.replyToSender(radarEvent(cells));
+                ctx.replyToSender(viewFor(bs, user)); // aggiorna le cariche nel cyberdeck
+            }
+            case "bs_move_ship" -> {
+                int fromR = payload.path("fromR").asInt(-1);
+                int fromC = payload.path("fromC").asInt(-1);
+                int toR = payload.path("toR").asInt(-1);
+                int toC = payload.path("toC").asInt(-1);
+                boolean horizontal = payload.path("horizontal").asBoolean(true);
+                if (!bs.moveShip(user, fromR, fromC, toR, toC, horizontal)) {
+                    ctx.replyToSender(error("Spostamento non valido"));
+                    return;
+                }
+                applied = true;
+                sendStateToBoth(ctx, bs);
+            }
+            case "bs_extend_ship" -> {
+                int r = payload.path("r").asInt(-1);
+                int c = payload.path("c").asInt(-1);
+                if (!bs.extendShip(user, r, c)) {
+                    ctx.replyToSender(error("Impossibile allungare questa nave"));
+                    return;
+                }
+                applied = true;
+                sendStateToBoth(ctx, bs);
+            }
+            case "bs_expand_board" -> {
+                if (!bs.expandBoard(user)) {
+                    ctx.replyToSender(error("Impossibile espandere il tabellone"));
+                    return;
+                }
+                applied = true;
+                sendStateToBoth(ctx, bs);
+            }
+            case "bs_extra_ship" -> {
+                if (!bs.addExtraShip(user)) {
+                    ctx.replyToSender(error("Nessuno spazio per una nave extra"));
+                    return;
+                }
+                applied = true;
+                sendStateToBoth(ctx, bs);
+            }
+            case "bs_decoy" -> {
+                int r = payload.path("r").asInt(-1);
+                int c = payload.path("c").asInt(-1);
+                if (!bs.placeDecoy(user, r, c)) {
+                    ctx.replyToSender(error("L'esca va piazzata su una tua nave"));
+                    return;
+                }
+                applied = true;
+                sendStateToBoth(ctx, bs);
+            }
+            default -> {
+                ctx.replyToSender(error("Potere sconosciuto"));
+                return;
+            }
+        }
+        if (applied) inventory.consume(user, powerId);
+    }
+
+    private void finishIfWon(GameContext ctx, BattleshipState bs) {
+        if (bs.status() == BattleshipState.Status.WON) {
+            ctx.room().status = Room.Status.DONE;
+            sendOverToBoth(ctx, bs);
+            leaderboard.record(bs.winner(), "battleship", "WIN");
+            leaderboard.record(bs.opponent(bs.winner()), "battleship", "LOSE");
+        }
+    }
+
+    // ---- Helper ----
 
     private BattleshipState require(GameContext ctx) {
         if (ctx.room().game instanceof BattleshipState bs) return bs;
@@ -120,7 +219,6 @@ public class BattleshipEngine implements GameEngine {
         return null;
     }
 
-    /** Estrae la lista di navi {r,c,len,horizontal} dal payload; null se malformato. */
     private List<int[]> parseShips(JsonNode payload) {
         JsonNode arr = payload.path("ships");
         if (!arr.isArray()) return null;
@@ -136,7 +234,6 @@ public class BattleshipEngine implements GameEngine {
         return ships;
     }
 
-    /** Invia a ENTRAMBI i giocatori la loro vista personalizzata. */
     private void sendStateToBoth(GameContext ctx, BattleshipState bs) {
         ctx.sendTo(bs.player1(), viewFor(bs, bs.player1()));
         ctx.sendTo(bs.player2(), viewFor(bs, bs.player2()));
@@ -147,15 +244,11 @@ public class BattleshipEngine implements GameEngine {
         ctx.sendTo(bs.player2(), over(bs, bs.player2()));
     }
 
-    /** Vista personalizzata del giocatore: include la SUA board e quella avversaria mascherata. */
+    /** Vista personalizzata: propria board, board avversaria mascherata, esche, cyberdeck. */
     private Map<String, Object> viewFor(BattleshipState bs, String player) {
         boolean won = bs.status() == BattleshipState.Status.WON;
-        String status;
-        if (!won) {
-            status = "PLAYING";
-        } else {
-            status = player.equals(bs.winner()) ? "WON" : "LOST";
-        }
+        String status = !won ? "PLAYING" : (player.equals(bs.winner()) ? "WON" : "LOST");
+        String enemy = bs.opponent(player);
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("type", "game:state");
         m.put("game", "battleship");
@@ -163,14 +256,54 @@ public class BattleshipEngine implements GameEngine {
         m.put("status", status);
         m.put("yourTurn", player.equals(bs.currentTurn()));
         m.put("youReady", bs.isReady(player));
-        m.put("enemyReady", bs.isReady(bs.opponent(player)));
+        m.put("enemyReady", bs.isReady(enemy));
         m.put("winner", bs.winner());
+        m.put("cols", BattleshipState.COLS);
+        m.put("yourRows", bs.rowsOf(player));
+        m.put("enemyRows", bs.rowsOf(enemy));
         m.put("yourBoard", bs.viewBoardOwn(player));
         m.put("enemyBoard", bs.viewBoardEnemy(player));
-        // Monitoraggio flotte: navi affondate per lato (totale flotta = FLEET.length).
-        m.put("fleetSize", BattleshipState.FLEET.length);
-        m.put("yourSunk", bs.sunkCount(player));                      // tue navi affondate
-        m.put("enemySunk", bs.sunkCount(bs.opponent(player)));        // navi nemiche affondate da te
+        m.put("yourFleet", bs.fleetCount(player));
+        m.put("enemyFleet", bs.fleetCount(enemy));
+        m.put("yourSunk", bs.sunkCount(player));
+        m.put("enemySunk", bs.sunkCount(enemy));
+        m.put("decoys", bs.decoyCells(player));
+        m.put("powers", buildPowers(player));
+        return m;
+    }
+
+    /** Cyberdeck: poteri della battaglia navale con metadati e cariche possedute dall'utente. */
+    private List<Map<String, Object>> buildPowers(String player) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (PowerCatalog.PowerDef d : PowerCatalog.forGame("battleship")) {
+            Map<String, Object> p = new LinkedHashMap<>();
+            p.put("id", d.id());
+            p.put("label", d.label());
+            p.put("emoji", d.emoji());
+            p.put("usage", d.usage());
+            p.put("phase", d.phase());
+            p.put("owned", inventory.quantity(player, d.id()));
+            out.add(p);
+        }
+        return out;
+    }
+
+    private Map<String, Object> torpedoEvent(int r, int c, BattleshipState.FireOutcome out) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("type", "power:torpedo");
+        m.put("r", r);
+        m.put("c", c);
+        m.put("result", out.result().name());
+        m.put("proximity", out.proximity());
+        return m;
+    }
+
+    private Map<String, Object> radarEvent(List<int[]> cells) {
+        List<List<Integer>> list = new ArrayList<>();
+        for (int[] cell : cells) list.add(List.of(cell[0], cell[1], cell[2]));
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("type", "power:radar");
+        m.put("cells", list);
         return m;
     }
 
