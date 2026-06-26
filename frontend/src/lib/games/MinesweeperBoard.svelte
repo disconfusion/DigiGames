@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { BoardProps } from './board';
+	import GameResultOverlay from './GameResultOverlay.svelte';
 
 	let { send, event, me }: BoardProps = $props();
 
@@ -107,16 +108,14 @@
 		{/if}
 	{/if}
 
-	<!-- Banner WON / LOST -->
+	<!-- Schermata di fine partita -->
 	{#if over || (state && state.status !== 'PLAYING')}
 		{@const s = over?.status ?? state?.status}
-		<div class="ms-banner" class:won={s === 'WON'} class:lost={s === 'LOST'}>
-			{#if s === 'WON'}
-				🎉 Avete vinto! Tutte le celle sicure sono state rivelate!
-			{:else}
-				💥 Boom! Avete colpito una mina. Partita persa.
-			{/if}
-		</div>
+		<GameResultOverlay
+			result={s === 'WON' ? 'win' : 'lose'}
+			title={s === 'WON' ? 'CAMPO BONIFICATO' : 'BOOM!'}
+			message={s === 'WON' ? 'Tutte le celle sicure rivelate!' : 'Avete colpito una mina.'}
+		/>
 	{/if}
 
 	{#if state}

@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import type { RoomEvent } from '$lib/ws';
 	import { gallows, type HangmanGameState } from './hangman';
+	import GameResultOverlay from './GameResultOverlay.svelte';
 
 	let {
 		send,
@@ -102,10 +103,13 @@
 		{/if}
 
 		{#if over}
-			<div class="result" class:won={over.status === 'WON'} class:lost={over.status === 'LOST'}>
-				{#if over.status === 'WON'}🎉 Indovinata!{:else}💀 Impiccato! La parola era <strong>{over.word}</strong>{/if}
-			</div>
-			<button class="start" onclick={startGame}>Nuova parola</button>
+			<GameResultOverlay
+				result={over.status === 'WON' ? 'win' : 'lose'}
+				title={over.status === 'WON' ? 'INDOVINATA' : 'IMPICCATO'}
+				message={over.status === 'WON' ? '' : `La parola era: ${over.word.toUpperCase()}`}
+				playAgainLabel="Nuova parola"
+				onPlayAgain={startGame}
+			/>
 		{/if}
 
 		<div class="keyboard">

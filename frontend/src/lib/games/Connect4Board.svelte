@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { BoardProps } from './board';
+	import GameResultOverlay from './GameResultOverlay.svelte';
 
 	let { send, event, me }: BoardProps = $props();
 
@@ -76,16 +77,10 @@
 			<p class="c4-info">In attesa del secondo giocatore…</p>
 			<button class="c4-btn" onclick={startGame}>Inizia partita</button>
 		{:else if over}
-			{#if over.status === 'WON'}
-				{#if over.winner === me.username}
-					<div class="c4-banner c4-win">Hai vinto!</div>
-				{:else}
-					<div class="c4-banner c4-lose">Hai perso!</div>
-				{/if}
-			{:else}
-				<div class="c4-banner c4-draw">Pareggio!</div>
-			{/if}
-			<button class="c4-btn" onclick={startGame}>Nuova partita</button>
+			<GameResultOverlay
+				result={over.status === 'WON' ? (over.winner === me.username ? 'win' : 'lose') : 'draw'}
+				onPlayAgain={startGame}
+			/>
 		{:else if isPlaying}
 			{#if isMyTurn}
 				<p class="c4-info c4-your-turn">

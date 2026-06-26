@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { BoardProps } from './board';
+	import GameResultOverlay from './GameResultOverlay.svelte';
 
 	let { send, event, me }: BoardProps = $props();
 
@@ -119,8 +120,14 @@
 
 	<!-- ===== Schermata fine partita ===== -->
 	{:else if gameOver}
-		<div class="over-screen">
-			<h2 class="title">Partita terminata!</h2>
+		{@const myRank = gameOver.ranking.findIndex((p) => p.username === me.username)}
+		<GameResultOverlay
+			result={myRank === 0 ? 'win' : 'lose'}
+			title={myRank === 0 ? 'PRIMO POSTO' : 'QUIZ FINITO'}
+			message={myRank >= 0 ? `Sei arrivato ${myRank + 1}º su ${gameOver.ranking.length}` : ''}
+			playAgainLabel="Nuovo quiz"
+			onPlayAgain={startQuiz}
+		>
 			<div class="ranking-table">
 				<table>
 					<thead>
@@ -139,8 +146,7 @@
 					</tbody>
 				</table>
 			</div>
-			<button class="btn-primary" onclick={startQuiz}>Nuovo quiz</button>
-		</div>
+		</GameResultOverlay>
 
 	<!-- ===== Domanda in corso ===== -->
 	{:else if isQuestion && gameState}

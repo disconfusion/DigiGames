@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { BoardProps } from './board';
+	import GameResultOverlay from './GameResultOverlay.svelte';
 
 	let { send, event, me }: BoardProps = $props();
 
@@ -185,10 +186,10 @@
 		<p class="muted">Nessuna partita in corso.</p>
 		<button class="primary" onclick={start}>Inizia</button>
 	{:else if over}
-		<div class="banner" class:won={over.status === 'WON'} class:lost={over.status !== 'WON'}>
-			{#if over.status === 'WON'}🎉 Vittoria!{:else}💥 Sconfitta{/if}
-		</div>
-		<button class="primary" onclick={start}>Nuova partita</button>
+		<GameResultOverlay
+			result={over.status === 'WON' ? 'win' : 'lose'}
+			onPlayAgain={start}
+		/>
 	{:else if inPlacement}
 		<div class="phase-head">
 			<h3>Disponi la tua flotta</h3>

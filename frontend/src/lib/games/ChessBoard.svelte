@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import type { BoardProps } from './board';
+	import GameResultOverlay from './GameResultOverlay.svelte';
 
 	let { send, event, me }: BoardProps = $props();
 
@@ -203,8 +204,11 @@
 			<p class="info">In attesa del secondo giocatore…</p>
 			<button class="btn" onclick={startGame}>Inizia partita</button>
 		{:else if over}
-			<div class="banner {overClass}">{overMessage(over)}</div>
-			<button class="btn" onclick={startGame}>Nuova partita</button>
+			<GameResultOverlay
+				result={(overClass || 'draw') as 'win' | 'lose' | 'draw'}
+				message={overMessage(over)}
+				onPlayAgain={startGame}
+			/>
 		{:else if isPlaying}
 			<p class="info" class:turn={isMyTurn}>
 				{turnLabel} · sei il {myColorLabel}
