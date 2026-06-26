@@ -82,8 +82,8 @@ class BattleshipStateTest {
 
     @Test
     void fleetExactlyEquals54332() {
-        // Verifica esplicita che la costante FLEET sia [5,4,3,3,2].
-        assertArrayEquals(new int[]{5, 4, 3, 3, 2}, BattleshipState.FLEET);
+        // Verifica esplicita che la flotta base sia [5,4,3,3,2].
+        assertArrayEquals(new int[]{5, 4, 3, 3, 2}, BattleshipState.BASE_FLEET);
     }
 
     @Test
