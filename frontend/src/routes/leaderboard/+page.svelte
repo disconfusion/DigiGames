@@ -10,12 +10,15 @@
 		username: string;
 		displayName: string;
 		avatar: string | null;
+		house: string | null;
 		points: number;
 		wins: number;
 		draws: number;
 		total: number;
 		games: Record<string, GameStats>;
 	};
+
+	type HouseRow = { id: string; name: string; points: number; members: number };
 
 	const GAME_LABELS: Record<string, string> = {
 		connect4: 'Forza 4',
@@ -30,13 +33,23 @@
 
 	const face = (avatar: string | null) => renderAvatar(parseAvatar(avatar));
 
+	const HOUSE_NAMES: Record<string, string> = {
+		grifondoro: 'Grifondoro',
+		serpeverde: 'Serpeverde',
+		corvonero: 'Corvonero',
+		tassorosso: 'Tassorosso'
+	};
+
 	let rows = $state<UserRow[]>([]);
+	let houses = $state<HouseRow[]>([]);
+	let tab = $state<'players' | 'houses'>('players');
 	let loading = $state(true);
 	let error = $state('');
 
 	onMount(async () => {
 		try {
 			rows = await api<UserRow[]>('/api/leaderboard');
+			houses = await api<HouseRow[]>('/api/houses/standings');
 		} catch (e) {
 			error = (e as Error).message;
 		} finally {
@@ -52,59 +65,91 @@
 
 <div class="lb">
 	<h1>★ HIGH SCORES ★</h1>
-	<p class="sub">Punti cumulativi (vittoria 3 · pareggio 1 · sconfitta 0)</p>
+	<div class="lb-tabs">
+		<button class:active={tab === 'players'} onclick={() => (tab = 'players')}>Giocatori</button>
+		<button class:active={tab === 'houses'} onclick={() => (tab = 'houses')}>Casate</button>
+	</div>
 
 	{#if loading}
 		<p class="muted">Caricamento…</p>
 	{:else if error}
 		<p class="err">⚠ {error}</p>
-	{:else if rows.length === 0}
-		<p class="muted">Nessuna partita completata ancora. Iniziate a giocare!</p>
+	{:else if tab === 'players'}
+		<p class="sub">Punti cumulativi (vittoria 3 · pareggio 1 · sconfitta 0)</p>
+		{#if rows.length === 0}
+			<p class="muted">Nessuna partita completata ancora. Iniziate a giocare!</p>
+		{:else}
+			<div class="table-wrap">
+				<table>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>Giocatore</th>
+							<th>Punti</th>
+							<th>Vittorie</th>
+							<th>Partite</th>
+							<th>% Vinte</th>
+							{#each Object.keys(GAME_LABELS) as slug}
+								<th class="game-col">{GAME_LABELS[slug]}</th>
+							{/each}
+						</tr>
+					</thead>
+					<tbody>
+						{#each rows as row, i (row.username)}
+							<tr class:podium={i < 3} class:gold={i === 0} class:silver={i === 1} class:bronze={i === 2}>
+								<td class="rank">
+									{#if i === 0}<Icon name="gold" size={26} title="1º" />{:else if i === 1}<Icon name="silver" size={26} title="2º" />{:else if i === 2}<Icon name="bronze" size={26} title="3º" />{:else}{i + 1}{/if}
+								</td>
+								<td>
+									<div class="player-cell">
+										<pre class="mini-face">{face(row.avatar)}</pre>
+										<span>
+											<span class="name">{#if row.house}<Icon name={row.house} size={16} title={HOUSE_NAMES[row.house] ?? ''} /> {/if}{row.displayName}</span>
+											<span class="uname">@{row.username}</span>
+										</span>
+									</div>
+								</td>
+								<td class="points">{row.points}</td>
+								<td class="wins">{row.wins}</td>
+								<td class="total">{row.total}</td>
+								<td class="rate">{winRate(row.wins, row.total)}</td>
+								{#each Object.keys(GAME_LABELS) as slug}
+									{@const gs = row.games[slug]}
+									<td class="game-col">
+										{#if gs}
+											{gs.wins}/{gs.played}
+										{:else}
+											—
+										{/if}
+									</td>
+								{/each}
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
 	{:else}
+		<p class="sub">Classifica Casate — somma dei punti di tutti i membri.</p>
 		<div class="table-wrap">
 			<table>
 				<thead>
-					<tr>
-						<th>#</th>
-						<th>Giocatore</th>
-						<th>Punti</th>
-						<th>Vittorie</th>
-						<th>Partite</th>
-						<th>% Vinte</th>
-						{#each Object.keys(GAME_LABELS) as slug}
-							<th class="game-col">{GAME_LABELS[slug]}</th>
-						{/each}
-					</tr>
+					<tr><th>#</th><th>Casata</th><th>Punti</th><th>Membri</th></tr>
 				</thead>
 				<tbody>
-					{#each rows as row, i (row.username)}
+					{#each houses as h, i (h.id)}
 						<tr class:podium={i < 3} class:gold={i === 0} class:silver={i === 1} class:bronze={i === 2}>
 							<td class="rank">
 								{#if i === 0}<Icon name="gold" size={26} title="1º" />{:else if i === 1}<Icon name="silver" size={26} title="2º" />{:else if i === 2}<Icon name="bronze" size={26} title="3º" />{:else}{i + 1}{/if}
 							</td>
 							<td>
 								<div class="player-cell">
-									<pre class="mini-face">{face(row.avatar)}</pre>
-									<span>
-										<span class="name">{row.displayName}</span>
-										<span class="uname">@{row.username}</span>
-									</span>
+									<Icon name={h.id} size={34} title={h.name} />
+									<span class="name">{h.name}</span>
 								</div>
 							</td>
-							<td class="points">{row.points}</td>
-							<td class="wins">{row.wins}</td>
-							<td class="total">{row.total}</td>
-							<td class="rate">{winRate(row.wins, row.total)}</td>
-							{#each Object.keys(GAME_LABELS) as slug}
-								{@const gs = row.games[slug]}
-								<td class="game-col">
-									{#if gs}
-										{gs.wins}/{gs.played}
-									{:else}
-										—
-									{/if}
-								</td>
-							{/each}
+							<td class="points">{h.points}</td>
+							<td class="total">{h.members}</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -119,6 +164,27 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 1rem;
+	}
+	.lb-tabs {
+		display: flex;
+		gap: 0.4rem;
+	}
+	.lb-tabs button {
+		padding: 0.4rem 1.1rem;
+		border: 1px solid var(--line);
+		border-radius: 999px;
+		background: var(--panel);
+		color: var(--muted);
+		cursor: pointer;
+		font-family: var(--font-ui);
+		font-size: 0.8rem;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+	.lb-tabs button.active {
+		border-color: var(--amber);
+		color: var(--amber);
+		text-shadow: 0 0 6px rgba(255, 207, 63, 0.5);
 	}
 	h1 {
 		margin: 0;

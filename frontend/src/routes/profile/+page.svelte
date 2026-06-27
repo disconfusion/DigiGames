@@ -50,6 +50,19 @@
 	const ownedCompanions = $derived(companions.filter((c) => c.owned));
 	const equippedCompanion = $derived(companions.find((c) => c.equipped)?.id ?? '');
 
+	type House = { id: string; name: string };
+	let houseList = $state<House[]>([]);
+	let myHouse = $state('');
+
+	async function joinHouse(id: string) {
+		try {
+			const r = await api<{ mine: string }>(`/api/houses/${id}/join`, { method: 'POST' });
+			myHouse = r.mine;
+		} catch (e) {
+			loadError = (e as Error).message;
+		}
+	}
+
 	async function equipCompanion(c: Companion) {
 		const target = c.equipped ? 'none' : c.id;
 		try {
@@ -89,6 +102,9 @@
 			stats = await api<Stats>('/api/me/stats');
 			const cr = await api<{ companions: Companion[] }>('/api/shop/companions');
 			companions = cr.companions;
+			const hr = await api<{ houses: House[]; mine: string }>('/api/houses');
+			houseList = hr.houses;
+			myHouse = hr.mine;
 		} catch (e) {
 			loadError = (e as Error).message;
 		}
@@ -230,6 +246,19 @@
 			</div>
 			<p class="hint">Clicca per equipaggiare/togliere. Appare nell'header, attorno all'avatar e nelle stanze.</p>
 		{/if}
+	</section>
+
+	<section class="panel">
+		<h2><Icon name={myHouse || 'grifondoro'} size={18} title="Casata" /> Casata</h2>
+		<div class="house-grid">
+			{#each houseList as h (h.id)}
+				<button class="house" class:on={myHouse === h.id} onclick={() => joinHouse(h.id)} title={h.name}>
+					<Icon name={h.id} size={44} title={h.name} />
+					<span class="house-name">{h.name}</span>
+				</button>
+			{/each}
+		</div>
+		<p class="hint">Scegli la tua casata: lo stemma appare nel profilo, nell'header, in classifica e nelle stanze. La <a href="/leaderboard">Classifica</a> ha la sezione Casate.</p>
 	</section>
 
 	{#if stats}
@@ -545,6 +574,35 @@
 		font-size: 0.55rem;
 		font-weight: 700;
 		color: var(--cyan);
+	}
+
+	/* Scelta casata */
+	.house-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+		gap: 0.5rem;
+	}
+	.house {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.6rem 0.3rem;
+		background: #0f172a;
+		border: 2px solid #334155;
+		border-radius: 10px;
+		color: var(--muted);
+		cursor: pointer;
+	}
+	.house.on {
+		border-color: var(--amber);
+		color: var(--text);
+		box-shadow: 0 0 10px rgba(255, 207, 63, 0.45);
+	}
+	.house-name {
+		font-size: 0.7rem;
+		font-family: var(--font-ui);
+		letter-spacing: 0.02em;
 	}
 
 	@media (prefers-reduced-motion: reduce) {

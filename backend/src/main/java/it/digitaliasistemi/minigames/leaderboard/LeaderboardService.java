@@ -2,6 +2,7 @@ package it.digitaliasistemi.minigames.leaderboard;
 
 import it.digitaliasistemi.minigames.domain.AppUser;
 import it.digitaliasistemi.minigames.domain.MatchResult;
+import it.digitaliasistemi.minigames.domain.UserHouse;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
@@ -102,11 +103,15 @@ public class LeaderboardService {
         Map<String, String> avatars = new HashMap<>();
         for (AppUser u : AppUser.<AppUser>listAll()) avatars.put(u.username, u.avatar);
 
+        Map<String, String> houses = new HashMap<>();
+        for (UserHouse uh : UserHouse.<UserHouse>listAll()) houses.put(uh.username, uh.house);
+
         return stats.values().stream()
             .sorted(Comparator.comparingInt((UserStats u) -> u.points()).thenComparingInt(u -> u.wins).reversed())
             .map(u -> {
                 Map<String, Object> m = u.toMap();
                 m.put("avatar", avatars.get(u.username));
+                m.put("house", houses.get(u.username));
                 return m;
             })
             .toList();

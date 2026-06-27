@@ -88,10 +88,12 @@
 	}
 
 	let companion = $state('');
+	let house = $state('');
 	async function fetchCompanion() {
 		try {
-			const r = await api<{ companion: string | null }>('/api/me');
+			const r = await api<{ companion: string | null; house: string | null }>('/api/me');
 			companion = r.companion ?? '';
+			house = r.house ?? '';
 		} catch { /* silenzioso */ }
 	}
 
@@ -138,6 +140,7 @@
 			setInviteCount(0);
 			tokens = 0;
 			companion = '';
+			house = '';
 		}
 	});
 
@@ -164,6 +167,7 @@
 			<div class="actions">
 				<a class="token-badge" href="/shop" title="Vai allo shop"><Icon name="coin" size={16} title="Token" /> {tokens}</a>
 				<a class="who" href="/profile" class:active={isActive('/profile')} title="Area personale">
+					{#if house}<Icon name={house} size={16} title="Casata" />{/if}
 					{#if companion}<Icon name={companion} size={16} title="Companion" />{/if}
 					<span class="who-name">{auth.session.displayName}</span>
 				</a>

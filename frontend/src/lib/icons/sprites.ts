@@ -1569,6 +1569,103 @@ const sly: Sprite = {
 	]]
 };
 
+/* =============================================================================
+   Stemmi casata (clan). Emblemi pixel ORIGINALI ispirati alle 4 case: scudo
+   coi colori della casa + animale stilizzato (leone/serpente/aquila/tasso).
+============================================================================= */
+
+const grifondoro: Sprite = {
+	motion: 'bob',
+	palette: { O: '#4a0a0a', P: '#9b1c1c', S: '#f0c64a', K: '#3a0808' },
+	frames: [[
+		'................',
+		'.OOOOOOOOOOOO...',
+		'.OPPPPPPPPPPO...',
+		'.OPSSSSSSSSPO...',
+		'.OPSSSSSSSSPO...',
+		'.OPSSKSSKSSPO...',
+		'.OPSSSSSSSSPO...',
+		'.OPSSSKKSSSPO...',
+		'.OPSSSSSSSSPO...',
+		'..OPPPPPPPPO....',
+		'...OPPPPPPO.....',
+		'....OPPPPO......',
+		'.....OPPO.......',
+		'......OO........',
+		'................',
+		'................'
+	]]
+};
+
+const serpeverde: Sprite = {
+	motion: 'bob',
+	palette: { O: '#0a2a18', P: '#1a6b3a', S: '#cdd6e3' },
+	frames: [[
+		'................',
+		'.OOOOOOOOOOOO...',
+		'.OPPPPPPPPPPO...',
+		'.OPSSSSSSPPPO...',
+		'.OPPPPPPSSPPO...',
+		'.OPPPPSSSPPPO...',
+		'.OPPSSSPPPPPO...',
+		'.OPSSPPPPPPPO...',
+		'.OPSSSSSSSPPO...',
+		'..OPPPPPPPPO....',
+		'...OPPPPPPO.....',
+		'....OPPPPO......',
+		'.....OPPO.......',
+		'......OO........',
+		'................',
+		'................'
+	]]
+};
+
+const corvonero: Sprite = {
+	motion: 'bob',
+	palette: { O: '#0a1a40', P: '#1a3a7a', S: '#b97e3a' },
+	frames: [[
+		'................',
+		'.OOOOOOOOOOOO...',
+		'.OPPPPPPPPPPO...',
+		'.OPPPPSSPPPPO...',
+		'.OPSSPSSPSSPO...',
+		'.OSSSSSSSSSSO...',
+		'.OPSSSSSSSSPO...',
+		'.OPPPSSSSPPPO...',
+		'.OPPPPSSPPPPO...',
+		'..OPPPPPPPPO....',
+		'...OPPPPPPO.....',
+		'....OPPPPO......',
+		'.....OPPO.......',
+		'......OO........',
+		'................',
+		'................'
+	]]
+};
+
+const tassorosso: Sprite = {
+	motion: 'bob',
+	palette: { O: '#6b4e00', P: '#e8c020', S: '#161616', W: '#f4f4f4' },
+	frames: [[
+		'................',
+		'.OOOOOOOOOOOO...',
+		'.OPPPPPPPPPPO...',
+		'.OPPSSSSSSPPO...',
+		'.OPSSSWWSSSPO...',
+		'.OPSSWWWWSSPO...',
+		'.OPSSWWWWSSPO...',
+		'.OPSSSWWSSSPO...',
+		'.OPPSSSSSSPPO...',
+		'..OPPPPPPPPO....',
+		'...OPPPPPPO.....',
+		'....OPPPPO......',
+		'.....OPPO.......',
+		'......OO........',
+		'................',
+		'................'
+	]]
+};
+
 export const SPRITES: Record<string, Sprite> = {
 	// giochi (le chiavi coincidono con gli slug del catalogo)
 	connect4,
@@ -1652,5 +1749,10 @@ export const SPRITES: Record<string, Sprite> = {
 	lupo,
 	batman,
 	persona5,
-	sly
+	sly,
+	// casate (le chiavi coincidono con gli id di HouseCatalog backend)
+	grifondoro,
+	serpeverde,
+	corvonero,
+	tassorosso
 };

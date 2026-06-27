@@ -25,7 +25,7 @@
 - [ ] Accessori avatar comprabili con i crediti — invio doni fra utenti
 - [x] Companion acquistabili dallo shop (animati a mano)
 - [x] Leaderboard coi punti accumulati al posto della colonna vittorie (che passa in seconda posizione)
-- [ ] Alpha test: clan/casate (temporaneamente le 4 di Hogwarts), badge casata personalizzabile nella sezione personale
+- [x] Alpha test: clan/casate (temporaneamente le 4 di Hogwarts), badge casata personalizzabile nella sezione personale
 
 ## Altre fix
 
