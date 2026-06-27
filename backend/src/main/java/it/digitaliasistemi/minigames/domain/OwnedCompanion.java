@@ -36,6 +36,7 @@ public class OwnedCompanion extends PanacheEntity {
     }
 
     public static OwnedCompanion findEquipped(String username) {
-        return find("username = ?1 and equipped = true", username).firstResult();
+        // NB: 3 argomenti (query + 2 param) per non collidere col metodo custom find(String, String).
+        return find("username = ?1 and equipped = ?2", username, true).firstResult();
     }
 }
