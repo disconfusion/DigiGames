@@ -5,6 +5,7 @@
 	import { api } from '$lib/api';
 	import { gameLabel } from '$lib/games/catalog';
 	import { showToast } from '$lib/notifications.svelte';
+	import Icon from '$lib/icons/Icon.svelte';
 
 	type Power = {
 		id: string;
@@ -63,7 +64,7 @@
 			});
 			balance = r.balance;
 			powers = powers.map((x) => (x.id === p.id ? { ...x, owned: x.owned + 1 } : x));
-			showToast(`🪙 ${r.message}`, 'success');
+			showToast(r.message, 'success');
 		} catch (e) {
 			showToast((e as Error).message, 'error');
 		} finally {
@@ -74,8 +75,8 @@
 
 <div class="shop">
 	<div class="head">
-		<h1>🛒 Shop</h1>
-		<div class="balance">🪙 <strong>{balance}</strong> Token</div>
+		<h1><Icon name="cart" size={22} title="Shop" /> Shop</h1>
+		<div class="balance"><Icon name="coin" size={18} title="Token" /> <strong>{balance}</strong> Token</div>
 	</div>
 	<p class="sub">Spendi i Token guadagnati giocando. I poteri si usano in partita dal Cyberdeck.</p>
 
@@ -91,12 +92,12 @@
 					{#each list as p (p.id)}
 						{@const affordable = balance >= p.cost}
 						<article class="power" class:owned={p.owned > 0}>
-							<div class="emoji">{p.emoji}</div>
+							<div class="emoji"><Icon name={p.id} size={32} title={p.label} /></div>
 							<h3>{p.label}</h3>
 							<p class="desc">{p.description}</p>
 							<p class="usage"><span class="usage-label">Uso:</span> {p.usage}</p>
 							<div class="foot">
-								<span class="cost" class:cheap={affordable} class:dear={!affordable}>🪙 {p.cost}</span>
+								<span class="cost" class:cheap={affordable} class:dear={!affordable}><Icon name="coin" size={14} /> {p.cost}</span>
 								{#if p.owned > 0}<span class="have">Possiedi {p.owned}</span>{/if}
 							</div>
 							<button onclick={() => buy(p)} disabled={busy[p.id] || !affordable}>

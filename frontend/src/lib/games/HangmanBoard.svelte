@@ -3,6 +3,7 @@
 	import type { RoomEvent } from '$lib/ws';
 	import { gallows, type HangmanGameState } from './hangman';
 	import GameResultOverlay from './GameResultOverlay.svelte';
+	import Icon from '$lib/icons/Icon.svelte';
 
 	let {
 		send,
@@ -88,8 +89,8 @@
 		<!-- Limiti regole personalizzate -->
 		{#if vowelLimit > 0 || letterLimit > 0}
 			<p class="limits">
-				{#if vowelLimit > 0}<span class="chip" class:exhausted={vowelBudgetOver}>🅰 Vocali: {state.vowelsCalled}/{vowelLimit}</span>{/if}
-				{#if letterLimit > 0}<span class="chip" class:exhausted={letterBudgetOver}>✋ Tue lettere: {myLettersUsed}/{letterLimit}</span>{/if}
+				{#if vowelLimit > 0}<span class="chip" class:exhausted={vowelBudgetOver}><Icon name="letters" size={14} /> Vocali: {state.vowelsCalled}/{vowelLimit}</span>{/if}
+				{#if letterLimit > 0}<span class="chip" class:exhausted={letterBudgetOver}><Icon name="hand" size={14} /> Tue lettere: {myLettersUsed}/{letterLimit}</span>{/if}
 			</p>
 		{/if}
 

@@ -7,6 +7,7 @@
 	import { connectRoom, type RoomEvent, type RoomConnection } from '$lib/ws';
 	import { BOARDS } from '$lib/games/registry';
 	import { parseAvatar, renderAvatar } from '$lib/avatar';
+	import Icon from '$lib/icons/Icon.svelte';
 
 	type RoomView = { code: string; gameSlug: string; players: number; maxPlayers: number };
 	type UserInfo = { displayName: string; avatar: string | null };
@@ -143,7 +144,7 @@
 	<button onclick={() => goto('/')}>Torna alla home</button>
 {:else}
 	<p class="status">
-		{connected ? '🟢 connesso' : '🟡 connessione…'} · giocatori: {players}/{room?.maxPlayers ?? '?'}
+		{#if connected}<Icon name="online" size={12} /> connesso{:else}<Icon name="wait" size={12} /> connessione…{/if} · giocatori: {players}/{room?.maxPlayers ?? '?'}
 	</p>
 
 	{#snippet seat(username: string, side: 'left' | 'right')}

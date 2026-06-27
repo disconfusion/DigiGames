@@ -5,6 +5,7 @@
 	import { api } from '$lib/api';
 	import { gameLabel } from '$lib/games/catalog';
 	import { showToast } from '$lib/notifications.svelte';
+	import Icon from '$lib/icons/Icon.svelte';
 
 	type Bug = {
 		id: number;
@@ -18,12 +19,12 @@
 	type PowerPrice = { id: string; game: string; label: string; emoji: string; cost: number; defaultCost: number };
 
 	type Tab = 'bugs' | 'daily' | 'roadmap' | 'users' | 'prices';
-	const TABS: { id: Tab; label: string }[] = [
-		{ id: 'bugs', label: '🐞 Bug' },
-		{ id: 'daily', label: '📅 Parola del giorno' },
-		{ id: 'roadmap', label: '🗺 Roadmap' },
-		{ id: 'users', label: '👥 Utenti' },
-		{ id: 'prices', label: '🪙 Prezzi poteri' }
+	const TABS: { id: Tab; label: string; icon: string }[] = [
+		{ id: 'bugs', label: 'Bug', icon: 'bug' },
+		{ id: 'daily', label: 'Parola del giorno', icon: 'calendar' },
+		{ id: 'roadmap', label: 'Roadmap', icon: 'map' },
+		{ id: 'users', label: 'Utenti', icon: 'people' },
+		{ id: 'prices', label: 'Prezzi poteri', icon: 'coin' }
 	];
 	let tab = $state<Tab>('bugs');
 
@@ -181,19 +182,19 @@
 	}
 </script>
 
-<h1>🛠 Pannello Admin</h1>
+<h1><Icon name="tools" size={22} title="Admin" /> Pannello Admin</h1>
 
 <nav class="tabs">
 	{#each TABS as t (t.id)}
 		<button class="tab" class:active={tab === t.id} onclick={() => (tab = t.id)}>
-			{t.label}{#if t.id === 'bugs' && bugs.length}<span class="count">{bugs.length}</span>{/if}
+			<Icon name={t.icon} size={16} /> {t.label}{#if t.id === 'bugs' && bugs.length}<span class="count">{bugs.length}</span>{/if}
 		</button>
 	{/each}
 </nav>
 
 {#if tab === 'bugs'}
 	<section class="panel">
-		<h2>🐞 Segnalazioni bug ({bugs.length})</h2>
+		<h2><Icon name="bug" size={18} /> Segnalazioni bug ({bugs.length})</h2>
 		{#if bugs.length === 0}
 			<p class="muted">Nessuna segnalazione.</p>
 		{:else}
@@ -213,7 +214,7 @@
 	</section>
 {:else if tab === 'daily'}
 	<section class="panel">
-		<h2>📅 Parola del Giorno</h2>
+		<h2><Icon name="calendar" size={18} /> Parola del Giorno</h2>
 		<div class="daily-controls">
 			<form class="word-form" onsubmit={(e) => { e.preventDefault(); setDailyWord(); }}>
 				<input placeholder="Parola personalizzata (solo a-z)…" bind:value={customWord} autocomplete="off" />
@@ -225,7 +226,7 @@
 	</section>
 {:else if tab === 'roadmap'}
 	<section class="panel">
-		<h2>🗺 Roadmap</h2>
+		<h2><Icon name="map" size={18} /> Roadmap</h2>
 		<form class="roadmap-form" onsubmit={(e) => { e.preventDefault(); saveRoadmap(); }}>
 			<textarea placeholder="Scrivi la roadmap in testo libero o Markdown…" bind:value={roadmapContent} rows="14"></textarea>
 			<button type="submit" disabled={busy['roadmap']}>Salva roadmap</button>
@@ -234,7 +235,7 @@
 	</section>
 {:else if tab === 'users'}
 	<section class="panel">
-		<h2>👥 Utenti ({users.length})</h2>
+		<h2><Icon name="people" size={18} /> Utenti ({users.length})</h2>
 		<ul class="users">
 			{#each users as u (u.username)}
 				<li>
@@ -253,7 +254,7 @@
 	</section>
 {:else if tab === 'prices'}
 	<section class="panel">
-		<h2>🪙 Prezzi poteri</h2>
+		<h2><Icon name="coin" size={18} /> Prezzi poteri</h2>
 		{#if prices.length === 0}
 			<p class="muted">Nessun potere disponibile.</p>
 		{:else}
@@ -261,7 +262,7 @@
 				{#each prices as p (p.id)}
 					<li>
 						<div class="price-meta">
-							<span class="p-emoji">{p.emoji}</span>
+							<span class="p-emoji"><Icon name={p.id} size={28} title={p.label} /></span>
 							<div>
 								<strong>{p.label}</strong>
 								<span class="muted">{gameLabel(p.game)} · default {p.defaultCost}</span>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { BoardProps } from './board';
 	import GameResultOverlay from './GameResultOverlay.svelte';
+	import Icon from '$lib/icons/Icon.svelte';
 
 	let { send, event, me }: BoardProps = $props();
 
@@ -81,7 +82,7 @@
 <div class="ms-wrapper">
 
 	<div class="ms-header">
-		<span class="mine-counter" title="Mine rimanenti">💣 {minesLeft}</span>
+		<span class="mine-counter" title="Mine rimanenti"><Icon name="bomb" size={16} /> {minesLeft}</span>
 
 		{#if state}
 			<button
@@ -90,7 +91,7 @@
 				onclick={() => (flagMode = !flagMode)}
 				title="Modalità bandierina (anche tasto destro)"
 			>
-				🚩 {flagMode ? 'Bandierina ON' : 'Bandierina OFF'}
+				<Icon name="flag" size={14} /> {flagMode ? 'Bandierina ON' : 'Bandierina OFF'}
 			</button>
 		{/if}
 
@@ -141,14 +142,14 @@
 					>
 						{#if cell.revealed}
 							{#if cell.mine}
-								💣
+								<Icon name="bomb" size={18} />
 							{:else if cell.adjacent && cell.adjacent > 0}
 								<span style="color: {adjColor(cell.adjacent)}; text-shadow: {adjGlow(cell.adjacent)}; font-weight: 700; font-family: var(--font-term);">
 									{cell.adjacent}
 								</span>
 							{/if}
 						{:else if cell.flagged}
-							🚩
+							<Icon name="flag" size={18} />
 						{/if}
 					</button>
 				{/each}

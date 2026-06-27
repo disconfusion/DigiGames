@@ -5,6 +5,7 @@
 	import { api } from '$lib/api';
 	import { gameLabel } from '$lib/games/catalog';
 	import { notifications, setInviteCount } from '$lib/notifications.svelte';
+	import Icon from '$lib/icons/Icon.svelte';
 
 	type Invite = {
 		id: number;
@@ -62,7 +63,7 @@
 	}
 </script>
 
-<h1>📨 Inviti ricevuti</h1>
+<h1><Icon name="mail" size={22} title="Inviti" /> Inviti ricevuti</h1>
 {#if error}<p class="error">{error}</p>{/if}
 
 {#if loading}

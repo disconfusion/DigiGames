@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { BoardProps } from './board';
 	import GameResultOverlay from './GameResultOverlay.svelte';
+	import Icon from '$lib/icons/Icon.svelte';
 
 	let { send, event, me }: BoardProps = $props();
 
@@ -137,7 +138,7 @@
 						{#each gameOver.ranking as player, i (player.username)}
 							<tr class:me={player.username === me.username}>
 								<td class="rank">
-									{#if i === 0}🥇{:else if i === 1}🥈{:else if i === 2}🥉{:else}{i + 1}{/if}
+									{#if i === 0}<Icon name="gold" size={24} title="1º" />{:else if i === 1}<Icon name="silver" size={24} title="2º" />{:else if i === 2}<Icon name="bronze" size={24} title="3º" />{:else}{i + 1}{/if}
 								</td>
 								<td class="email">{player.username}</td>
 								<td class="score">{player.score}</td>

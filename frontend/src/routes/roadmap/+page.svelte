@@ -4,6 +4,7 @@
 	import { auth } from '$lib/auth.svelte';
 	import { api } from '$lib/api';
 	import Markdown from '$lib/Markdown.svelte';
+	import Icon from '$lib/icons/Icon.svelte';
 
 	let content = $state('');
 	let loading = $state(true);
@@ -25,7 +26,7 @@
 	});
 </script>
 
-<h1>🗺 Roadmap</h1>
+<h1><Icon name="map" size={22} title="Roadmap" /> Roadmap</h1>
 
 {#if loading}
 	<p class="muted">Caricamento…</p>

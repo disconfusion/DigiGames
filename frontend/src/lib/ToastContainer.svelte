@@ -1,6 +1,15 @@
 <script lang="ts">
 	import { fly, fade } from 'svelte/transition';
 	import { notifications, dismissToast } from '$lib/notifications.svelte';
+	import Icon from '$lib/icons/Icon.svelte';
+
+	// Icona pixel in base al tipo di toast
+	const KIND_ICON: Record<string, string> = {
+		invite: 'mail',
+		success: 'check',
+		error: 'cross',
+		info: 'speech'
+	};
 </script>
 
 <div class="toast-stack" aria-live="polite" aria-atomic="false">
@@ -11,6 +20,7 @@
 			in:fly={{ x: 40, duration: 220 }}
 			out:fade={{ duration: 160 }}
 		>
+			<Icon name={KIND_ICON[t.kind] ?? 'speech'} size={18} />
 			<span class="msg">{t.message}</span>
 			<button class="close" onclick={() => dismissToast(t.id)} aria-label="Chiudi notifica">✕</button>
 		</div>

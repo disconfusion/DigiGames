@@ -7,6 +7,7 @@
 	import { parseAvatar, renderAvatar } from '$lib/avatar';
 	import GameOptions from '$lib/games/GameOptions.svelte';
 	import GamePicker from '$lib/games/GamePicker.svelte';
+	import Icon from '$lib/icons/Icon.svelte';
 	import { notifications } from '$lib/notifications.svelte';
 
 	const FEATURES = __WHATSNEW__;
@@ -162,7 +163,7 @@
 	<div class="modal-backdrop" role="presentation" onclick={closeWhatsNew}>
 		<div class="modal" role="dialog" aria-modal="true" onclick={(e) => e.stopPropagation()}>
 			<div class="modal-head">
-				<h2>🚀 Novità</h2>
+				<h2><Icon name="rocket" size={20} title="Novità" /> Novità</h2>
 				<button class="x" onclick={closeWhatsNew} aria-label="Chiudi">✕</button>
 			</div>
 			<ul class="features">
@@ -188,7 +189,7 @@
 <div class="cards">
 	<!-- Card 1: Ospita partita -->
 	<section class="card fade" style="--delay: 0ms">
-		<div class="card-icon">🏠</div>
+		<div class="card-icon"><Icon name="house" size={40} title="Ospita" /></div>
 		<h2>Ospita partita</h2>
 		<p class="muted">Apri una stanza pubblica: chiunque può entrare.</p>
 		<GamePicker bind:value={hostGame} />
@@ -200,17 +201,19 @@
 
 	<!-- Card 2 (centrale): Parola del Giorno -->
 	<section class="card center fade" style="--delay: 80ms">
-		<div class="card-icon">🗓</div>
+		<div class="card-icon"><Icon name="calendar" size={40} title="Parola del Giorno" /></div>
 		<h2>Parola del Giorno</h2>
 		{#if !daily}
 			<p class="muted">Caricamento…</p>
 		{:else if daily.eliminated && daily.status === 'PLAYING'}
-			<div class="badge danger pulse">☠️ Sei stato eliminato</div>
+			<div class="badge danger pulse"><Icon name="lose" size={16} /> Sei stato eliminato</div>
 			<p class="muted">Puoi solo guardare il resto della giornata.</p>
 		{:else if daily.status === 'WON'}
-			<div class="badge ok pulse">{daily.won ? '🎉 Hai indovinato!' : '🏆 Parola trovata'}</div>
+			<div class="badge ok pulse">
+				{#if daily.won}<Icon name="party" size={16} /> Hai indovinato!{:else}<Icon name="win" size={16} /> Parola trovata{/if}
+			</div>
 		{:else if daily.status === 'LOST'}
-			<div class="badge danger">💀 Parola persa</div>
+			<div class="badge danger"><Icon name="lose" size={16} /> Parola persa</div>
 		{:else}
 			<div class="big-number">{lettersLeft}</div>
 			<p class="muted">lettere mancanti</p>
@@ -235,10 +238,10 @@
 
 	<!-- Card 3: Invita un amico -->
 	<section class="card fade" style="--delay: 160ms">
-		<div class="card-icon">✉️</div>
+		<div class="card-icon"><Icon name="mail" size={40} title="Invita" /></div>
 		<h2>Invita un amico</h2>
 		<p class="muted">Scegli un gioco e invita una o più persone.</p>
-		<p class="muted small">🟢 {onlineCount} online ora</p>
+		<p class="muted small"><Icon name="online" size={14} /> {onlineCount} online ora</p>
 		<GamePicker bind:value={inviteGame} />
 		<GameOptions game={inviteGame} bind:options={inviteOptions} />
 		<div class="users">

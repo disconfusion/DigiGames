@@ -1,13 +1,14 @@
-/** Catalogo giochi condiviso (label + emoji) per home, lobby e inviti. */
-export const GAME_CATALOG: { slug: string; label: string; emoji: string }[] = [
-	{ slug: 'connect4', label: 'Forza 4', emoji: '🔴' },
-	{ slug: 'hangman', label: 'Impiccato', emoji: '🔤' },
-	{ slug: 'quiz', label: 'Quiz', emoji: '❓' },
-	{ slug: 'battleship', label: 'Battaglia navale', emoji: '🚢' },
-	{ slug: 'minesweeper', label: 'Campo minato', emoji: '💣' },
-	{ slug: 'tris', label: 'Tris', emoji: '❌' },
-	{ slug: 'dama', label: 'Dama', emoji: '⛀' },
-	{ slug: 'chess', label: 'Scacchi', emoji: '♟️' }
+/** Catalogo giochi condiviso (label) per home, lobby e inviti.
+ *  Le icone sono pixel-art animate, risolte per slug da $lib/icons (vedi sprites.ts). */
+export const GAME_CATALOG: { slug: string; label: string }[] = [
+	{ slug: 'connect4', label: 'Forza 4' },
+	{ slug: 'hangman', label: 'Impiccato' },
+	{ slug: 'quiz', label: 'Quiz' },
+	{ slug: 'battleship', label: 'Battaglia navale' },
+	{ slug: 'minesweeper', label: 'Campo minato' },
+	{ slug: 'tris', label: 'Tris' },
+	{ slug: 'dama', label: 'Dama' },
+	{ slug: 'chess', label: 'Scacchi' }
 ];
 
 export const gameLabel = (slug: string): string =>

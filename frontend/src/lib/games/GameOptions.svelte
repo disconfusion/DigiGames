@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { ACCESSORIES, CLASSIC_OPTIONS, type HangmanOptions } from '$lib/games/hangman';
+	import Icon from '$lib/icons/Icon.svelte';
 
 	let { game, options = $bindable() }: { game: string; options: unknown } = $props();
 
@@ -99,7 +100,7 @@
 								checked={hmOptions.accessories.includes(a.key)}
 								onchange={() => toggleAccessory(a.key)}
 							/>
-							{a.emoji} {a.label}
+							<Icon name={a.key} size={16} title={a.label} /> {a.label}
 						</label>
 					{/each}
 				</div>

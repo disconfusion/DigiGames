@@ -27,10 +27,10 @@ export const CLASSIC_OPTIONS: HangmanOptions = {
 	accessories: []
 };
 
-export const ACCESSORIES: { key: string; label: string; emoji: string }[] = [
-	{ key: 'hat', label: 'Cappello', emoji: '🎩' },
-	{ key: 'pipe', label: 'Pipa', emoji: '🚬' },
-	{ key: 'shoes', label: 'Scarpe', emoji: '👟' }
+export const ACCESSORIES: { key: string; label: string }[] = [
+	{ key: 'hat', label: 'Cappello' },
+	{ key: 'pipe', label: 'Pipa' },
+	{ key: 'shoes', label: 'Scarpe' }
 ];
 
 /**

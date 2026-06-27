@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { api } from '$lib/api';
 	import { parseAvatar, renderAvatar } from '$lib/avatar';
+	import Icon from '$lib/icons/Icon.svelte';
 
 	type GameStats = { played: number; wins: number };
 
@@ -79,7 +80,7 @@
 					{#each rows as row, i (row.username)}
 						<tr class:podium={i < 3} class:gold={i === 0} class:silver={i === 1} class:bronze={i === 2}>
 							<td class="rank">
-								{#if i === 0}🥇{:else if i === 1}🥈{:else if i === 2}🥉{:else}{i + 1}{/if}
+								{#if i === 0}<Icon name="gold" size={26} title="1º" />{:else if i === 1}<Icon name="silver" size={26} title="2º" />{:else if i === 2}<Icon name="bronze" size={26} title="3º" />{:else}{i + 1}{/if}
 							</td>
 							<td>
 								<div class="player-cell">

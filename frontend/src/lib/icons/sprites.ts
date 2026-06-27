@@ -343,6 +343,999 @@ const generale: Sprite = {
 	]]
 };
 
+// ── Chrome / navigazione ───────────────────────────────────────────────────
+const gamepad: Sprite = {
+	motion: 'bob',
+	palette: { C: C.cyan, R: C.danger, G: C.green, K: '#0a0512' },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'..CCCCCCCCCCCC..',
+		'.CCKCCCCCCCGCCC.',
+		'.CKKKCCCCCCCRCC.',
+		'.CCKCCCCCCCGCCC.',
+		'..CCCCCCCCCCCC..',
+		'..CC......CC....',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const coin: Sprite = {
+	motion: 'bob',
+	palette: { A: C.amber, K: '#7a5a10' },
+	frames: [[
+		'................',
+		'................',
+		'....AAAAAAAA....',
+		'..AAAAAAAAAAAA..',
+		'.AAAAAAAAAAAAAA.',
+		'.AAAKKKKKKKKAAA.',
+		'.AAAAAAKKAAAAAA.',
+		'.AAAAAAKKAAAAAA.',
+		'.AAAAAAKKAAAAAA.',
+		'.AAAAAAKKAAAAAA.',
+		'.AAAAAAAAAAAAAA.',
+		'..AAAAAAAAAAAA..',
+		'....AAAAAAAA....',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const tools: Sprite = {
+	motion: 'swing',
+	palette: { H: C.muted },
+	frames: [[
+		'................',
+		'............HH..',
+		'...........H.H..',
+		'...........HH...',
+		'..........HH....',
+		'.........HH.....',
+		'........HH......',
+		'.......HH.......',
+		'......HH........',
+		'.....HH.........',
+		'....HHH.........',
+		'...HHH..........',
+		'...HH...........',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const bug: Sprite = {
+	motion: 'float',
+	palette: { R: C.danger, K: '#0a0512' },
+	frames: [[
+		'................',
+		'................',
+		'......KKKK......',
+		'.....RRKKRR.....',
+		'....RRRKKRRR....',
+		'...RRKRKKRKRR...',
+		'..RRRRRKKRRRRR..',
+		'..RRKRRKKRRKRR..',
+		'..RRRRRKKRRRRR..',
+		'...RRRRKKRRRR...',
+		'....RRRKKRRR....',
+		'.....RRRRRR.....',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const mail: Sprite = {
+	motion: 'bob',
+	palette: { W: C.text, C: C.cyan },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'................',
+		'..WWWWWWWWWWWW..',
+		'..WCWWWWWWWWCW..',
+		'..WWCWWWWWWCWW..',
+		'..WWWCWWWWCWWW..',
+		'..WWWWCWWCWWWW..',
+		'..WWWWWCCWWWWW..',
+		'..WWWWWWWWWWWW..',
+		'..WWWWWWWWWWWW..',
+		'..WWWWWWWWWWWW..',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const rocket: Sprite = {
+	motion: 'float',
+	palette: { W: C.text, C: C.cyan, R: C.danger, A: C.amber },
+	frames: [[
+		'................',
+		'......WW........',
+		'.....WWWW.......',
+		'.....WCCW.......',
+		'.....WCCW.......',
+		'.....WWWW.......',
+		'.....WWWW.......',
+		'....WWWWWW......',
+		'...W.WWWW.W.....',
+		'.....WWWW.......',
+		'......RR........',
+		'.....RAAR.......',
+		'......AA........',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const house: Sprite = {
+	motion: 'bob',
+	palette: { R: C.danger, W: C.text, C: C.cyan, A: C.amber },
+	frames: [[
+		'................',
+		'................',
+		'.......RR.......',
+		'......RRRR......',
+		'.....RRRRRR.....',
+		'....RRRRRRRR....',
+		'...RRRRRRRRRR...',
+		'..RRRRRRRRRRRR..',
+		'...WWWWWWWWWW...',
+		'...WWCCWWWWWW...',
+		'...WWCCWWWWWW...',
+		'...WWWWAAWWWW...',
+		'...WWWWAAWWWW...',
+		'...WWWWAAWWWW...',
+		'................',
+		'................'
+	]]
+};
+
+const calendar: Sprite = {
+	motion: 'bob',
+	palette: { W: C.text, R: C.danger, C: C.cyan },
+	frames: [[
+		'................',
+		'................',
+		'....W....W......',
+		'....W....W......',
+		'..RRRRRRRRRRRR..',
+		'..RRRRRRRRRRRR..',
+		'..WWWWWWWWWWWW..',
+		'..WWWWWWWWWWWW..',
+		'..WWWCCCCCCWWW..',
+		'..WWWCCCCCCWWW..',
+		'..WWWWWWWWWWWW..',
+		'..WWWWWWWWWWWW..',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const map: Sprite = {
+	motion: 'bob',
+	palette: { G: C.green, C: C.cyan, A: C.amber },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'..GGGGGGGGGGGG..',
+		'..GCGGGGGGGGGG..',
+		'..GCGGGGGGGGGG..',
+		'..GGCGGGGGGGGG..',
+		'..GGCGGGGGGGGG..',
+		'..GGGCCGGGGGGG..',
+		'..GGGGGCCGGAGG..',
+		'..GGGGGGGCCAGG..',
+		'..GGGGGGGGGAGG..',
+		'..GGGGGGGGGGGG..',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const people: Sprite = {
+	motion: 'bob',
+	palette: { C: C.cyan, M: C.mag },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'....CC....MM....',
+		'...CCCC..MMMM...',
+		'...CCCC..MMMM...',
+		'....CC....MM....',
+		'..CCCCCCMMMMMM..',
+		'.CCCCCCCMMMMMMM.',
+		'.CCCCCCCMMMMMMM.',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const person: Sprite = {
+	motion: 'bob',
+	palette: { C: C.cyan },
+	frames: [[
+		'................',
+		'................',
+		'......CCCC......',
+		'.....CCCCCC.....',
+		'.....CCCCCC.....',
+		'......CCCC......',
+		'....CCCCCCCC....',
+		'..CCCCCCCCCCCC..',
+		'.CCCCCCCCCCCCCC.',
+		'.CCCCCCCCCCCCCC.',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const smiley: Sprite = {
+	motion: 'bob',
+	palette: { A: C.amber, K: '#0a0512' },
+	frames: [[
+		'................',
+		'................',
+		'....AAAAAAAA....',
+		'..AAAAAAAAAAAA..',
+		'.AAAAAAAAAAAAAA.',
+		'.AAKKAAAAKKAAAA.',
+		'.AAKKAAAAKKAAAA.',
+		'.AAAAAAAAAAAAAA.',
+		'.AAKAAAAAAAAKAA.',
+		'.AAKKAAAAAAKKAA.',
+		'.AAAKKKKKKKKAAA.',
+		'..AAAAAAAAAAAA..',
+		'....AAAAAAAA....',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const lock: Sprite = {
+	motion: 'bob',
+	palette: { A: C.amber, S: C.muted, K: '#0a0512' },
+	frames: [[
+		'................',
+		'................',
+		'.....SSSS.......',
+		'....S....S......',
+		'....S....S......',
+		'..AAAAAAAAAA....',
+		'..AAAAAAAAAA....',
+		'..AAAAKKAAAA....',
+		'..AAAKKKKAAA....',
+		'..AAAAKKAAAA....',
+		'..AAAAAAAAAA....',
+		'..AAAAAAAAAA....',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const chart: Sprite = {
+	motion: 'bob',
+	palette: { C: C.cyan, A: C.amber, G: C.green, M: C.mag, L: C.muted },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'........GG......',
+		'........GG......',
+		'.....AA.GG......',
+		'.....AA.GG.MM...',
+		'..CC.AA.GG.MM...',
+		'..CC.AA.GG.MM...',
+		'..CC.AA.GG.MM...',
+		'..CC.AA.GG.MM...',
+		'.LLLLLLLLLLLLLL.',
+		'................',
+		'................'
+	]]
+};
+
+const cart: Sprite = {
+	motion: 'bob',
+	palette: { C: C.cyan, A: C.amber },
+	frames: [[
+		'................',
+		'................',
+		'.CC.............',
+		'...C............',
+		'...C............',
+		'..CCCCCCCCCCC...',
+		'..C.AAAAAAAA.C..',
+		'..C.AAAAAAAA.C..',
+		'..C.AAAAAAAA.C..',
+		'..CCCCCCCCCCC...',
+		'...C.......C....',
+		'..CCC.....CCC...',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+// ── Parola del Giorno / esiti vari ──────────────────────────────────────────
+const book: Sprite = {
+	motion: 'bob',
+	palette: { W: C.text, C: C.cyan },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'..WWWWW..WWWWW..',
+		'.WWWWWW..WWWWWW.',
+		'.WCCCW....WCCCW.',
+		'.WCCCW....WCCCW.',
+		'.WCCCW....WCCCW.',
+		'.WCCCW....WCCCW.',
+		'.WWWWWW..WWWWWW.',
+		'..WWWWW..WWWWW..',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const globe: Sprite = {
+	motion: 'float',
+	palette: { C: C.cyan, G: C.green },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'....CCCCCC......',
+		'..CCCCCCCCCC....',
+		'.CCCGGCCCCCC....',
+		'.CCGGGCCCGGCC...',
+		'.CCCCCCCGGGCC...',
+		'.CCGGCCCCCCCC...',
+		'.CCGGGCCCGGCC...',
+		'..CCCCCCCCCC....',
+		'....CCCCCC......',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const letters: Sprite = {
+	motion: 'bob',
+	palette: { C: C.cyan, A: C.amber },
+	frames: [[
+		'................',
+		'................',
+		'..CCCCCCCCCC....',
+		'..C........C....',
+		'..C..AAAA..C....',
+		'..C.AA..AA.C....',
+		'..C.AA..AA.C....',
+		'..C.AAAAAA.C....',
+		'..C.AA..AA.C....',
+		'..C.AA..AA.C....',
+		'..C........C....',
+		'..CCCCCCCCCC....',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const party: Sprite = {
+	motion: 'pulse',
+	palette: { A: C.amber, M: C.mag, C: C.cyan, G: C.green },
+	frames: [[
+		'................',
+		'............M...',
+		'.........C......',
+		'...........G....',
+		'.......M........',
+		'....AAAA...C....',
+		'...AAAAA...G....',
+		'..AAAAA.........',
+		'.AAAA...........',
+		'.AAA............',
+		'.AA.............',
+		'.A..............',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const sync: Sprite = {
+	motion: 'spin',
+	palette: { C: C.cyan },
+	frames: [[
+		'................',
+		'................',
+		'.....CCCCC......',
+		'...CCC...CCC....',
+		'..CC.......CC...',
+		'..C.........C...',
+		'..C.........C.C.',
+		'..C.........CCC.',
+		'..C..........CC.',
+		'..CC.......CC...',
+		'...CCC...CCC....',
+		'.....CCCCC......',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const clock: Sprite = {
+	motion: 'bob',
+	palette: { W: C.text, C: C.cyan, K: '#0a0512' },
+	frames: [[
+		'................',
+		'................',
+		'.....CCCC.......',
+		'...CCWWWWCC.....',
+		'..CWWWWWWWWC....',
+		'.CWWWWKWWWWWC...',
+		'.CWWWWKWWWWWC...',
+		'CWWWWWKWWWWWWC..',
+		'CWWWWWKKKWWWWC..',
+		'CWWWWWWWWWWWWC..',
+		'.CWWWWWWWWWWC...',
+		'..CWWWWWWWWC....',
+		'...CCWWWWCC.....',
+		'.....CCCC.......',
+		'................',
+		'................'
+	]]
+};
+
+const speech: Sprite = {
+	motion: 'bob',
+	palette: { C: C.cyan, K: '#0a0512' },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'.CCCCCCCCCCCC...',
+		'.CCCCCCCCCCCC...',
+		'.CKKCCKKCCKKC...',
+		'.CKKCCKKCCKKC...',
+		'.CCCCCCCCCCCC...',
+		'.CCCCCCCCCCCC...',
+		'..CCC...........',
+		'..CC............',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const check: Sprite = {
+	motion: '',
+	palette: { G: C.green },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'................',
+		'.............GG.',
+		'............GG..',
+		'...........GG...',
+		'..GG......GG....',
+		'...GG....GG.....',
+		'....GG..GG......',
+		'.....GGGG.......',
+		'......GG........',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const cross: Sprite = {
+	motion: '',
+	palette: { R: C.danger },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'..RR......RR....',
+		'...RR....RR.....',
+		'....RR..RR......',
+		'.....RRRR.......',
+		'......RR........',
+		'.....RRRR.......',
+		'....RR..RR......',
+		'...RR....RR.....',
+		'..RR......RR....',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+// ── Pallini di stato ────────────────────────────────────────────────────────
+const DOT_MAP = [
+	'................',
+	'................',
+	'................',
+	'................',
+	'.....DDDD.......',
+	'....DDDDDD......',
+	'...DDDDDDDD.....',
+	'...DDDDDDDD.....',
+	'...DDDDDDDD.....',
+	'...DDDDDDDD.....',
+	'....DDDDDD......',
+	'.....DDDD.......',
+	'................',
+	'................',
+	'................',
+	'................'
+];
+const online: Sprite = { motion: 'pulse', palette: { D: C.green }, frames: [DOT_MAP] };
+const wait: Sprite = { motion: 'pulse', palette: { D: C.amber }, frames: [DOT_MAP] };
+
+// ── Medaglie podio ──────────────────────────────────────────────────────────
+const MEDAL_MAP = [
+	'................',
+	'..R........R....',
+	'..RR......RR....',
+	'...RR....RR.....',
+	'....RR..RR......',
+	'.....DDDD.......',
+	'...DDDDDDDD.....',
+	'..DDDDDDDDDD....',
+	'..DDDDWWDDDD....',
+	'..DDDWWWWDDD....',
+	'..DDDDWWDDDD....',
+	'...DDDDDDDD.....',
+	'.....DDDD.......',
+	'................',
+	'................',
+	'................'
+];
+const gold: Sprite = { motion: 'pulse', palette: { R: C.mag, D: C.amber, W: '#fff6cf' }, frames: [MEDAL_MAP] };
+const silver: Sprite = { motion: 'bob', palette: { R: C.cyan, D: '#cdd6e3', W: C.text }, frames: [MEDAL_MAP] };
+const bronze: Sprite = { motion: 'bob', palette: { R: C.muted, D: '#d98a4a', W: '#ffe0b0' }, frames: [MEDAL_MAP] };
+
+// ── Battaglia navale (statistiche + poteri) ─────────────────────────────────
+const target: Sprite = {
+	motion: 'pulse',
+	palette: { R: C.danger, W: C.text, A: C.amber },
+	frames: [[
+		'................',
+		'................',
+		'....RRRRRR......',
+		'..RRRRRRRRRR....',
+		'.RRWWWWWWWWRR...',
+		'.RWWRRRRRRWWR...',
+		'.RWRRWWWWRRWR...',
+		'.RWRWWAAWWRWR...',
+		'.RWRWWAAWWRWR...',
+		'.RWRRWWWWRRWR...',
+		'.RWWRRRRRRWWR...',
+		'.RRWWWWWWWWRR...',
+		'..RRRRRRRRRR....',
+		'....RRRRRR......',
+		'................',
+		'................'
+	]]
+};
+
+const hourglass: Sprite = {
+	motion: 'bob',
+	palette: { A: C.amber, W: C.text },
+	frames: [[
+		'................',
+		'................',
+		'..WWWWWWWWWW....',
+		'..WAAAAAAAAW....',
+		'...WAAAAAAW.....',
+		'....WAAAAW......',
+		'.....WAAW.......',
+		'......WW........',
+		'......WW........',
+		'.....WAAW.......',
+		'....WAAAAW......',
+		'...WAAAAAAW.....',
+		'..WAAAAAAAAW....',
+		'..WWWWWWWWWW....',
+		'................',
+		'................'
+	]]
+};
+
+const fire: Sprite = {
+	motion: 'pulse',
+	palette: { R: C.danger, A: C.amber, Y: '#ffe08a' },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'.......R........',
+		'......RAR.......',
+		'.....RAAR.......',
+		'.....RAAAR......',
+		'....RAAYAAR.....',
+		'....RAYYYAR.....',
+		'...RAAYYYAAR....',
+		'...RAAYYYYAR....',
+		'...RAAAYAAAR....',
+		'....RAAAAAR.....',
+		'.....RRRRR......',
+		'................',
+		'................'
+	]]
+};
+
+const water: Sprite = {
+	motion: 'bob',
+	palette: { C: C.cyan, W: '#cdf6ff' },
+	frames: [[
+		'................',
+		'................',
+		'.......C........',
+		'.......CC.......',
+		'......CCC.......',
+		'......CCCC......',
+		'.....CCCCC......',
+		'.....CWCCC......',
+		'....CCWCCCC.....',
+		'....CCWCCCC.....',
+		'....CCCCCCC.....',
+		'.....CCCCC......',
+		'......CCC.......',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const dice: Sprite = {
+	motion: 'swing',
+	palette: { W: C.text, K: '#0a0512' },
+	frames: [[
+		'................',
+		'................',
+		'..WWWWWWWWWW....',
+		'..WWWWWWWWWW....',
+		'..WWKKWWKKWW....',
+		'..WWKKWWKKWW....',
+		'..WWWWKKWWWW....',
+		'..WWWWKKWWWW....',
+		'..WWKKWWKKWW....',
+		'..WWKKWWKKWW....',
+		'..WWWWWWWWWW....',
+		'..WWWWWWWWWW....',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const pencil: Sprite = {
+	motion: 'swing',
+	palette: { A: C.amber, W: C.text, K: '#0a0512' },
+	frames: [[
+		'................',
+		'................',
+		'...........WW...',
+		'..........WWW...',
+		'.........AAW....',
+		'........AAA.....',
+		'.......AAA......',
+		'......AAA.......',
+		'.....AAA........',
+		'....AAA.........',
+		'...AAA..........',
+		'..KAA...........',
+		'..K.............',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const bomb: Sprite = {
+	motion: '',
+	palette: { K: '#15152b', W: '#5a5a8a', F: C.amber, A: C.amber },
+	frames: [[
+		'............A...',
+		'...........F....',
+		'..........F.....',
+		'.........F......',
+		'.....KKKKK......',
+		'...KKKKKKKKK....',
+		'..KKKKKKKKKKK...',
+		'..KKWWKKKKKKK...',
+		'..KKWKKKKKKKK...',
+		'..KKKKKKKKKKK...',
+		'...KKKKKKKKK....',
+		'.....KKKKK......',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const flag: Sprite = {
+	motion: 'swing',
+	palette: { R: C.danger, L: C.muted },
+	frames: [[
+		'................',
+		'................',
+		'....LRRRRR......',
+		'....LRRRRRRR....',
+		'....LRRRRRRRR...',
+		'....LRRRRRR.....',
+		'....LRRR........',
+		'....L...........',
+		'....L...........',
+		'....L...........',
+		'....L...........',
+		'...LLLLL........',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+// ── Accessori impiccato ─────────────────────────────────────────────────────
+const hat: Sprite = {
+	motion: 'bob',
+	palette: { K: '#241a3a', B: C.mag },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'.....KKKKKK.....',
+		'.....KKKKKK.....',
+		'.....KKKKKK.....',
+		'.....KKKKKK.....',
+		'.....BBBBBB.....',
+		'...KKKKKKKKKK...',
+		'..KKKKKKKKKKKK..',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const pipe: Sprite = {
+	motion: 'bob',
+	palette: { W: '#c2925a' },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'................',
+		'............WWW.',
+		'...........W..W.',
+		'..WWWWWWWWWWW.W.',
+		'..WWWWWWWWWWWWW.',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const shoes: Sprite = {
+	motion: 'bob',
+	palette: { W: C.text, C: C.cyan, L: C.muted },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'.....WWW........',
+		'.....WWWW.......',
+		'....WWWWWWW.....',
+		'...WWCWWWWWWW...',
+		'..WWWCWWWWWWWW..',
+		'..WWWWWWWWWWWW..',
+		'..LLLLLLLLLLLL..',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const hand: Sprite = {
+	motion: 'swing',
+	palette: { C: C.cyan },
+	frames: [[
+		'................',
+		'................',
+		'...C.C.C.C......',
+		'...C.C.C.C......',
+		'...CCCCCCC......',
+		'.CCCCCCCCC......',
+		'CCCCCCCCCC......',
+		'.CCCCCCCCC......',
+		'..CCCCCCC.......',
+		'...CCCCC........',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const bolt: Sprite = {
+	motion: 'pulse',
+	palette: { A: C.amber },
+	frames: [[
+		'................',
+		'................',
+		'........AAAA....',
+		'.......AAA......',
+		'......AAA.......',
+		'.....AAAAAAA....',
+		'........AAA.....',
+		'.......AAA......',
+		'......AAA.......',
+		'.....AAA........',
+		'....AA..........',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+// ── Poteri shop (radar/sposta/espandi/esca) ─────────────────────────────────
+const radar: Sprite = {
+	motion: 'pulse',
+	palette: { C: C.cyan, L: C.muted },
+	frames: [[
+		'................',
+		'................',
+		'........CCCC....',
+		'.......C....C...',
+		'......C....C....',
+		'.....C....C.....',
+		'.....C...C......',
+		'....C.CCC.......',
+		'....CC..........',
+		'...LCL..........',
+		'..LLLLL.........',
+		'.LLLLLLL........',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const move: Sprite = {
+	motion: '',
+	palette: { C: C.cyan },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'...C........C...',
+		'..CC........CC..',
+		'.CCCCCCCCCCCCCC.',
+		'..CC........CC..',
+		'...C........C...',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const plus: Sprite = {
+	motion: 'pulse',
+	palette: { G: C.green },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'......GG........',
+		'......GG........',
+		'......GG........',
+		'..GGGGGGGGGG....',
+		'..GGGGGGGGGG....',
+		'......GG........',
+		'......GG........',
+		'......GG........',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const trap: Sprite = {
+	motion: '',
+	palette: { R: C.danger, L: C.muted },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'.R..........R...',
+		'.RR........RR...',
+		'..RR......RR....',
+		'...RR....RR.....',
+		'....RRRRRR......',
+		'..LLLLLLLLLL....',
+		'..LLLLLLLLLL....',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
 export const SPRITES: Record<string, Sprite> = {
 	// giochi (le chiavi coincidono con gli slug del catalogo)
 	connect4,
@@ -357,6 +1350,64 @@ export const SPRITES: Record<string, Sprite> = {
 	win,
 	lose,
 	draw,
-	// vari
-	generale
+	// chrome / navigazione
+	generale,
+	gamepad,
+	coin,
+	tools,
+	bug,
+	mail,
+	rocket,
+	house,
+	calendar,
+	map,
+	people,
+	person,
+	smiley,
+	lock,
+	chart,
+	cart,
+	// parola del giorno / vari
+	book,
+	globe,
+	letters,
+	party,
+	sync,
+	clock,
+	speech,
+	check,
+	cross,
+	online,
+	wait,
+	// podio
+	gold,
+	silver,
+	bronze,
+	// battaglia navale: statistiche
+	target,
+	hourglass,
+	fire,
+	water,
+	dice,
+	pencil,
+	bomb,
+	flag,
+	// accessori impiccato
+	hat,
+	pipe,
+	shoes,
+	hand,
+	bolt,
+	// poteri shop (alias per id potere → sprite)
+	radar,
+	move,
+	plus,
+	trap,
+	bs_torpedo: target,
+	bs_radar: radar,
+	bs_move_ship: move,
+	bs_extend_ship: plus,
+	bs_expand_board: map,
+	bs_extra_ship: battleship,
+	bs_decoy: trap
 };

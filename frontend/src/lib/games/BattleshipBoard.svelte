@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { BoardProps } from './board';
 	import GameResultOverlay from './GameResultOverlay.svelte';
+	import Icon from '$lib/icons/Icon.svelte';
 
 	let { send, event, me }: BoardProps = $props();
 
@@ -318,7 +319,7 @@
 			</div>
 
 			<div class="actions">
-				<button class="ghost" onclick={doRandomize}>🎲 A caso</button>
+				<button class="ghost" onclick={doRandomize}><Icon name="dice" size={16} /> A caso</button>
 				<button class="primary" disabled={!allLocalPlaced} onclick={confirmPlacement}>
 					{allLocalPlaced ? '✓ Conferma disposizione' : `Mancano ${unplacedCount} navi`}
 				</button>
@@ -342,8 +343,8 @@
 				</div>
 			</div>
 			<div class="actions">
-				<button class="ghost" onclick={editPlacement} disabled={state.youReady}>✏️ Modifica</button>
-				<button class="ghost" onclick={doRandomize} disabled={state.youReady}>🎲 A caso</button>
+				<button class="ghost" onclick={editPlacement} disabled={state.youReady}><Icon name="pencil" size={16} /> Modifica</button>
+				<button class="ghost" onclick={doRandomize} disabled={state.youReady}><Icon name="dice" size={16} /> A caso</button>
 				<button class="primary" onclick={doReady} disabled={state.youReady || !fleetConfirmed}>
 					{state.youReady ? 'Pronto ✓' : 'Pronto'}
 				</button>
@@ -357,19 +358,19 @@
 		{/if}
 	{:else if inBattle}
 		<div class="turn" class:active={state.yourTurn}>
-			{state.yourTurn ? '🎯 Tocca a te' : '⏳ Turno avversario'}
+			{#if state.yourTurn}<Icon name="target" size={18} /> Tocca a te{:else}<Icon name="hourglass" size={18} /> Turno avversario{/if}
 		</div>
 
 		<!-- Cyberdeck: poteri usabili -->
 		<div class="cyberdeck">
-			<span class="deck-label">⚡ CYBERDECK</span>
+			<span class="deck-label"><Icon name="bolt" size={14} /> CYBERDECK</span>
 			{#if ownPowers.length === 0}
 				<span class="deck-empty">Nessun potere — compra dallo <a href="/shop">shop</a></span>
 			{:else}
 				<div class="deck-slots">
 					{#each ownPowers as p (p.id)}
 						<button class="slot" class:active={activePower?.id === p.id} onclick={() => selectPower(p)} title={p.usage}>
-							<span class="slot-emoji">{p.emoji}</span>
+							<span class="slot-emoji"><Icon name={p.id} size={22} title={p.label} /></span>
 							<span class="slot-name">{p.label}</span>
 							<span class="slot-qty">×{p.owned}</span>
 						</button>
@@ -381,7 +382,7 @@
 		<!-- HUD di guida quando un potere è attivo -->
 		{#if activePower}
 			<div class="hud">
-				<div class="hud-icon">{activePower.emoji}</div>
+				<div class="hud-icon"><Icon name={activePower.id} size={32} title={activePower.label} /></div>
 				<div class="hud-body">
 					<strong>{activePower.label}</strong>
 					<p>
@@ -417,13 +418,13 @@
 								disabled={!ownTargeting}
 								onclick={() => ownCellClick(r, c)}
 								title={cellTitle(cell, false)}
-							>{#if decoySet.has(key)}<span class="decoy-mark">🪤</span>{/if}</button>
+							>{#if decoySet.has(key)}<span class="decoy-mark"><Icon name="trap" size={16} /></span>{/if}</button>
 						{/each}
 					{/each}
 				</div>
 				<div class="stats own-stats">
-					<span class="stat" class:danger={yourSunk > 0}>🚢 Affondate {yourSunk}/{yourFleet}</span>
-					<span class="stat">🎯 Colpita {hitsTaken}×</span>
+					<span class="stat" class:danger={yourSunk > 0}><Icon name="battleship" size={14} /> Affondate {yourSunk}/{yourFleet}</span>
+					<span class="stat"><Icon name="target" size={14} /> Colpita {hitsTaken}×</span>
 				</div>
 			</div>
 
@@ -452,9 +453,9 @@
 					{/each}
 				</div>
 				<div class="stats enemy-stats">
-					<span class="stat" class:good={enemySunk > 0}>🔥 Affondate {enemySunk}/{enemyFleet}</span>
-					<span class="stat">🎯 A segno {myHits}</span>
-					<span class="stat muted-stat">💧 Mancati {myMisses}</span>
+					<span class="stat" class:good={enemySunk > 0}><Icon name="fire" size={14} /> Affondate {enemySunk}/{enemyFleet}</span>
+					<span class="stat"><Icon name="target" size={14} /> A segno {myHits}</span>
+					<span class="stat muted-stat"><Icon name="water" size={14} /> Mancati {myMisses}</span>
 				</div>
 			</div>
 		</div>

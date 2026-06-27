@@ -4,6 +4,7 @@
 	import { auth } from '$lib/auth.svelte';
 	import { api } from '$lib/api';
 	import { notifications } from '$lib/notifications.svelte';
+	import Icon from '$lib/icons/Icon.svelte';
 
 	type DailyState = {
 		// stato condiviso
@@ -117,19 +118,19 @@
 </script>
 
 <div class="daily">
-	<h1>🗓 Parola del Giorno</h1>
+	<h1><Icon name="calendar" size={22} title="Parola del Giorno" /> Parola del Giorno</h1>
 	<p class="sub">Uno slot lettera + un tentativo parola a testa. Chi indovina vince 10 punti!</p>
 
 	<details class="rules">
-		<summary>📖 Come si gioca</summary>
+		<summary><Icon name="book" size={16} /> Come si gioca</summary>
 		<ul>
-			<li>🌍 Ogni giorno <strong>una sola parola</strong>, uguale per tutti i colleghi.</li>
-			<li>🔤 Hai <strong>una lettera</strong> e <strong>un tentativo di parola intera</strong> per tutta la giornata.</li>
-			<li>🤝 Gli errori sono <strong>condivisi</strong>: a {state?.maxWrong ?? 6} errori totali la parola è persa per tutti.</li>
-			<li>🎉 Indovini la parola → <strong>vinci +10 punti</strong>.</li>
-			<li>☠️ Sbagli il tentativo di parola → <strong>eliminato</strong> per oggi: puoi solo guardare.</li>
-			<li>🔄 Aggiornamento <strong>in tempo reale</strong> quando gli altri giocano.</li>
-			<li>🕛 Nuova parola a <strong>mezzanotte (ora di Roma)</strong>.</li>
+			<li><Icon name="globe" size={16} /> Ogni giorno <strong>una sola parola</strong>, uguale per tutti i colleghi.</li>
+			<li><Icon name="letters" size={16} /> Hai <strong>una lettera</strong> e <strong>un tentativo di parola intera</strong> per tutta la giornata.</li>
+			<li><Icon name="draw" size={16} /> Gli errori sono <strong>condivisi</strong>: a {state?.maxWrong ?? 6} errori totali la parola è persa per tutti.</li>
+			<li><Icon name="party" size={16} /> Indovini la parola → <strong>vinci +10 punti</strong>.</li>
+			<li><Icon name="lose" size={16} /> Sbagli il tentativo di parola → <strong>eliminato</strong> per oggi: puoi solo guardare.</li>
+			<li><Icon name="sync" size={16} /> Aggiornamento <strong>in tempo reale</strong> quando gli altri giocano.</li>
+			<li><Icon name="clock" size={16} /> Nuova parola a <strong>mezzanotte (ora di Roma)</strong>.</li>
 		</ul>
 	</details>
 
@@ -158,23 +159,23 @@
 		<!-- Banner fine partita -->
 		{#if state.status === 'WON'}
 			{#if state.winner === me || state.won}
-				<div class="banner won">🎉 Hai vinto! +10 punti!</div>
+				<div class="banner won"><Icon name="party" size={18} /> Hai vinto! +10 punti!</div>
 			{:else}
-				<div class="banner won">🏆 <strong>{state.winner}</strong> ha indovinato la parola: <strong>{state.word}</strong></div>
+				<div class="banner won"><Icon name="win" size={18} /> <strong>{state.winner}</strong> ha indovinato la parola: <strong>{state.word}</strong></div>
 			{/if}
 		{:else if state.status === 'LOST'}
-			<div class="banner lost">💀 Parola persa! Era: <strong>{state.word}</strong></div>
+			<div class="banner lost"><Icon name="lose" size={18} /> Parola persa! Era: <strong>{state.word}</strong></div>
 			{:else if eliminated}
-				<div class="banner lost">☠️ Sei stato eliminato: hai sbagliato il tentativo della parola. Puoi solo guardare il resto della giornata.</div>
+				<div class="banner lost"><Icon name="lose" size={18} /> Sei stato eliminato: hai sbagliato il tentativo della parola. Puoi solo guardare il resto della giornata.</div>
 			{/if}
 
 		<!-- Sezione: la tua lettera -->
 		<section class="section">
 			<h2>
 				{#if state.letterUsed}
-					✅ Lettera usata
+					<Icon name="check" size={16} /> Lettera usata
 				{:else}
-					🔤 Scegli la tua lettera
+					<Icon name="letters" size={16} /> Scegli la tua lettera
 				{/if}
 			</h2>
 			{#if state.letterUsed && state.myLetter}
@@ -205,9 +206,9 @@
 		<section class="section">
 			<h2>
 				{#if state.wordAttemptUsed}
-					{#if state.won}✅ Hai indovinato!{:else}❌ Tentativo esaurito{/if}
+					{#if state.won}<Icon name="check" size={16} /> Hai indovinato!{:else}<Icon name="cross" size={16} /> Tentativo esaurito{/if}
 				{:else}
-					💬 Indovina la parola
+					<Icon name="speech" size={16} /> Indovina la parola
 				{/if}
 			</h2>
 			{#if state.wordAttemptUsed && state.wordGuess}

@@ -10,6 +10,7 @@
 	import { notifications, onInviteReceived, setInviteCount, onDailyUpdate, onPresenceUpdate, showToast } from '$lib/notifications.svelte';
 	import ToastContainer from '$lib/ToastContainer.svelte';
 	import GamePicker from '$lib/games/GamePicker.svelte';
+	import Icon from '$lib/icons/Icon.svelte';
 
 	// Etichetta gioco da slug (per i toast invito)
 	const gameLabel = (slug: unknown): string =>
@@ -102,13 +103,13 @@
 						const from = typeof msg.from === 'string' ? msg.from : null;
 						showToast(
 							from
-								? `📨 ${from} ti ha invitato a ${gameLabel(msg.game)}`
-								: '📨 Hai ricevuto un nuovo invito',
+								? `${from} ti ha invitato a ${gameLabel(msg.game)}`
+								: 'Hai ricevuto un nuovo invito',
 							'invite'
 						);
 					} else if (msg.type === 'daily:update') {
 						onDailyUpdate();
-						showToast('🗓 La parola del giorno è stata aggiornata', 'info');
+						showToast('La parola del giorno è stata aggiornata', 'info');
 					} else if (msg.type === 'presence:update') {
 						// Aggiorna solo lo stato presenze (niente toast: troppo frequente)
 						onPresenceUpdate();
@@ -143,9 +144,9 @@
 </svelte:head>
 
 <header>
-	<a class="brand" href="/">🎮 DigiGames</a>
+	<a class="brand" href="/"><Icon name="gamepad" size={18} title="DigiGames" /> DigiGames</a>
 	{#if auth.session}
-		<a class="token-badge" href="/shop" title="Vai allo shop">🪙 {tokens}</a>
+		<a class="token-badge" href="/shop" title="Vai allo shop"><Icon name="coin" size={16} title="Token" /> {tokens}</a>
 		<button
 			class="menu-toggle"
 			onclick={() => (menuOpen = !menuOpen)}
@@ -161,14 +162,14 @@
 			<a href="/">Home</a>
 			<a href="/daily">Parola del Giorno</a>
 			<a href="/leaderboard">Classifica</a>
-			<a href="/shop">🛒 Shop</a>
+			<a href="/shop"><Icon name="cart" size={15} title="Shop" /> Shop</a>
 			<a href="/roadmap">Roadmap</a>
 			<a class="invites" href="/invites">
 				Inviti
 				{#if notifications.inviteCount > 0}<span class="nav-badge">{notifications.inviteCount}</span>{/if}
 			</a>
-			{#if isAdmin}<a href="/admin">🛠 Admin</a>{/if}
-			<button class="link bug" onclick={openBug}>🐞 Segnala bug</button>
+			{#if isAdmin}<a href="/admin"><Icon name="tools" size={15} title="Admin" /> Admin</a>{/if}
+			<button class="link bug" onclick={openBug}><Icon name="bug" size={15} title="Bug" /> Segnala bug</button>
 			<button class="link" onclick={doLogout}>Esci</button>
 		{:else}
 			<a href="/login">Accedi</a>
@@ -190,7 +191,7 @@
 	>
 		<div class="modal" role="dialog" aria-modal="true" onclick={(e) => e.stopPropagation()}>
 			<div class="modal-head">
-				<h2>🐞 Segnala un bug</h2>
+				<h2><Icon name="bug" size={18} title="Bug" /> Segnala un bug</h2>
 				<button class="x" onclick={() => (showBug = false)} aria-label="Chiudi">✕</button>
 			</div>
 			<div class="field">

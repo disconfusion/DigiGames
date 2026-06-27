@@ -13,6 +13,7 @@
 		renderAvatar,
 		type AvatarSpec
 	} from '$lib/avatar';
+	import Icon from '$lib/icons/Icon.svelte';
 
 	type Profile = { username: string; displayName: string; avatar: string | null; role: string };
 	type AuthResponse = { token: string; username: string; displayName: string; role: string };
@@ -130,7 +131,7 @@
 
 	<div class="profile-grid">
 	<section class="panel">
-		<h2>🙂 Avatar</h2>
+		<h2><Icon name="smiley" size={18} title="Avatar" /> Avatar</h2>
 		<div class="avatar-builder">
 			<pre class="avatar-preview">{preview}</pre>
 			<div class="controls">
@@ -159,7 +160,7 @@
 	</section>
 
 	<section class="panel">
-		<h2>👤 Nome visualizzato</h2>
+		<h2><Icon name="person" size={18} title="Nome" /> Nome visualizzato</h2>
 		<div class="row">
 			<input bind:value={displayName} maxlength="40" placeholder="Nome visualizzato" />
 			<button onclick={saveProfile}>Salva profilo</button>
@@ -170,7 +171,7 @@
 	</section>
 
 	<section class="panel">
-		<h2>🔒 Cambia password</h2>
+		<h2><Icon name="lock" size={18} title="Password" /> Cambia password</h2>
 		<form onsubmit={changePassword} class="pw-form">
 			<input
 				type="password"
@@ -192,7 +193,7 @@
 
 	{#if stats}
 		<section class="panel stats-panel">
-			<h2>📊 Le tue statistiche</h2>
+			<h2><Icon name="chart" size={18} title="Statistiche" /> Le tue statistiche</h2>
 			{#if stats.total === 0}
 				<p class="hint">Nessuna partita registrata. Gioca qualcosa dalla home!</p>
 			{:else}
