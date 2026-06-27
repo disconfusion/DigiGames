@@ -55,7 +55,7 @@ public class CompanionService {
             return new BuyResult(false, "Companion inesistente", tokens.balance(username));
         }
         if (OwnedCompanion.find(username, companionId) != null) {
-            return new BuyResult(false, "Lo possiedi gi&agrave;", tokens.balance(username));
+            return new BuyResult(false, "Lo possiedi già", tokens.balance(username));
         }
         CompanionCatalog.CompanionDef def = defOpt.get();
         if (!tokens.spend(username, def.defaultCost())) {
@@ -72,7 +72,7 @@ public class CompanionService {
 
     /**
      * Equipaggia il companion indicato (deve essere posseduto). id vuoto o "none"
-     * = togli l'equip. Ritorna true se l'operazione &egrave; valida.
+     * = togli l'equip. Ritorna true se l'operazione è valida.
      */
     @Transactional
     public boolean equip(String username, String companionId) {
