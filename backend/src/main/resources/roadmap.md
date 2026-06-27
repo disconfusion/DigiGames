@@ -1,7 +1,7 @@
 # FIX UI/UX
 
 - [x] Monitoraggio dei pezzi persi/conquistati (scacchi, dama, battaglia navale)
-- [ ] Restyling header
+- [x] Restyling header
 - [x] Toast quando arrivano notifiche
 - [x] Scritta di game over e win con animazioni annesse
 - [x] Visibili tutte le mosse dell'utente nella sezione "Impiccato del giorno"
