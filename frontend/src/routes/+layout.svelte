@@ -4,6 +4,7 @@
 	import { onDestroy } from 'svelte';
 	import { auth, logout } from '$lib/auth.svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { api } from '$lib/api';
 	import { GAME_CATALOG } from '$lib/games/catalog';
 	import { connectNotify, type NotifyConnection } from '$lib/ws';
@@ -26,7 +27,9 @@
 
 	const isAdmin = $derived(auth.session?.role === 'admin');
 
-	let menuOpen = $state(false);
+	// Pagina corrente → evidenziazione del link attivo nella tab-strip
+	const path = $derived(page.url.pathname);
+	const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
 	let tokens = $state(0);
 
 	// Modale segnalazione bug
@@ -155,37 +158,36 @@
 </svelte:head>
 
 <header>
-	<a class="brand" href="/"><Icon name="gamepad" size={18} title="DigiGames" /> DigiGames</a>
-	{#if auth.session}
-		<a class="token-badge" href="/shop" title="Vai allo shop"><Icon name="coin" size={16} title="Token" /> {tokens}</a>
-		<button
-			class="menu-toggle"
-			onclick={() => (menuOpen = !menuOpen)}
-			aria-label="Apri/chiudi menu"
-			aria-expanded={menuOpen}
-		>
-			{menuOpen ? '✕' : '☰'}
-		</button>
-	{/if}
-	<nav class:open={menuOpen} onclick={() => (menuOpen = false)}>
+	<div class="bar-top">
+		<a class="brand" href="/"><Icon name="gamepad" size={18} title="DigiGames" /> DigiGames</a>
 		{#if auth.session}
-			<a class="who" href="/profile">{#if companion}<Icon name={companion} size={16} title="Companion" /> {/if}{auth.session.displayName}</a>
-			<a href="/">Home</a>
-			<a href="/daily">Parola del Giorno</a>
-			<a href="/leaderboard">Classifica</a>
-			<a href="/shop"><Icon name="cart" size={15} title="Shop" /> Shop</a>
-			<a href="/roadmap">Roadmap</a>
-			<a class="invites" href="/invites">
+			<div class="actions">
+				<a class="token-badge" href="/shop" title="Vai allo shop"><Icon name="coin" size={16} title="Token" /> {tokens}</a>
+				<a class="who" href="/profile" class:active={isActive('/profile')} title="Area personale">
+					{#if companion}<Icon name={companion} size={16} title="Companion" />{/if}
+					<span class="who-name">{auth.session.displayName}</span>
+				</a>
+				<button class="icon-btn bug" onclick={openBug} title="Segnala bug" aria-label="Segnala bug"><Icon name="bug" size={16} /></button>
+				<button class="icon-btn" onclick={doLogout} title="Esci">Esci</button>
+			</div>
+		{:else}
+			<a class="login-link" href="/login">Accedi</a>
+		{/if}
+	</div>
+	{#if auth.session}
+		<nav class="tab-strip">
+			<a href="/" class:active={isActive('/')}>Home</a>
+			<a href="/daily" class:active={isActive('/daily')}>Parola del Giorno</a>
+			<a href="/leaderboard" class:active={isActive('/leaderboard')}>Classifica</a>
+			<a href="/shop" class:active={isActive('/shop')}><Icon name="cart" size={14} title="Shop" /> Shop</a>
+			<a href="/roadmap" class:active={isActive('/roadmap')}>Roadmap</a>
+			<a class="invites" href="/invites" class:active={isActive('/invites')}>
 				Inviti
 				{#if notifications.inviteCount > 0}<span class="nav-badge">{notifications.inviteCount}</span>{/if}
 			</a>
-			{#if isAdmin}<a href="/admin"><Icon name="tools" size={15} title="Admin" /> Admin</a>{/if}
-			<button class="link bug" onclick={openBug}><Icon name="bug" size={15} title="Bug" /> Segnala bug</button>
-			<button class="link" onclick={doLogout}>Esci</button>
-		{:else}
-			<a href="/login">Accedi</a>
-		{/if}
-	</nav>
+			{#if isAdmin}<a href="/admin" class:active={isActive('/admin')}><Icon name="tools" size={14} title="Admin" /> Admin</a>{/if}
+		</nav>
+	{/if}
 </header>
 
 <main>
@@ -265,13 +267,18 @@
 	:global(::-webkit-scrollbar-corner) {
 		background: var(--bg);
 	}
+	/* ── Header a due righe: brand+azioni / tab-strip ── */
 	header {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 0.6rem 1rem 0;
+	}
+	.bar-top {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 1rem;
-		padding: 0.75rem 1rem;
-		background: var(--panel);
+		gap: 0.75rem;
 		flex-wrap: wrap;
 	}
 	.brand {
@@ -279,13 +286,19 @@
 		font-size: 1.2rem;
 		color: var(--text);
 		text-decoration: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
 	}
-	/* Badge saldo Token: spinto a destra (margin auto), resta sempre visibile anche su mobile */
+	.actions {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
 	.token-badge {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.3rem;
-		margin-left: auto;
 		padding: 0.25rem 0.65rem;
 		border-radius: 999px;
 		background: var(--inset);
@@ -301,45 +314,79 @@
 	.token-badge:hover {
 		box-shadow: 0 0 10px rgba(255, 207, 63, 0.45);
 	}
-	nav {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-	}
-	.menu-toggle {
-		display: none;
-		background: none;
-		border: none;
-		color: var(--text);
-		font-size: 1.5rem;
-		line-height: 1;
-		cursor: pointer;
-		padding: 0.25rem 0.5rem;
-	}
-	nav a,
 	.who {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.22rem 0.6rem;
+		border-radius: 999px;
+		border: 1px solid var(--line);
+		background: var(--inset);
 		color: var(--muted);
 		text-decoration: none;
 	}
-	nav a:hover {
+	.who:hover,
+	.who.active {
+		border-color: var(--cyan);
 		color: var(--text);
+		box-shadow: 0 0 8px color-mix(in srgb, var(--cyan) 30%, transparent);
 	}
-	.link {
+	.icon-btn {
 		background: none;
-		border: none;
+		border: 1px solid transparent;
 		color: var(--muted);
 		cursor: pointer;
 		font: inherit;
-		padding: 0;
-	}
-	.link:hover {
-		color: var(--text);
-	}
-	.invites {
-		position: relative;
+		padding: 0.25rem 0.5rem;
+		border-radius: 8px;
 		display: inline-flex;
 		align-items: center;
 		gap: 0.3rem;
+	}
+	.icon-btn:hover {
+		color: var(--text);
+		border-color: var(--line);
+	}
+	.icon-btn.bug {
+		color: var(--amber);
+	}
+	.login-link {
+		color: var(--cyan);
+		text-decoration: none;
+	}
+
+	/* Striscia di tab della navigazione */
+	.tab-strip {
+		display: flex;
+		align-items: stretch;
+		gap: 0.15rem;
+		border-top: 1px solid var(--line);
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+	.tab-strip::-webkit-scrollbar {
+		display: none;
+	}
+	.tab-strip a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.55rem 0.8rem;
+		color: var(--muted);
+		text-decoration: none;
+		white-space: nowrap;
+		border-bottom: 2px solid transparent;
+	}
+	.tab-strip a:hover {
+		color: var(--text);
+	}
+	.tab-strip a.active {
+		color: var(--cyan);
+		border-bottom-color: var(--cyan);
+		text-shadow: var(--glow-cyan);
+	}
+	.invites {
+		position: relative;
 	}
 	.nav-badge {
 		background: #ef4444;
@@ -381,37 +428,23 @@
 	}
 	@media (max-width: 640px) {
 		header {
-			padding: 0.6rem 0.8rem;
+			padding: 0.5rem 0.6rem 0;
 		}
 		.brand {
-			font-size: 1.05rem;
+			font-size: 1rem;
 		}
-		.menu-toggle {
-			display: block;
+		.actions {
+			gap: 0.35rem;
 		}
-		/* La nav diventa un menu a tendina a tutta larghezza */
-		nav {
-			display: none;
-			order: 3;
-			width: 100%;
-			flex-direction: column;
-			align-items: stretch;
-			gap: 0.25rem;
-			margin-top: 0.5rem;
+		.who-name {
+			display: inline-block;
+			max-width: 6rem;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
 		}
-		nav.open {
-			display: flex;
-		}
-		nav a,
-		nav button {
-			padding: 0.6rem 0.4rem;
-			border-radius: 8px;
-			width: 100%;
-			text-align: left;
-		}
-		nav a:hover,
-		nav button:hover {
-			background: var(--inset);
+		.tab-strip a {
+			padding: 0.5rem 0.6rem;
 		}
 		main {
 			padding: 1rem 0.8rem;

@@ -40,7 +40,6 @@ Frontend: board in `frontend/src/lib/games/<X>Board.svelte`, registrato in `regi
 - JWT: `subject`=`upn`=**username** (minuscolo, chiave d'identità: leaderboard/JWT/players). `groups`=role.
 - `@Authenticated` / `@RolesAllowed("admin")`. `AuthResponse {token,username,displayName,role}`; la `Session` FE memorizza `role`.
 - **Admin**: role `admin`, account seedato all'avvio (`DataInitializer`): username `admin`, password `gianlucaGM`.
-- Registrazione ristretta ai domini `@digitaliasistemi.it` / `@ascesa.it` (login no). Lo **username non si cambia**, il **displayName sì**.
 - Presenza online: heartbeat in-memory `POST /api/presence/ping` (TTL 60s), chiamato dal polling 15s in `+layout.svelte`.
 
 ## Convenzioni
