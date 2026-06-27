@@ -8,12 +8,12 @@
 	import GameOptions from '$lib/games/GameOptions.svelte';
 	import GamePicker from '$lib/games/GamePicker.svelte';
 	import Icon from '$lib/icons/Icon.svelte';
+	import Markdown from '$lib/Markdown.svelte';
 	import { notifications } from '$lib/notifications.svelte';
 
-	const FEATURES = __WHATSNEW__;
-	const SEEN_KEY = 'digiGamesSeenDate';
-	const TODAY = new Date().toISOString().slice(0, 10);
+	const SEEN_KEY = 'digiGamesSeenAnnouncement';
 
+	let whatsNew = $state<{ content: string; revision: number }>({ content: '', revision: 0 });
 	let showWhatsNew = $state(false);
 
 	type RoomView = {
@@ -86,14 +86,21 @@
 			return;
 		}
 		load();
-		// Mostra modal novità al primo accesso del giorno
-		if (FEATURES.length > 0 && localStorage.getItem(SEEN_KEY) !== TODAY) {
-			showWhatsNew = true;
-		}
+		checkAnnouncement();
 	});
 
+	// Mostra la modale "Ultime Fix" finché l'utente non ha visto l'ultima revisione
+	async function checkAnnouncement() {
+		try {
+			const a = await api<{ content: string; revision: number }>('/api/announcement');
+			whatsNew = a;
+			const seen = Number(localStorage.getItem(SEEN_KEY) ?? '0');
+			if (a.content.trim() && a.revision > seen) showWhatsNew = true;
+		} catch { /* silenzioso */ }
+	}
+
 	function closeWhatsNew() {
-		localStorage.setItem(SEEN_KEY, TODAY);
+		localStorage.setItem(SEEN_KEY, String(whatsNew.revision));
 		showWhatsNew = false;
 	}
 
@@ -166,11 +173,7 @@
 				<h2><Icon name="rocket" size={20} title="Novità" /> Novità</h2>
 				<button class="x" onclick={closeWhatsNew} aria-label="Chiudi">✕</button>
 			</div>
-			<ul class="features">
-				{#each FEATURES as f (f)}
-					<li>{f}</li>
-				{/each}
-			</ul>
+			<div class="features"><Markdown source={whatsNew.content} /></div>
 			<div class="modal-actions">
 				<button class="ok" onclick={closeWhatsNew}>Capito!</button>
 			</div>

@@ -18,11 +18,12 @@
 	type AdminUser = { username: string; displayName: string; role: string };
 	type PowerPrice = { id: string; game: string; label: string; emoji: string; cost: number; defaultCost: number };
 
-	type Tab = 'bugs' | 'daily' | 'roadmap' | 'users' | 'prices';
+	type Tab = 'bugs' | 'daily' | 'roadmap' | 'announcement' | 'users' | 'prices';
 	const TABS: { id: Tab; label: string; icon: string }[] = [
 		{ id: 'bugs', label: 'Bug', icon: 'bug' },
 		{ id: 'daily', label: 'Parola del giorno', icon: 'calendar' },
 		{ id: 'roadmap', label: 'Roadmap', icon: 'map' },
+		{ id: 'announcement', label: 'Ultime Fix', icon: 'rocket' },
 		{ id: 'users', label: 'Utenti', icon: 'people' },
 		{ id: 'prices', label: 'Prezzi poteri', icon: 'coin' }
 	];
@@ -72,6 +73,26 @@
 		} catch { /* ignora */ }
 	}
 
+	let announcementContent = $state('');
+	async function loadAnnouncement() {
+		try {
+			const a = await api<{ content: string }>('/api/announcement');
+			announcementContent = a.content;
+		} catch { /* ignora */ }
+	}
+
+	function saveAnnouncement() {
+		run(
+			'announcement',
+			() =>
+				api<{ message: string }>('/api/admin/announcement', {
+					method: 'PUT',
+					body: JSON.stringify({ content: announcementContent })
+				}),
+			(r) => showToast(r.message, 'success')
+		);
+	}
+
 	onMount(() => {
 		if (!auth.session) {
 			goto('/login');
@@ -83,6 +104,7 @@
 		}
 		load();
 		loadRoadmap();
+		loadAnnouncement();
 		loadPrices();
 	});
 
@@ -232,6 +254,15 @@
 			<button type="submit" disabled={busy['roadmap']}>Salva roadmap</button>
 		</form>
 		<p class="muted hint">Visibile a tutti gli utenti su <a href="/roadmap" target="_blank">/roadmap</a>. NB: al riavvio del server viene riallineata al file roadmap.md del repo.</p>
+	</section>
+{:else if tab === 'announcement'}
+	<section class="panel">
+		<h2><Icon name="rocket" size={18} /> Ultime Fix</h2>
+		<form class="roadmap-form" onsubmit={(e) => { e.preventDefault(); saveAnnouncement(); }}>
+			<textarea placeholder="Scrivi le novità in Markdown (titoli, elenchi…). Vuoto = niente modale." bind:value={announcementContent} rows="12"></textarea>
+			<button type="submit" disabled={busy['announcement']}>Salva e mostra a tutti</button>
+		</form>
+		<p class="muted hint">È la modale "Novità" che appare in home dopo il login. Ogni salvataggio la rende di nuovo visibile a tutti (una volta a testa).</p>
 	</section>
 {:else if tab === 'users'}
 	<section class="panel">

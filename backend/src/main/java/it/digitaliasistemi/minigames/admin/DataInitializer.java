@@ -4,6 +4,7 @@ import io.quarkus.elytron.security.common.BcryptUtil;
 import io.quarkus.runtime.StartupEvent;
 import it.digitaliasistemi.minigames.domain.AppUser;
 import it.digitaliasistemi.minigames.domain.Roadmap;
+import it.digitaliasistemi.minigames.domain.Announcement;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.transaction.Transactional;
@@ -43,6 +44,20 @@ public class DataInitializer {
         } else if (!fileContent.equals(r.content)) {
             r.content = fileContent;
             LOG.info("Roadmap allineata a roadmap.md");
+        }
+
+        // Modale "Ultime Fix": creata di default solo se assente (poi gestita dall'admin).
+        if (Announcement.getFirst() == null) {
+            Announcement a = new Announcement();
+            a.content = "## Novità\n\n"
+                + "- Icone pixel-art animate per tutti i giochi\n"
+                + "- **Companion** acquistabili dallo shop\n"
+                + "- **Casate** con classifica casate\n"
+                + "- Header rinnovato\n\n"
+                + "Buon divertimento!";
+            a.revision = 1;
+            a.persist();
+            LOG.info("Announcement (Ultime Fix) di default creato");
         }
     }
 

@@ -29,6 +29,6 @@
 
 ## Altre fix
 
-- [ ] Modale "Ultime Fix" editabile dall'Admin
+- [x] Modale "Ultime Fix" editabile dall'Admin
 - [ ] Regole dell'Impiccato del giorno personalizzabili dall'Admin
 - [ ] Callout con messaggi dall'Admin nella sezione "Impiccato del giorno" per giornate speciali / info utili

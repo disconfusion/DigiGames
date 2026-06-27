@@ -13,6 +13,7 @@ Web app aziendale interna di minigiochi multiplayer (svago tra colleghi, non un 
 - `cd backend && ./mvnw quarkus:dev` · `cd frontend && npm run dev`.
 - In prod il build statico del frontend è servito dallo stesso origin Quarkus (single deploy: Render + Neon). Render dorme dopo 15 min → cold start.
 - ⚠️ Su questa macchina Windows **non c'è JDK né Node**: build/test si fanno altrove.
+- ⚠️ Il **push su branch `1.0`** fa partire la **build Docker completa** (FE `npm run build` + BE `mvn package`): un errore di compilazione (Java o Svelte) **rompe il deploy**. Rileggere bene il codice nuovo prima di pushare.
 
 ## Architettura giochi (il pattern ricorrente)
 Ogni gioco = bean `@ApplicationScoped implements GameEngine` in `backend/.../game/<slug>/`, **auto-scoperto** dal registry `GameEngines` (nessuna registrazione manuale lato BE).
@@ -31,9 +32,17 @@ Frontend: board in `frontend/src/lib/games/<X>Board.svelte`, registrato in `regi
 3. Label in `leaderboard/+page.svelte` e `profile/+page.svelte`.
 4. Se ha opzioni: gestirle in `GameOptions.svelte` + parsing in `game:start`.
 
+## Meta-sistemi (Token, shop, companion, casate, icone)
+- **Token**: valuta interna su `AppUser.tokens` (`TokenService`); guadagnata giocando (vittoria 10 · pareggio 5 · Impiccato del giorno 50) e spesa nello shop.
+- **Shop** (`shop/`): poteri di gioco (`PowerCatalog` statico · inventario `OwnedPower` · prezzi override admin `PowerPrice`) e **companion** cosmetici (`CompanionCatalog` · possesso/equip `OwnedCompanion`). La Battaglia navale usa i poteri (cyberdeck/HUD).
+- **Casate/clan** (`house/`): 4 case stile Hogwarts (`HouseCatalog` · scelta in `UserHouse`); classifica casate in `/leaderboard` (somma punti membri).
+- **Icone**: niente emoji nella UI → icone **pixel-art** animate in `frontend/src/lib/icons` (`<Icon name="..." />`; sprite in `sprites.ts`, colori dai token del tema, rispetta `prefers-reduced-motion`). Companion/casate/poteri usano lo stesso motore (id = nome sprite). **Usare `<Icon>`, non emoji.**
+- **Modale "Ultime Fix/Novità"**: entità `Announcement` (DB, editabile da Admin in `/admin`), mostrata in home dopo il login finché l'utente non ha visto l'ultima `revision`.
+- Identità extra esposte su `/api/me` e `/api/users`: `companion` e `house` (così header/stanze/classifica mostrano gli stemmi).
+
 ## Persistenza & schema
 - **In-memory** (perso al restart/cold-start): stanze e stato partita (`room.game`).
-- **Persistite** (PanacheEntity): `AppUser`, `MatchResult`, `DailyAttempt`, `DailyWordState`, `Invitation`, `BugReport`.
+- **Persistite** (PanacheEntity): `AppUser`, `MatchResult`, `DailyAttempt`, `DailyWordState`, `Invitation`, `BugReport`, `Roadmap`, `Announcement`, `PowerPrice`, `OwnedPower`, `OwnedCompanion`, `UserHouse`. ⚠️ Le identità "extra" (companion/casata) stanno in **tabelle separate** (`OwnedCompanion`, `UserHouse`) apposta per evitare l'ALTER ADD su `app_user`.
 - Schema: dev `drop-and-create` (+ `import-dev.sql`); prod `update`. ⚠️ `update` **crea** tabelle mancanti in modo affidabile ma **l'ALTER ADD di colonne è inaffidabile**: per tabelle disallineate fare DROP + restart (i CREATE le rigenerano).
 
 ## Auth / ruoli

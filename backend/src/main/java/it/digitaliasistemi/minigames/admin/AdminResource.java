@@ -6,6 +6,7 @@ import it.digitaliasistemi.minigames.domain.AppUser;
 import it.digitaliasistemi.minigames.domain.DailyAttempt;
 import it.digitaliasistemi.minigames.domain.MatchResult;
 import it.digitaliasistemi.minigames.domain.Roadmap;
+import it.digitaliasistemi.minigames.domain.Announcement;
 import it.digitaliasistemi.minigames.shop.ShopService;
 import it.digitaliasistemi.minigames.ws.NotifyBus;
 import jakarta.annotation.security.RolesAllowed;
@@ -126,6 +127,25 @@ public class AdminResource {
         return Response.ok(Map.of("message", "Roadmap aggiornata")).build();
     }
 
+    /** Aggiorna il testo della modale "Ultime Fix" (e incrementa la revisione). */
+    @PUT
+    @Path("/announcement")
+    @Transactional
+    public Response setAnnouncement(AnnouncementRequest req) {
+        String content = req != null && req.content() != null ? req.content() : "";
+        Announcement a = Announcement.getFirst();
+        if (a == null) {
+            a = new Announcement();
+            a.content = content;
+            a.revision = 1;
+            a.persist();
+        } else {
+            a.content = content;
+            a.revision += 1;
+        }
+        return Response.ok(Map.of("message", "Ultime Fix aggiornate", "revision", a.revision)).build();
+    }
+
     /** Elenco poteri con prezzo corrente e default (gestione prezzi shop). */
     @GET
     @Path("/power-prices")
@@ -155,4 +175,6 @@ public class AdminResource {
     public record DailyWordRequest(String word) {}
 
     public record RoadmapRequest(String content) {}
+
+    public record AnnouncementRequest(String content) {}
 }
