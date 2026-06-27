@@ -1336,6 +1336,239 @@ const trap: Sprite = {
 	]]
 };
 
+/* =============================================================================
+   Companion (cosmetici acquistabili dallo shop). Le chiavi coincidono con gli
+   id del CompanionCatalog backend → <Icon name={companionId} /> ovunque.
+============================================================================= */
+
+const gondola: Sprite = {
+	motion: 'float',
+	palette: { K: '#5a5472', F: C.danger, A: C.amber, Y: '#ffe08a' },
+	frames: [[
+		'................',
+		'..............K.',
+		'.............K..',
+		'............K...',
+		'...F.......K....',
+		'..FAF.....K.....',
+		'..FYF....K......',
+		'...A....K.......',
+		'K......KK.......',
+		'KK....KK........',
+		'.KKKKKKK........',
+		'.KKKKKKKKKKKK...',
+		'..KKKKKKKKKK....',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const leone: Sprite = {
+	motion: 'bob',
+	palette: { A: C.amber, S: '#c9991f', K: '#0a0512' },
+	frames: [[
+		'................',
+		'................',
+		'...A.A.A.A.A....',
+		'..AAAAAAAAAAA...',
+		'.AAAAAAAAAAAAA..',
+		'.AAASAAAAASAAA..',
+		'.AAKAAAAAAKAAA..',
+		'.AAAAAKKAAAAAA..',
+		'.AAAASKKSAAAAA..',
+		'.AAAAAAAAAAAA...',
+		'..AAAAAAAAAAA...',
+		'...A.A.A.A.A....',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const mose: Sprite = {
+	motion: '',
+	fps: 1.2,
+	palette: { B: '#1a6bd6', Y: C.amber, C: '#7fd4ff' },
+	frames: [
+		[
+			'................',
+			'................',
+			'..Y.Y.Y.Y.Y.Y...',
+			'..Y.Y.Y.Y.Y.Y...',
+			'..Y.Y.Y.Y.Y.Y...',
+			'..YYYYYYYYYYYY..',
+			'.BBBBBBBBBBBBBB.',
+			'.BCBBBCBBBBCBBB.',
+			'.BBBBBBBBBBBBBB.',
+			'.BBBBBBBBBBBBBB.',
+			'.BBBBBBBBBBBBBB.',
+			'................',
+			'................',
+			'................',
+			'................',
+			'................'
+		],
+		[
+			'................',
+			'................',
+			'................',
+			'................',
+			'..YYYYYYYYYYYY..',
+			'..YYYYYYYYYYYY..',
+			'.BBBBBBBBBBBBBB.',
+			'.BCBBBCBBBBCBBB.',
+			'.BBBBBBBBBBBBBB.',
+			'.BBBBBBBBBBBBBB.',
+			'.BBBBBBBBBBBBBB.',
+			'................',
+			'................',
+			'................',
+			'................',
+			'................'
+		]
+	]
+};
+
+const dart180: Sprite = {
+	motion: 'pulse',
+	palette: { R: C.danger, G: C.green, K: '#0a0512' },
+	frames: [[
+		'................',
+		'................',
+		'....RRRRRR......',
+		'..RRRRRRRRRR....',
+		'.RRGGGGGGGGRR...',
+		'.RGGGRRRRGGGR...',
+		'.RGGRRKKRRGGR...',
+		'.RGGRRKKRRGGR...',
+		'.RGGGRRRRGGGR...',
+		'.RRGGGGGGGGRR...',
+		'..RRRRRRRRRR....',
+		'....RRRRRR......',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const stambecco: Sprite = {
+	motion: 'bob',
+	palette: { D: '#6b4a28', H: '#9a6b3a', K: '#0a0512' },
+	frames: [[
+		'................',
+		'.D..........D...',
+		'.DD........DD...',
+		'..DD......DD....',
+		'..DD......DD....',
+		'...DD....DD.....',
+		'....HHHHHHHH....',
+		'...HHKHHHHKHH...',
+		'...HHHHHHHHHH...',
+		'....HHHHHHHH....',
+		'.....HHHHHH.....',
+		'......HHHH......',
+		'.......HH.......',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const lupo: Sprite = {
+	motion: 'bob',
+	palette: { G: '#8a93a8', S: '#5a6378', K: '#0a0512' },
+	frames: [[
+		'................',
+		'..G..........G..',
+		'.GG..........GG.',
+		'.GGG........GGG.',
+		'.GGGGGGGGGGGGGG.',
+		'.GGGGGGGGGGGGGG.',
+		'.GGKGGGGGGGGKGG.',
+		'.GGGGGGGGGGGGGG.',
+		'..GGGGGGGGGGGG..',
+		'...GGGGSSGGGG...',
+		'....GGSKSGG.....',
+		'.....GGGGGG.....',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const batman: Sprite = {
+	motion: 'bob',
+	palette: { K: '#33334d', W: C.text },
+	frames: [[
+		'................',
+		'.K..........K...',
+		'.KK........KK...',
+		'.KKK......KKK...',
+		'.KKKKKKKKKKKKKK.',
+		'.KKKKKKKKKKKKKK.',
+		'.KKWWKKKKKKWWKK.',
+		'.KKWWKKKKKKWWKK.',
+		'.KKKKKKKKKKKKKK.',
+		'..KKKK....KKKK..',
+		'...KK......KK...',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const persona5: Sprite = {
+	motion: 'bob',
+	palette: { W: C.text, K: '#0a0512' },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'................',
+		'.WW........WW...',
+		'.WWWW....WWWW...',
+		'.WWKWW..WWKWW...',
+		'.WWKWW..WWKWW...',
+		'.WWWWW..WWWWW...',
+		'..WWW....WWW....',
+		'...W......W.....',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const sly: Sprite = {
+	motion: 'bob',
+	palette: { B: '#2b6bff', K: '#0a0512' },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'..B........B....',
+		'.BBB......BBB...',
+		'.BBBBBBBBBBBBBB.',
+		'.BBKKBBBBBBKKBB.',
+		'.BBKKBBBBBBKKBB.',
+		'.BBBBBBBBBBBBBB.',
+		'..BBB......BBB..',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
 export const SPRITES: Record<string, Sprite> = {
 	// giochi (le chiavi coincidono con gli slug del catalogo)
 	connect4,
@@ -1409,5 +1642,15 @@ export const SPRITES: Record<string, Sprite> = {
 	bs_extend_ship: plus,
 	bs_expand_board: map,
 	bs_extra_ship: battleship,
-	bs_decoy: trap
+	bs_decoy: trap,
+	// companion (le chiavi coincidono con gli id del CompanionCatalog backend)
+	gondola,
+	leone,
+	mose,
+	dart180,
+	stambecco,
+	lupo,
+	batman,
+	persona5,
+	sly
 };

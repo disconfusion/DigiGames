@@ -10,7 +10,7 @@
 	import Icon from '$lib/icons/Icon.svelte';
 
 	type RoomView = { code: string; gameSlug: string; players: number; maxPlayers: number };
-	type UserInfo = { displayName: string; avatar: string | null };
+	type UserInfo = { displayName: string; avatar: string | null; companion?: string | null };
 
 	const SYSTEM = new Set(['player:joined', 'player:left', 'chat']);
 	const code: string = page.params.code ?? '';
@@ -38,6 +38,7 @@
 
 	const face = (u: string) => renderAvatar(parseAvatar(userInfo[u]?.avatar ?? null));
 	const nameOf = (u: string) => (u === meUsername ? 'Tu' : (userInfo[u]?.displayName ?? u));
+	const companionOf = (u: string) => userInfo[u]?.companion ?? '';
 
 	function addPlayer(u: string) {
 		if (u && !playerNames.includes(u)) playerNames = [...playerNames, u];
@@ -98,13 +99,13 @@
 
 	async function loadAvatars() {
 		try {
-			const me = await api<{ username: string; displayName: string; avatar: string | null }>('/api/me');
-			const others = await api<{ username: string; displayName: string; avatar: string | null }[]>(
+			const me = await api<{ username: string; displayName: string; avatar: string | null; companion: string | null }>('/api/me');
+			const others = await api<{ username: string; displayName: string; avatar: string | null; companion: string | null }[]>(
 				'/api/users'
 			);
 			const map: Record<string, UserInfo> = {};
-			map[me.username] = { displayName: me.displayName, avatar: me.avatar };
-			for (const u of others) map[u.username] = { displayName: u.displayName, avatar: u.avatar };
+			map[me.username] = { displayName: me.displayName, avatar: me.avatar, companion: me.companion };
+			for (const u of others) map[u.username] = { displayName: u.displayName, avatar: u.avatar, companion: u.companion };
 			userInfo = map;
 		} catch {
 			// avatar non disponibili: si userà il volto di default
@@ -155,6 +156,9 @@
 					<div class="bubble {side}">{bubbles[username].text}</div>
 				{/if}
 				<pre class="face">{face(username)}</pre>
+				{#if companionOf(username)}
+					<div class="seat-companion"><Icon name={companionOf(username)} size={26} title="Companion" /></div>
+				{/if}
 			</div>
 			<span class="seat-name" class:me={username === meUsername}>{nameOf(username)}</span>
 		</div>
@@ -291,6 +295,16 @@
 		border-color: var(--line);
 		box-shadow: none;
 		opacity: 0.4;
+	}
+	.seat-companion {
+		position: absolute;
+		right: -10px;
+		bottom: -10px;
+		background: var(--inset);
+		border: 1px solid var(--line);
+		border-radius: 8px;
+		padding: 1px 2px;
+		line-height: 0;
 	}
 	.face {
 		font-family: ui-monospace, monospace;

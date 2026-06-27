@@ -19,8 +19,18 @@
 		owned: number;
 	};
 
+	type Companion = {
+		id: string;
+		name: string;
+		description: string;
+		cost: number;
+		owned: boolean;
+		equipped: boolean;
+	};
+
 	let balance = $state(0);
 	let powers = $state<Power[]>([]);
+	let companions = $state<Companion[]>([]);
 	let loading = $state(true);
 	let error = $state('');
 	let busy = $state<Record<string, boolean>>({});
@@ -40,6 +50,9 @@
 			const r = await api<{ balance: number; powers: Power[] }>('/api/shop/powers');
 			balance = r.balance;
 			powers = r.powers;
+			const c = await api<{ balance: number; companions: Companion[] }>('/api/shop/companions');
+			balance = c.balance;
+			companions = c.companions;
 		} catch (e) {
 			error = (e as Error).message;
 		} finally {
@@ -69,6 +82,43 @@
 			showToast((e as Error).message, 'error');
 		} finally {
 			busy = { ...busy, [p.id]: false };
+		}
+	}
+
+	async function buyCompanion(c: Companion) {
+		if (busy[c.id] || balance < c.cost) return;
+		busy = { ...busy, [c.id]: true };
+		try {
+			const r = await api<{ message: string; balance: number }>(`/api/shop/companions/${c.id}/buy`, {
+				method: 'POST'
+			});
+			balance = r.balance;
+			// se è il primo companion il backend lo equipaggia da solo
+			const hadEquipped = companions.some((x) => x.equipped);
+			companions = companions.map((x) =>
+				x.id === c.id ? { ...x, owned: true, equipped: !hadEquipped } : x
+			);
+			showToast(r.message, 'success');
+		} catch (e) {
+			showToast((e as Error).message, 'error');
+		} finally {
+			busy = { ...busy, [c.id]: false };
+		}
+	}
+
+	async function equipCompanion(c: Companion) {
+		if (busy[c.id]) return;
+		const target = c.equipped ? 'none' : c.id;
+		busy = { ...busy, [c.id]: true };
+		try {
+			const r = await api<{ equipped: string }>(`/api/shop/companions/${target}/equip`, {
+				method: 'POST'
+			});
+			companions = companions.map((x) => ({ ...x, equipped: x.id === r.equipped }));
+		} catch (e) {
+			showToast((e as Error).message, 'error');
+		} finally {
+			busy = { ...busy, [c.id]: false };
 		}
 	}
 </script>
@@ -108,6 +158,37 @@
 				</div>
 			</section>
 		{/each}
+
+		<section class="game-block companions">
+			<h2>Companion</h2>
+			<p class="sub">Compagni puramente estetici. Equipaggiane uno: comparirà nel profilo, nell'header e nelle stanze di gioco.</p>
+			<div class="grid">
+				{#each companions as c (c.id)}
+					{@const affordable = balance >= c.cost}
+					<article class="power companion" class:owned={c.owned}>
+						<div class="emoji"><Icon name={c.id} size={40} title={c.name} /></div>
+						<h3>{c.name}</h3>
+						<p class="desc">{c.description}</p>
+						<div class="foot">
+							{#if c.owned}
+								<span class="have">Posseduto</span>
+							{:else}
+								<span class="cost" class:cheap={affordable} class:dear={!affordable}><Icon name="coin" size={14} /> {c.cost}</span>
+							{/if}
+						</div>
+						{#if c.owned}
+							<button class="equip" class:on={c.equipped} disabled={busy[c.id]} onclick={() => equipCompanion(c)}>
+								{c.equipped ? 'Equipaggiato ✓' : 'Equipaggia'}
+							</button>
+						{:else}
+							<button onclick={() => buyCompanion(c)} disabled={busy[c.id] || !affordable}>
+								{busy[c.id] ? '…' : affordable ? 'Acquista' : 'Token insuff.'}
+							</button>
+						{/if}
+					</article>
+				{/each}
+			</div>
+		</section>
 	{/if}
 </div>
 
@@ -258,5 +339,22 @@
 		background: var(--inset);
 		border-color: var(--line);
 		box-shadow: none;
+	}
+	.equip {
+		background: transparent;
+		border: 2px solid var(--cyan);
+		color: var(--cyan);
+		box-shadow: none;
+	}
+	.equip:hover:not(:disabled) {
+		box-shadow: var(--glow-cyan);
+	}
+	.equip.on {
+		background: linear-gradient(180deg, var(--cyan), #16a6b3);
+		border-color: var(--cyan);
+		color: #04222a;
+	}
+	.companions > .sub {
+		margin: 0 0 0.75rem;
 	}
 </style>

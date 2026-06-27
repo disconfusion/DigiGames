@@ -27,12 +27,14 @@ public class ProfileResource {
     @Inject JsonWebToken jwt;
     @Inject AuthService auth;
     @Inject LeaderboardService leaderboard;
+    @Inject it.digitaliasistemi.minigames.shop.CompanionService companions;
 
     @GET
     public Response me() {
         AppUser u = AppUser.findByUsername(jwt.getSubject());
         if (u == null) return notFound();
-        return Response.ok(new ProfileView(u.username, u.displayName, u.avatar, u.role)).build();
+        return Response.ok(new ProfileView(u.username, u.displayName, u.avatar, u.role,
+            companions.equippedId(u.username))).build();
     }
 
     @GET
@@ -95,7 +97,7 @@ public class ProfileResource {
         return Response.status(status).entity(Map.of("message", message)).build();
     }
 
-    public record ProfileView(String username, String displayName, String avatar, String role) {}
+    public record ProfileView(String username, String displayName, String avatar, String role, String companion) {}
 
     public record UpdateProfileRequest(String displayName, String avatar) {}
 

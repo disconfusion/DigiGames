@@ -18,6 +18,7 @@ import java.util.Map;
 public class ShopResource {
 
     @Inject ShopService shop;
+    @Inject CompanionService companions;
     @Inject TokenService tokens;
     @Inject JsonWebToken jwt;
 
@@ -36,5 +37,41 @@ public class ShopResource {
         ShopService.BuyResult r = shop.buy(jwt.getSubject(), id);
         Map<String, Object> body = Map.of("message", r.message(), "balance", r.balance());
         return r.ok() ? Response.ok(body).build() : Response.status(400).entity(body).build();
+    }
+
+    // ---- Companion (cosmetici) ----
+
+    /** Catalogo companion + saldo + id equipaggiato ("" se nessuno). */
+    @GET
+    @Path("/companions")
+    public Map<String, Object> companions() {
+        String u = jwt.getSubject();
+        String eq = companions.equippedId(u);
+        return Map.of(
+            "balance", tokens.balance(u),
+            "companions", companions.catalog(u),
+            "equipped", eq != null ? eq : ""
+        );
+    }
+
+    /** Acquista il companion indicato. */
+    @POST
+    @Path("/companions/{id}/buy")
+    public Response buyCompanion(@PathParam("id") String id) {
+        CompanionService.BuyResult r = companions.buy(jwt.getSubject(), id);
+        Map<String, Object> body = Map.of("message", r.message(), "balance", r.balance());
+        return r.ok() ? Response.ok(body).build() : Response.status(400).entity(body).build();
+    }
+
+    /** Equipaggia il companion ("none" per toglierlo). */
+    @POST
+    @Path("/companions/{id}/equip")
+    public Response equipCompanion(@PathParam("id") String id) {
+        boolean ok = companions.equip(jwt.getSubject(), id);
+        if (!ok) {
+            return Response.status(400).entity(Map.of("message", "Companion non posseduto")).build();
+        }
+        String eq = companions.equippedId(jwt.getSubject());
+        return Response.ok(Map.of("equipped", eq != null ? eq : "")).build();
     }
 }

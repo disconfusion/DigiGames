@@ -84,14 +84,24 @@
 		} catch { /* silenzioso */ }
 	}
 
+	let companion = $state('');
+	async function fetchCompanion() {
+		try {
+			const r = await api<{ companion: string | null }>('/api/me');
+			companion = r.companion ?? '';
+		} catch { /* silenzioso */ }
+	}
+
 	$effect(() => {
 		if (auth.session) {
-			// Heartbeat presenza + refresh saldo Token ogni 30s
+			// Heartbeat presenza + refresh saldo Token / companion ogni 30s
 			ping();
 			fetchTokens();
+			fetchCompanion();
 			pingTimer = setInterval(() => {
 				ping();
 				fetchTokens();
+				fetchCompanion();
 			}, 30_000);
 			// Fetch count iniziale + canale WS notifiche
 			fetchInviteCount();
@@ -124,6 +134,7 @@
 			notifyWs = undefined;
 			setInviteCount(0);
 			tokens = 0;
+			companion = '';
 		}
 	});
 
@@ -158,7 +169,7 @@
 	{/if}
 	<nav class:open={menuOpen} onclick={() => (menuOpen = false)}>
 		{#if auth.session}
-			<a class="who" href="/profile">{auth.session.displayName}</a>
+			<a class="who" href="/profile">{#if companion}<Icon name={companion} size={16} title="Companion" /> {/if}{auth.session.displayName}</a>
 			<a href="/">Home</a>
 			<a href="/daily">Parola del Giorno</a>
 			<a href="/leaderboard">Classifica</a>

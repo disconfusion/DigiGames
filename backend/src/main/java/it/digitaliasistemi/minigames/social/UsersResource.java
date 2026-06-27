@@ -23,14 +23,18 @@ public class UsersResource {
     @Inject
     PresenceService presence;
 
+    @Inject
+    it.digitaliasistemi.minigames.shop.CompanionService companions;
+
     @GET
     public List<UserView> list() {
         String me = jwt.getName();
         return AppUser.<AppUser>listAll().stream()
                 .filter(u -> !u.username.equals(me))
-                .map(u -> new UserView(u.username, u.displayName, u.avatar, presence.isOnline(u.username)))
+                .map(u -> new UserView(u.username, u.displayName, u.avatar, presence.isOnline(u.username),
+                        companions.equippedId(u.username)))
                 .toList();
     }
 
-    public record UserView(String username, String displayName, String avatar, boolean online) {}
+    public record UserView(String username, String displayName, String avatar, boolean online, String companion) {}
 }

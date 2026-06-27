@@ -40,9 +40,25 @@
 	};
 	const gameLabel = (g: string) => GAME_LABELS[g] ?? g;
 
+	type Companion = { id: string; name: string; description: string; cost: number; owned: boolean; equipped: boolean };
+
 	let profile = $state<Profile | null>(null);
 	let stats = $state<Stats | null>(null);
 	let loadError = $state('');
+
+	let companions = $state<Companion[]>([]);
+	const ownedCompanions = $derived(companions.filter((c) => c.owned));
+	const equippedCompanion = $derived(companions.find((c) => c.equipped)?.id ?? '');
+
+	async function equipCompanion(c: Companion) {
+		const target = c.equipped ? 'none' : c.id;
+		try {
+			const r = await api<{ equipped: string }>(`/api/shop/companions/${target}/equip`, { method: 'POST' });
+			companions = companions.map((x) => ({ ...x, equipped: x.id === r.equipped }));
+		} catch (e) {
+			loadError = (e as Error).message;
+		}
+	}
 
 	const winRate = $derived(stats && stats.total > 0 ? Math.round((stats.wins / stats.total) * 100) : 0);
 
@@ -71,6 +87,8 @@
 			displayName = profile.displayName;
 			spec = parseAvatar(profile.avatar);
 			stats = await api<Stats>('/api/me/stats');
+			const cr = await api<{ companions: Companion[] }>('/api/shop/companions');
+			companions = cr.companions;
 		} catch (e) {
 			loadError = (e as Error).message;
 		}
@@ -133,7 +151,12 @@
 	<section class="panel">
 		<h2><Icon name="smiley" size={18} title="Avatar" /> Avatar</h2>
 		<div class="avatar-builder">
-			<pre class="avatar-preview">{preview}</pre>
+			<div class="avatar-stage">
+				<pre class="avatar-preview">{preview}</pre>
+				{#if equippedCompanion}
+					<div class="orbit"><div class="orbit-pos"><Icon name={equippedCompanion} size={28} title="Companion" /></div></div>
+				{/if}
+			</div>
 			<div class="controls">
 				<div class="ctrl">
 					<button onclick={() => cycle('hat', HATS.length, -1)}>◀</button>
@@ -189,6 +212,24 @@
 		</form>
 		{#if pwMsg}<p class="ok">{pwMsg}</p>{/if}
 		{#if pwErr}<p class="err">{pwErr}</p>{/if}
+	</section>
+
+	<section class="panel">
+		<h2><Icon name={equippedCompanion || 'leone'} size={18} title="Companion" /> Companion</h2>
+		{#if ownedCompanions.length === 0}
+			<p class="hint">Non possiedi companion. Compratene uno nello <a href="/shop">shop</a>!</p>
+		{:else}
+			<div class="companion-grid">
+				{#each ownedCompanions as c (c.id)}
+					<button class="comp" class:on={c.equipped} onclick={() => equipCompanion(c)} title={c.name}>
+						<Icon name={c.id} size={40} title={c.name} />
+						<span class="comp-name">{c.name}</span>
+						{#if c.equipped}<span class="comp-tag">ON</span>{/if}
+					</button>
+				{/each}
+			</div>
+			<p class="hint">Clicca per equipaggiare/togliere. Appare nell'header, attorno all'avatar e nelle stanze.</p>
+		{/if}
 	</section>
 
 	{#if stats}
@@ -442,5 +483,73 @@
 	}
 	.dot.draw {
 		background: #3b82f6;
+	}
+
+	/* Companion che orbita attorno all'avatar */
+	.avatar-stage {
+		position: relative;
+		display: inline-flex;
+	}
+	.orbit {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		width: 0;
+		height: 0;
+		pointer-events: none;
+		animation: orbit 7s linear infinite;
+	}
+	.orbit-pos {
+		position: absolute;
+		transform: translate(-50%, -50%) translateY(-58px);
+	}
+	@keyframes orbit {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	/* Griglia companion posseduti */
+	.companion-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
+		gap: 0.5rem;
+	}
+	.comp {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.5rem 0.3rem;
+		background: #0f172a;
+		border: 2px solid #334155;
+		border-radius: 8px;
+		color: var(--muted);
+		cursor: pointer;
+	}
+	.comp.on {
+		border-color: var(--cyan);
+		color: var(--text);
+		box-shadow: var(--glow-cyan);
+	}
+	.comp-name {
+		font-size: 0.65rem;
+		text-align: center;
+		line-height: 1.1;
+	}
+	.comp-tag {
+		position: absolute;
+		top: 0.2rem;
+		right: 0.25rem;
+		font-size: 0.55rem;
+		font-weight: 700;
+		color: var(--cyan);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.orbit {
+			animation: none;
+		}
 	}
 </style>

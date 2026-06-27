@@ -1,0 +1,89 @@
+package it.digitaliasistemi.minigames.shop;
+
+import it.digitaliasistemi.minigames.domain.OwnedCompanion;
+import it.digitaliasistemi.minigames.token.TokenService;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/** Logica dei companion cosmetici: catalogo per utente, acquisto, equip. */
+@ApplicationScoped
+public class CompanionService {
+
+    @Inject TokenService tokens;
+
+    /** id del companion equipaggiato dall'utente, o null. */
+    public String equippedId(String username) {
+        OwnedCompanion eq = OwnedCompanion.findEquipped(username);
+        return eq != null ? eq.companionId : null;
+    }
+
+    /** Catalogo completo con flag owned/equipped per l'utente. */
+    public List<Map<String, Object>> catalog(String username) {
+        Map<String, Boolean> ownedEquip = new HashMap<>();
+        for (OwnedCompanion oc : OwnedCompanion.forUser(username)) {
+            ownedEquip.put(oc.companionId, oc.equipped);
+        }
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (CompanionCatalog.CompanionDef d : CompanionCatalog.COMPANIONS) {
+            boolean owned = ownedEquip.containsKey(d.id());
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", d.id());
+            m.put("name", d.name());
+            m.put("description", d.description());
+            m.put("cost", d.defaultCost());
+            m.put("owned", owned);
+            m.put("equipped", owned && Boolean.TRUE.equals(ownedEquip.get(d.id())));
+            out.add(m);
+        }
+        return out;
+    }
+
+    public record BuyResult(boolean ok, String message, int balance) {}
+
+    /** Acquisto: scala i Token e registra il possesso. Auto-equip se non ne hai uno. */
+    @Transactional
+    public BuyResult buy(String username, String companionId) {
+        var defOpt = CompanionCatalog.byId(companionId);
+        if (defOpt.isEmpty()) {
+            return new BuyResult(false, "Companion inesistente", tokens.balance(username));
+        }
+        if (OwnedCompanion.find(username, companionId) != null) {
+            return new BuyResult(false, "Lo possiedi gi&agrave;", tokens.balance(username));
+        }
+        CompanionCatalog.CompanionDef def = defOpt.get();
+        if (!tokens.spend(username, def.defaultCost())) {
+            return new BuyResult(false, "Token insufficienti (servono " + def.defaultCost() + ")", tokens.balance(username));
+        }
+        boolean firstOne = OwnedCompanion.forUser(username).isEmpty();
+        OwnedCompanion oc = new OwnedCompanion();
+        oc.username = username;
+        oc.companionId = companionId;
+        oc.equipped = firstOne; // primo companion: equipaggiato in automatico
+        oc.persist();
+        return new BuyResult(true, def.name() + " acquistato!", tokens.balance(username));
+    }
+
+    /**
+     * Equipaggia il companion indicato (deve essere posseduto). id vuoto o "none"
+     * = togli l'equip. Ritorna true se l'operazione &egrave; valida.
+     */
+    @Transactional
+    public boolean equip(String username, String companionId) {
+        boolean unequip = companionId == null || companionId.isBlank() || companionId.equals("none");
+        List<OwnedCompanion> owned = OwnedCompanion.forUser(username);
+        if (!unequip && owned.stream().noneMatch(o -> o.companionId.equals(companionId))) {
+            return false; // non posseduto
+        }
+        for (OwnedCompanion oc : owned) {
+            oc.equipped = !unequip && oc.companionId.equals(companionId);
+        }
+        return true;
+    }
+}
