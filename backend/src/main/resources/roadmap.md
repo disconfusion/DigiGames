@@ -15,7 +15,7 @@
 
 - [ ] Restyling animazioni dei pezzi di scacchi e dama
 - [x] Esplosioni e buchi nell'acqua in Battaglia navale
-- [ ] Campo minato
+- [x] Campo minato
 - [x] Forza 4
 
 # Game Loop / Game design

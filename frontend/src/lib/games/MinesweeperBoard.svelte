@@ -122,6 +122,8 @@
 	{#if state}
 		<div
 			class="ms-grid"
+			class:lost={state.status === 'LOST'}
+			class:won={state.status === 'WON'}
 			style="--cols: {state.cols};"
 			role="grid"
 			aria-label="Campo Minato {state.rows}×{state.cols}"
@@ -326,24 +328,36 @@
 		transform: scale(1.06);
 	}
 
-	/* Cella rivelata sicura */
+	/* Cella rivelata sicura — pop alla rivelazione (anche a cascata sui flood-fill) */
 	.ms-cell.revealed.safe {
 		background: var(--inset);
 		box-shadow: inset 0 0 0 1px var(--line);
 		cursor: default;
+		animation: ms-reveal 0.18s ease-out;
 	}
 
-	/* Cella con mina esplosa */
+	/* Cella con mina rivelata */
 	.ms-cell.revealed.mine {
 		background: #3a1420;
 		box-shadow: inset 0 0 0 1px var(--accent), 0 0 8px color-mix(in srgb, var(--accent) 50%, transparent);
 		cursor: default;
 	}
+	/* Sconfitta: le mine esplodono (scatto + flash rosso) */
+	.ms-grid.lost .ms-cell.revealed.mine {
+		animation: ms-explode 0.5s ease-out;
+	}
+	/* Vittoria: mine "bonificate" — rivelazione calma con glow verde */
+	.ms-grid.won .ms-cell.revealed.mine {
+		background: #10331f;
+		box-shadow: inset 0 0 0 1px var(--green), 0 0 8px color-mix(in srgb, var(--green) 45%, transparent);
+		animation: ms-reveal 0.22s ease-out;
+	}
 
-	/* Cella con bandierina */
+	/* Cella con bandierina — pop di piazzamento */
 	.ms-cell.flagged {
 		background: #1a1000;
 		box-shadow: inset 0 0 0 1px var(--amber);
+		animation: ms-flag-pop 0.22s ease-out;
 	}
 
 	.ms-cell:disabled { cursor: default; }
@@ -358,6 +372,24 @@
 		max-width: 400px;
 	}
 
+	/* ── Animazioni celle ── */
+	@keyframes ms-reveal {
+		0%   { transform: scale(0.82); opacity: 0.4; }
+		60%  { transform: scale(1.06); }
+		100% { transform: scale(1);    opacity: 1; }
+	}
+	@keyframes ms-explode {
+		0%   { transform: scale(1)    rotate(0);     box-shadow: inset 0 0 0 1px var(--accent); }
+		25%  { transform: scale(1.28) rotate(-4deg); box-shadow: inset 0 0 0 1px var(--danger), 0 0 22px 6px var(--danger); }
+		55%  { transform: scale(0.94) rotate(3deg); }
+		100% { transform: scale(1)    rotate(0);     box-shadow: inset 0 0 0 1px var(--accent), 0 0 8px color-mix(in srgb, var(--accent) 50%, transparent); }
+	}
+	@keyframes ms-flag-pop {
+		0%   { transform: scale(0.3); }
+		65%  { transform: scale(1.18); }
+		100% { transform: scale(1); }
+	}
+
 	/* ── Responsive ── */
 	@media (max-width: 480px) {
 		.ms-header { justify-content: center; }
@@ -370,6 +402,10 @@
 	@media (prefers-reduced-motion: reduce) {
 		.ms-cell { transition: none; }
 		.ms-cell:hover:not(:disabled) { transform: none; }
+		.ms-cell.revealed.safe,
+		.ms-grid.lost .ms-cell.revealed.mine,
+		.ms-grid.won .ms-cell.revealed.mine,
+		.ms-cell.flagged { animation: none; }
 		.flag-toggle, .btn-start { transition: none; }
 	}
 </style>
