@@ -12,7 +12,7 @@ Web app aziendale interna di minigiochi multiplayer (svago tra colleghi, non un 
 - Backend dev: porta **8085** (8080/8081 occupate da stack `pio/*`). Frontend dev: 5173. CORS già configurato per 5173.
 - `cd backend && ./mvnw quarkus:dev` · `cd frontend && npm run dev`.
 - In prod il build statico del frontend è servito dallo stesso origin Quarkus (single deploy: Render + Neon). Render dorme dopo 15 min → cold start.
-- ⚠️ Su questa macchina Windows **non c'è JDK né Node**: build/test si fanno altrove.
+- ⚠️ Due macchine di sviluppo: sulla **Windows** non c'è JDK/Node → build/test altrove; sulla **Linux** il toolchain c'è (JDK 21 · Node 22 · Docker) → build/test eseguibili in locale (`platform: linux` ⇒ puoi verificare).
 - ⚠️ Il **push su branch `1.0`** fa partire la **build Docker completa** (FE `npm run build` + BE `mvn package`): un errore di compilazione (Java o Svelte) **rompe il deploy**. Rileggere bene il codice nuovo prima di pushare.
 
 ## Architettura giochi (il pattern ricorrente)
