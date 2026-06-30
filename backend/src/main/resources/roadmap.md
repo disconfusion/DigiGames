@@ -32,3 +32,7 @@
 - [x] Modale "Ultime Fix" editabile dall'Admin
 - [ ] Regole dell'Impiccato del giorno personalizzabili dall'Admin
 - [ ] Callout con messaggi dall'Admin nella sezione "Impiccato del giorno" per giornate speciali / info utili
+
+# Tecnico / Infra
+
+- [ ] Efficientare storage e cancellazione dati dal DB: Neon offre solo ~0,5 GB, quindi strutturare il progetto attorno a questo limite (retention e purge dei dati storici)
