@@ -181,11 +181,11 @@ class QuizStateTest {
             if (i < 4) qs.nextQuestion();
         }
         var ranking = qs.ranking();
-        assertEquals("alice@test.it", ranking.get(0).get("email"));
+        assertEquals("alice@test.it", ranking.get(0).get("username"));
         assertEquals(5, ranking.get(0).get("score"));
-        assertEquals("bob@test.it", ranking.get(1).get("email"));
+        assertEquals("bob@test.it", ranking.get(1).get("username"));
         assertEquals(2, ranking.get(1).get("score"));
-        assertEquals("carl@test.it", ranking.get(2).get("email"));
+        assertEquals("carl@test.it", ranking.get(2).get("username"));
         assertEquals(0, ranking.get(2).get("score"));
     }
 
