@@ -36,6 +36,7 @@
 	let daily = $state<DailyState | null>(null);
 	let users = $state<UserView[]>([]);
 	let rooms = $state<RoomView[]>([]);
+	let activeRooms = $state<RoomView[]>([]);
 	let error = $state('');
 
 	// Card "Ospita"
@@ -67,6 +68,7 @@
 			daily = await api<DailyState>('/api/daily');
 			users = await api<UserView[]>('/api/users');
 			await refreshRooms();
+			await refreshActive();
 		} catch (e) {
 			error = (e as Error).message;
 		}
@@ -77,6 +79,15 @@
 			rooms = await api<RoomView[]>('/api/rooms');
 		} catch (e) {
 			error = (e as Error).message;
+		}
+	}
+
+	// Partite ancora in corso in cui sono coinvolto (additivo: un errore non deve rompere la home)
+	async function refreshActive() {
+		try {
+			activeRooms = await api<RoomView[]>('/api/rooms/mine');
+		} catch {
+			/* silenzioso */
 		}
 	}
 
@@ -271,6 +282,27 @@
 		</button>
 	</section>
 </div>
+
+{#if activeRooms.length > 0}
+	<!-- Partite in corso: rientra con un click, senza ricordare il codice -->
+	<section class="panel active-games">
+		<h3>Partite in corso</h3>
+		<ul class="rooms">
+			{#each activeRooms as r (r.code)}
+				<li>
+					<div class="game-info">
+						<Icon name={r.gameSlug} size={28} title={gameLabel(r.gameSlug)} />
+						<div>
+							<strong>{gameLabel(r.gameSlug)}</strong>
+							<span class="muted">· {r.code} · {r.players}/{r.maxPlayers} giocatori</span>
+						</div>
+					</div>
+					<button class="alt" onclick={() => goto(`/room/${r.code}`)}>Rientra</button>
+				</li>
+			{/each}
+		</ul>
+	</section>
+{/if}
 
 <!-- Entra con codice -->
 <section class="panel">
@@ -598,6 +630,18 @@
 		border-left: 4px solid var(--cyan);
 		border-radius: 8px;
 		flex-wrap: wrap;
+	}
+	/* "Partite in corso": bordo verde per distinguerle dalle stanze pubbliche */
+	.active-games .rooms li {
+		border-left-color: var(--green);
+	}
+	.game-info {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+	}
+	.game-info strong {
+		color: var(--text);
 	}
 	.fade {
 		opacity: 0;

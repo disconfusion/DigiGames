@@ -39,6 +39,14 @@ public class RoomManager {
                 .toList();
     }
 
+    /** Stanze in cui l'utente è membro e la partita è ancora in corso (per "Partite in corso" in home). */
+    public List<Room> listActiveForUser(String username) {
+        if (username == null) return List.of();
+        return rooms.values().stream()
+                .filter(r -> r.status == Room.Status.PLAYING && r.players.contains(username))
+                .toList();
+    }
+
     public void remove(String code) {
         if (code != null) rooms.remove(code.toUpperCase());
     }

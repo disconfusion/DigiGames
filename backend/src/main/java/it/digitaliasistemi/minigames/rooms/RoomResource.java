@@ -38,6 +38,13 @@ public class RoomResource {
         return manager.listPublicWaiting().stream().map(RoomView::of).toList();
     }
 
+    /** Stanze in cui l'utente corrente è coinvolto con una partita ancora in corso. */
+    @GET
+    @Path("/mine")
+    public List<RoomView> listMine() {
+        return manager.listActiveForUser(jwt.getName()).stream().map(RoomView::of).toList();
+    }
+
     @GET
     @Path("/{code}")
     public Response get(@PathParam("code") String code) {

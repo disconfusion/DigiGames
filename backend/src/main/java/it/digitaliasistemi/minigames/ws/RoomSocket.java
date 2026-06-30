@@ -79,11 +79,14 @@ public class RoomSocket {
         String username = conn.userData().get(USER);
         String code = conn.pathParam("code");
         Room room = rooms.get(code);
-        if (username != null && room != null) {
-            room.players.remove(username);
-            broadcast(code, evt("player:left", "username", username, "players", room.players.size()));
-            if (room.players.isEmpty()) rooms.remove(code);
-        }
+        if (username == null || room == null) return;
+        // Partita in corso: il giocatore resta membro (slot "sospeso") e la stanza sopravvive,
+        // così può rientrare dalla home ("Partite in corso"). Per gli altri resta seduto: niente broadcast.
+        if (room.status == Room.Status.PLAYING) return;
+        // Lobby (WAITING) o partita finita (DONE): libera lo slot e distruggi la stanza se vuota.
+        room.players.remove(username);
+        broadcast(code, evt("player:left", "username", username, "players", room.players.size()));
+        if (room.players.isEmpty()) rooms.remove(code);
     }
 
     private GameContext ctx(WebSocketConnection conn, Room room, String username) {
