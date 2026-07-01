@@ -9,6 +9,7 @@ import io.quarkus.websockets.next.UserData;
 import io.quarkus.websockets.next.WebSocket;
 import io.quarkus.websockets.next.WebSocketConnection;
 import io.smallrye.jwt.auth.principal.JWTParser;
+import jakarta.enterprise.context.control.ActivateRequestContext;
 import it.digitaliasistemi.minigames.game.GameContext;
 import it.digitaliasistemi.minigames.game.GameEngine;
 import it.digitaliasistemi.minigames.game.GameEngines;
@@ -30,6 +31,10 @@ public class RoomSocket {
     @Inject JWTParser jwtParser;
     @Inject GameEngines engines;
 
+    // Gli handler WebSocket girano su executor-thread senza il request context CDI dei REST:
+    // senza questo, ogni accesso Panache dagli engine (es. inventario poteri) lancia
+    // ContextNotActiveException. I metodi @Transactional dei service gestiscono la loro tx.
+    @ActivateRequestContext
     @OnTextMessage
     public void onMessage(String raw, WebSocketConnection conn) throws Exception {
         JsonNode msg = mapper.readTree(raw);
@@ -44,17 +49,21 @@ public class RoomSocket {
         switch (type) {
             case "hello" -> {
                 String token = msg.path("token").asText(null);
+                String username;
                 try {
-                    String username = jwtParser.parse(token).getName();
-                    conn.userData().put(USER, username);
-                    room.players.add(username);
-                    broadcast(code, evt("player:joined", "username", username, "players", room.players.size()));
-                    GameEngine engine = engines.get(room.gameSlug);
-                    if (engine != null) engine.onJoin(ctx(conn, room, username));
+                    username = jwtParser.parse(token).getName();
                 } catch (Exception e) {
+                    // Solo il parsing del token: gli errori dell'engine (onJoin) NON vanno
+                    // mascherati da "Token non valido".
                     conn.sendTextAndAwait(err("Token non valido"));
                     conn.closeAndAwait();
+                    return;
                 }
+                conn.userData().put(USER, username);
+                room.players.add(username);
+                broadcast(code, evt("player:joined", "username", username, "players", room.players.size()));
+                GameEngine engine = engines.get(room.gameSlug);
+                if (engine != null) engine.onJoin(ctx(conn, room, username));
             }
             case "chat" -> {
                 String username = requireAuth(conn);
