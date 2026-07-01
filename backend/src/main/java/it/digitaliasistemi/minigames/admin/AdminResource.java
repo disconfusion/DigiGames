@@ -7,7 +7,13 @@ import it.digitaliasistemi.minigames.domain.DailyAttempt;
 import it.digitaliasistemi.minigames.domain.MatchResult;
 import it.digitaliasistemi.minigames.domain.Roadmap;
 import it.digitaliasistemi.minigames.domain.Announcement;
+import it.digitaliasistemi.minigames.gift.GiftService;
+import it.digitaliasistemi.minigames.shop.CompanionCatalog;
+import it.digitaliasistemi.minigames.shop.CompanionService;
+import it.digitaliasistemi.minigames.shop.InventoryService;
+import it.digitaliasistemi.minigames.shop.PowerCatalog;
 import it.digitaliasistemi.minigames.shop.ShopService;
+import it.digitaliasistemi.minigames.token.TokenService;
 import it.digitaliasistemi.minigames.ws.NotifyBus;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -33,6 +39,10 @@ public class AdminResource {
     @Inject DailyHangmanService dailyService;
     @Inject NotifyBus notifyBus;
     @Inject ShopService shop;
+    @Inject TokenService tokens;
+    @Inject InventoryService inventory;
+    @Inject CompanionService companions;
+    @Inject GiftService giftService;
 
     @GET
     @Path("/users")
@@ -165,6 +175,60 @@ public class AdminResource {
         }
         return Response.ok(Map.of("message", "Prezzo aggiornato (" + req.cost() + " Token)")).build();
     }
+
+    /** Cataloghi regalabili (poteri + companion) per la UI di grant admin. */
+    @GET
+    @Path("/grantables")
+    public Map<String, Object> grantables() {
+        List<Map<String, String>> powers = PowerCatalog.POWERS.stream()
+                .map(p -> Map.of("id", p.id(), "label", p.label(), "game", p.game())).toList();
+        List<Map<String, String>> comps = CompanionCatalog.COMPANIONS.stream()
+                .map(c -> Map.of("id", c.id(), "name", c.name())).toList();
+        return Map.of("powers", powers, "companions", comps);
+    }
+
+    /** Regala all'utente Token, cariche di un potere o un companion (gratis). */
+    @POST
+    @Path("/users/{username}/grant")
+    public Response grant(@PathParam("username") String username, GrantRequest req) {
+        if (AppUser.findByUsername(username) == null) {
+            return Response.status(Response.Status.NOT_FOUND).entity(Map.of("message", "Utente non trovato")).build();
+        }
+        if (req == null || req.type() == null) {
+            return Response.status(400).entity(Map.of("message", "Richiesta non valida")).build();
+        }
+        switch (req.type()) {
+            case "tokens" -> {
+                int n = req.amount() != null ? req.amount() : 0;
+                if (n <= 0) return Response.status(400).entity(Map.of("message", "Quantità non valida")).build();
+                tokens.award(username, n);
+                giftService.record(username, "tokens", null, "Token", n);
+                return Response.ok(Map.of("message", n + " Token accreditati a " + username)).build();
+            }
+            case "power" -> {
+                var def = PowerCatalog.byId(req.id());
+                if (def.isEmpty()) return Response.status(400).entity(Map.of("message", "Potere inesistente")).build();
+                int n = (req.amount() != null && req.amount() > 0) ? req.amount() : 1;
+                inventory.grant(username, req.id(), n);
+                giftService.record(username, "power", req.id(), def.get().label(), n);
+                return Response.ok(Map.of("message", n + "× " + def.get().label() + " regalati a " + username)).build();
+            }
+            case "companion" -> {
+                var def = CompanionCatalog.byId(req.id());
+                if (def.isEmpty()) return Response.status(400).entity(Map.of("message", "Companion inesistente")).build();
+                boolean added = companions.grant(username, req.id());
+                if (added) giftService.record(username, "companion", req.id(), def.get().name(), 1);
+                return Response.ok(Map.of("message", added
+                        ? def.get().name() + " regalato a " + username
+                        : username + " possiede già " + def.get().name())).build();
+            }
+            default -> {
+                return Response.status(400).entity(Map.of("message", "Tipo non valido: " + req.type())).build();
+            }
+        }
+    }
+
+    public record GrantRequest(String type, String id, Integer amount) {}
 
     public record UserView(String username, String displayName, String role) {}
 

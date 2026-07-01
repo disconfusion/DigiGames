@@ -17,15 +17,20 @@
 	};
 	type AdminUser = { username: string; displayName: string; role: string };
 	type PowerPrice = { id: string; game: string; label: string; emoji: string; cost: number; defaultCost: number };
+	type Grantables = {
+		powers: { id: string; label: string; game: string }[];
+		companions: { id: string; name: string }[];
+	};
 
-	type Tab = 'bugs' | 'daily' | 'roadmap' | 'announcement' | 'users' | 'prices';
+	type Tab = 'bugs' | 'daily' | 'roadmap' | 'announcement' | 'users' | 'prices' | 'grants';
 	const TABS: { id: Tab; label: string; icon: string }[] = [
 		{ id: 'bugs', label: 'Bug', icon: 'bug' },
 		{ id: 'daily', label: 'Parola del giorno', icon: 'calendar' },
 		{ id: 'roadmap', label: 'Roadmap', icon: 'map' },
 		{ id: 'announcement', label: 'Ultime Fix', icon: 'rocket' },
 		{ id: 'users', label: 'Utenti', icon: 'people' },
-		{ id: 'prices', label: 'Prezzi poteri', icon: 'coin' }
+		{ id: 'prices', label: 'Prezzi poteri', icon: 'coin' },
+		{ id: 'grants', label: 'Regali', icon: 'party' }
 	];
 	let tab = $state<Tab>('bugs');
 
@@ -34,6 +39,14 @@
 	let prices = $state<PowerPrice[]>([]);
 	let priceEdits = $state<Record<string, number>>({});
 	let busy = $state<Record<string, boolean>>({});
+
+	// Regali admin → utente
+	let grantables = $state<Grantables>({ powers: [], companions: [] });
+	let grantUser = $state('');
+	let grantKind = $state<'tokens' | 'power' | 'companion'>('tokens');
+	let grantPowerId = $state('');
+	let grantCompanionId = $state('');
+	let grantAmount = $state(50);
 
 	async function run<T>(key: string, fn: () => Promise<T>, onOk?: (r: T) => void) {
 		if (busy[key]) return;
@@ -64,6 +77,35 @@
 		} catch (e) {
 			showToast((e as Error).message, 'error');
 		}
+	}
+
+	async function loadGrantables() {
+		try {
+			grantables = await api<Grantables>('/api/admin/grantables');
+			grantPowerId = grantables.powers[0]?.id ?? '';
+			grantCompanionId = grantables.companions[0]?.id ?? '';
+		} catch (e) {
+			showToast((e as Error).message, 'error');
+		}
+	}
+
+	function doGrant() {
+		if (!grantUser) return;
+		const body =
+			grantKind === 'tokens'
+				? { type: 'tokens', amount: grantAmount }
+				: grantKind === 'power'
+					? { type: 'power', id: grantPowerId, amount: grantAmount }
+					: { type: 'companion', id: grantCompanionId };
+		run(
+			'grant',
+			() =>
+				api<{ message: string }>(`/api/admin/users/${grantUser}/grant`, {
+					method: 'POST',
+					body: JSON.stringify(body)
+				}),
+			(r) => showToast(r.message, 'success')
+		);
 	}
 
 	async function loadRoadmap() {
@@ -106,6 +148,7 @@
 		loadRoadmap();
 		loadAnnouncement();
 		loadPrices();
+		loadGrantables();
 	});
 
 	function deleteBug(id: number) {
@@ -310,6 +353,53 @@
 			<p class="muted hint">Il prezzo modificato sovrascrive il default ed è subito attivo nello shop.</p>
 		{/if}
 	</section>
+{:else if tab === 'grants'}
+	<section class="panel">
+		<h2><Icon name="party" size={18} /> Regala a un utente</h2>
+		<div class="grant-form">
+			<label>Utente
+				<select bind:value={grantUser}>
+					<option value="" disabled>Scegli un utente…</option>
+					{#each users as u (u.username)}
+						<option value={u.username}>{u.displayName} (@{u.username})</option>
+					{/each}
+				</select>
+			</label>
+			<label>Cosa regalare
+				<select bind:value={grantKind}>
+					<option value="tokens">Token</option>
+					<option value="power">Potere</option>
+					<option value="companion">Companion</option>
+				</select>
+			</label>
+			{#if grantKind === 'tokens'}
+				<label>Quantità Token
+					<input type="number" min="1" bind:value={grantAmount} />
+				</label>
+			{:else if grantKind === 'power'}
+				<label>Potere
+					<select bind:value={grantPowerId}>
+						{#each grantables.powers as p (p.id)}
+							<option value={p.id}>{p.label} ({gameLabel(p.game)})</option>
+						{/each}
+					</select>
+				</label>
+				<label>Cariche
+					<input type="number" min="1" bind:value={grantAmount} />
+				</label>
+			{:else}
+				<label>Companion
+					<select bind:value={grantCompanionId}>
+						{#each grantables.companions as c (c.id)}
+							<option value={c.id}>{c.name}</option>
+						{/each}
+					</select>
+				</label>
+			{/if}
+			<button disabled={!grantUser || busy['grant']} onclick={doGrant}>Regala gratis</button>
+		</div>
+		<p class="muted hint">Il regalo è gratuito e l'utente lo vedrà in una modale al prossimo accesso.</p>
+	</section>
 {/if}
 
 <style>
@@ -500,5 +590,30 @@
 	.unit {
 		color: var(--muted);
 		font-size: 0.8rem;
+	}
+	.grant-form {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		max-width: 440px;
+	}
+	.grant-form label {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		font-size: 0.85rem;
+		color: var(--muted);
+	}
+	.grant-form select,
+	.grant-form input {
+		padding: 0.45rem 0.7rem;
+		border-radius: 8px;
+		border: 1px solid var(--line);
+		background: var(--inset);
+		color: var(--text);
+		font-size: 0.9rem;
+	}
+	.grant-form button {
+		align-self: flex-start;
 	}
 </style>

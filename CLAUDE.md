@@ -42,7 +42,7 @@ Frontend: board in `frontend/src/lib/games/<X>Board.svelte`, registrato in `regi
 
 ## Persistenza & schema
 - **In-memory** (perso al restart/cold-start): stanze e stato partita (`room.game`).
-- **Persistite** (PanacheEntity): `AppUser`, `MatchResult`, `DailyAttempt`, `DailyWordState`, `Invitation`, `BugReport`, `Roadmap`, `Announcement`, `PowerPrice`, `OwnedPower`, `OwnedCompanion`, `UserHouse`. ⚠️ Le identità "extra" (companion/casata) stanno in **tabelle separate** (`OwnedCompanion`, `UserHouse`) apposta per evitare l'ALTER ADD su `app_user`.
+- **Persistite** (PanacheEntity): `AppUser`, `MatchResult`, `DailyAttempt`, `DailyWordState`, `Invitation`, `BugReport`, `Roadmap`, `Announcement`, `PowerPrice`, `OwnedPower`, `OwnedCompanion`, `UserHouse`, `Gift`. ⚠️ Le identità "extra" (companion/casata) stanno in **tabelle separate** (`OwnedCompanion`, `UserHouse`) apposta per evitare l'ALTER ADD su `app_user`. `Gift` = regali admin→utente pendenti (cancellati dopo la visione in home).
 - Schema: dev `drop-and-create` (+ `import-dev.sql`); prod `update`. ⚠️ `update` **crea** tabelle mancanti in modo affidabile ma **l'ALTER ADD di colonne è inaffidabile**: per tabelle disallineate fare DROP + restart (i CREATE le rigenerano).
 
 ## Auth / ruoli

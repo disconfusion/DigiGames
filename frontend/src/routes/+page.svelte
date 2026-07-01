@@ -15,6 +15,8 @@
 
 	let whatsNew = $state<{ content: string; revision: number }>({ content: '', revision: 0 });
 	let showWhatsNew = $state(false);
+	let gifts = $state<GiftItem[]>([]);
+	let showGifts = $state(false);
 
 	type RoomView = {
 		code: string;
@@ -32,6 +34,7 @@
 		eliminated: boolean;
 	};
 	type UserView = { username: string; displayName: string; avatar: string | null; online: boolean };
+	type GiftItem = { type: 'tokens' | 'power' | 'companion'; itemId: string | null; label: string; amount: number };
 
 	let daily = $state<DailyState | null>(null);
 	let users = $state<UserView[]>([]);
@@ -97,7 +100,7 @@
 			return;
 		}
 		load();
-		checkAnnouncement();
+		checkAnnouncement().finally(loadGifts);
 	});
 
 	// Mostra la modale "Ultime Fix" finché l'utente non ha visto l'ultima revisione
@@ -113,6 +116,26 @@
 	function closeWhatsNew() {
 		localStorage.setItem(SEEN_KEY, String(whatsNew.revision));
 		showWhatsNew = false;
+		maybeShowGifts();
+	}
+
+	// Regali assegnati dall'admin: mostrati una volta al prossimo accesso, poi cancellati.
+	async function loadGifts() {
+		try {
+			gifts = await api<GiftItem[]>('/api/gifts');
+			maybeShowGifts();
+		} catch {
+			/* silenzioso */
+		}
+	}
+	function maybeShowGifts() {
+		// Non sovrapporre alla modale "Novità": i regali appaiono dopo averla chiusa.
+		if (gifts.length > 0 && !showWhatsNew) showGifts = true;
+	}
+	function closeGifts() {
+		showGifts = false;
+		gifts = [];
+		api('/api/gifts/ack', { method: 'POST' }).catch(() => {});
 	}
 
 	// Aggiorna lista utenti quando qualcuno va online/offline (evento WS)
@@ -187,6 +210,33 @@
 			<div class="features"><Markdown source={whatsNew.content} /></div>
 			<div class="modal-actions">
 				<button class="ok" onclick={closeWhatsNew}>Capito!</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
+{#if showGifts}
+	<div class="modal-backdrop" role="presentation" onclick={closeGifts}>
+		<div class="modal" role="dialog" aria-modal="true" onclick={(e) => e.stopPropagation()}>
+			<div class="modal-head">
+				<h2><Icon name="party" size={20} title="Regali" /> Regali ricevuti!</h2>
+				<button class="x" onclick={closeGifts} aria-label="Chiudi">✕</button>
+			</div>
+			<p class="muted">L'admin ti ha fatto un regalo:</p>
+			<ul class="gift-list">
+				{#each gifts as g, i (i)}
+					<li>
+						<Icon name={g.type === 'tokens' ? 'coin' : (g.itemId ?? 'party')} size={30} title={g.label} />
+						<span>
+							{#if g.type === 'tokens'}<strong>{g.amount}</strong> Token
+							{:else if g.type === 'power'}<strong>{g.amount}×</strong> {g.label}
+							{:else}{g.label}{/if}
+						</span>
+					</li>
+				{/each}
+			</ul>
+			<div class="modal-actions">
+				<button class="ok" onclick={closeGifts}>Fantastico!</button>
 			</div>
 		</div>
 	</div>
@@ -743,6 +793,29 @@
 		color: var(--text);
 		font-family: var(--font-term);
 		font-size: 1.1rem;
+	}
+	.gift-list {
+		list-style: none;
+		padding: 0;
+		margin: 0.5rem 0 1rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	.gift-list li {
+		display: flex;
+		align-items: center;
+		gap: 0.7rem;
+		background: var(--inset);
+		border: 1px solid var(--line);
+		border-radius: 8px;
+		padding: 0.5rem 0.7rem;
+		color: var(--text);
+		font-family: var(--font-term);
+		font-size: 1.05rem;
+	}
+	.gift-list strong {
+		color: var(--amber);
 	}
 	.modal-actions {
 		display: flex;

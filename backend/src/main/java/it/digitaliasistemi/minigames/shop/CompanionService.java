@@ -71,6 +71,23 @@ public class CompanionService {
     }
 
     /**
+     * Regala un companion senza costo (uso admin). Auto-equip se è il primo.
+     * Ritorna true se aggiunto, false se id ignoto o già posseduto.
+     */
+    @Transactional
+    public boolean grant(String username, String companionId) {
+        if (CompanionCatalog.byId(companionId).isEmpty()) return false;
+        if (OwnedCompanion.find(username, companionId) != null) return false;
+        boolean firstOne = OwnedCompanion.forUser(username).isEmpty();
+        OwnedCompanion oc = new OwnedCompanion();
+        oc.username = username;
+        oc.companionId = companionId;
+        oc.equipped = firstOne;
+        oc.persist();
+        return true;
+    }
+
+    /**
      * Equipaggia il companion indicato (deve essere posseduto). id vuoto o "none"
      * = togli l'equip. Ritorna true se l'operazione è valida.
      */
