@@ -97,7 +97,7 @@ Segnalazioni utenti.
 - [x] Se hosti una partita e poi esci o finisci di giocare, la stanza rimane aperta e non si può chiudere (@emanuele.taglia) — risolto: uscita esplicita ("Esci") libera lo slot anche a partita in corso e distrugge la stanza se vuota; l'host può chiuderla per tutti ("Chiudi stanza")
 - [x] Quiz: gestire la casistica di pareggio (@manuchao) — risolto: tutti i giocatori col punteggio massimo sono vincitori; se più di uno → DRAW (token pareggio), medaglie a pari merito nella classifica
 - [x] Impiccato: se una parola contiene più di due vocali non può essere completata (@manuchao) — risolto: ora si può tentare l'intera parola in qualsiasi momento
-- [ ] Togliere le emoji dalla personalizzazione account, o sostituirle con nuove animazioni e sprite (@spacevampire)
+- [x] Togliere le emoji dalla personalizzazione account, o sostituirle con nuove animazioni e sprite (@spacevampire) — risolto: frecce selettore avatar e messaggi ✓/⚠ ora usano sprite pixel-art (`arrow_left`/`arrow_right`/`warning`/`check`) invece dei glifi Unicode
 <!-- ROADMAP:END -->
 
 Tutti i giochi sono coperti da unit test (logica pura) e test d'integrazione WebSocket.

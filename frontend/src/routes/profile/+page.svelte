@@ -133,7 +133,7 @@
 				displayName: res.displayName,
 				role: res.role
 			});
-			profileMsg = '✓ Profilo aggiornato';
+			profileMsg = 'Profilo aggiornato';
 		} catch (e) {
 			profileErr = (e as Error).message;
 		}
@@ -148,7 +148,7 @@
 				method: 'PUT',
 				body: JSON.stringify({ currentPassword, newPassword })
 			});
-			pwMsg = '✓ Password aggiornata';
+			pwMsg = 'Password aggiornata';
 			currentPassword = '';
 			newPassword = '';
 		} catch (err) {
@@ -158,7 +158,7 @@
 </script>
 
 <h1>Area personale</h1>
-{#if loadError}<p class="err">⚠ {loadError}</p>{/if}
+{#if loadError}<p class="err"><Icon name="warning" size={14} /> {loadError}</p>{/if}
 
 {#if profile}
 	<p class="sub">@{profile.username}</p>
@@ -175,24 +175,24 @@
 			</div>
 			<div class="controls">
 				<div class="ctrl">
-					<button onclick={() => cycle('hat', HATS.length, -1)}>◀</button>
+					<button onclick={() => cycle('hat', HATS.length, -1)}><Icon name="arrow_left" size={16} title="Precedente" /></button>
 					<span>Cappello</span>
-					<button onclick={() => cycle('hat', HATS.length, 1)}>▶</button>
+					<button onclick={() => cycle('hat', HATS.length, 1)}><Icon name="arrow_right" size={16} title="Successivo" /></button>
 				</div>
 				<div class="ctrl">
-					<button onclick={() => cycle('eyes', EYES.length, -1)}>◀</button>
+					<button onclick={() => cycle('eyes', EYES.length, -1)}><Icon name="arrow_left" size={16} title="Precedente" /></button>
 					<span>Occhi</span>
-					<button onclick={() => cycle('eyes', EYES.length, 1)}>▶</button>
+					<button onclick={() => cycle('eyes', EYES.length, 1)}><Icon name="arrow_right" size={16} title="Successivo" /></button>
 				</div>
 				<div class="ctrl">
-					<button onclick={() => cycle('nose', NOSES.length, -1)}>◀</button>
+					<button onclick={() => cycle('nose', NOSES.length, -1)}><Icon name="arrow_left" size={16} title="Precedente" /></button>
 					<span>Naso</span>
-					<button onclick={() => cycle('nose', NOSES.length, 1)}>▶</button>
+					<button onclick={() => cycle('nose', NOSES.length, 1)}><Icon name="arrow_right" size={16} title="Successivo" /></button>
 				</div>
 				<div class="ctrl">
-					<button onclick={() => cycle('mouth', MOUTHS.length, -1)}>◀</button>
+					<button onclick={() => cycle('mouth', MOUTHS.length, -1)}><Icon name="arrow_left" size={16} title="Precedente" /></button>
 					<span>Bocca</span>
-					<button onclick={() => cycle('mouth', MOUTHS.length, 1)}>▶</button>
+					<button onclick={() => cycle('mouth', MOUTHS.length, 1)}><Icon name="arrow_right" size={16} title="Successivo" /></button>
 				</div>
 			</div>
 		</div>
@@ -204,8 +204,8 @@
 			<input bind:value={displayName} maxlength="40" placeholder="Nome visualizzato" />
 			<button onclick={saveProfile}>Salva profilo</button>
 		</div>
-		{#if profileMsg}<p class="ok">{profileMsg}</p>{/if}
-		{#if profileErr}<p class="err">{profileErr}</p>{/if}
+		{#if profileMsg}<p class="ok"><Icon name="check" size={14} /> {profileMsg}</p>{/if}
+		{#if profileErr}<p class="err"><Icon name="warning" size={14} /> {profileErr}</p>{/if}
 		<p class="hint">Salva profilo aggiorna anche l'avatar.</p>
 	</section>
 
@@ -226,8 +226,8 @@
 			/>
 			<button type="submit" disabled={!currentPassword || newPassword.length < 6}>Aggiorna password</button>
 		</form>
-		{#if pwMsg}<p class="ok">{pwMsg}</p>{/if}
-		{#if pwErr}<p class="err">{pwErr}</p>{/if}
+		{#if pwMsg}<p class="ok"><Icon name="check" size={14} /> {pwMsg}</p>{/if}
+		{#if pwErr}<p class="err"><Icon name="warning" size={14} /> {pwErr}</p>{/if}
 	</section>
 
 	<section class="panel">
@@ -372,6 +372,10 @@
 	.ctrl button {
 		width: 2.2rem;
 		height: 2.2rem;
+		padding: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		border-radius: 8px;
 		border: 1px solid #334155;
 		background: #0f172a;
@@ -417,10 +421,16 @@
 	.ok {
 		color: #4ade80;
 		margin: 0.5rem 0 0;
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
 	}
 	.err {
 		color: #f87171;
 		margin: 0.5rem 0 0;
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
 	}
 	.hint {
 		color: var(--muted);
