@@ -13,7 +13,7 @@
 
 ## Nuove animazioni
 
-- [ ] Restyling animazioni dei pezzi di scacchi e dama
+- [x] Restyling animazioni dei pezzi di scacchi e dama — pezzo che scivola dall'origine alla destinazione, dissolvenza dei pezzi catturati, pop di promozione (dama); diff client-side degli snapshot, rispetta prefers-reduced-motion
 - [x] Esplosioni e buchi nell'acqua in Battaglia navale
 - [x] Campo minato
 - [x] Forza 4

@@ -35,6 +35,19 @@
 	let sel = $state<{ r: number; c: number } | null>(null);
 	let pendingPromo = $state<{ from: { r: number; c: number }; to: { r: number; c: number } } | null>(null);
 
+	// ── Animazioni pezzi (diff client-side degli snapshot) ──
+	const reduceMotion =
+		typeof window !== 'undefined' &&
+		!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+	let prevBoard: (string | null)[][] | null = null;
+	let animTimer: ReturnType<typeof setTimeout> | null = null;
+	// Pezzo in volo dall'origine alla destinazione (dx/dy = offset in celle).
+	let flying = $state<{ piece: string; toR: number; toC: number; dx: number; dy: number } | null>(null);
+	// Casella la cui pedina è nascosta durante il volo (per non vederla doppia).
+	let hideDest = $state<{ r: number; c: number } | null>(null);
+	// Pezzi catturati che "dissolvono" sulla loro casella.
+	let captureFx = $state<{ r: number; c: number; p: string }[]>([]);
+
 	// Orologio: valori visualizzati (ticchettano localmente tra una mossa e l'altra)
 	let dispWhite = $state(0);
 	let dispBlack = $state(0);
@@ -45,7 +58,10 @@
 		const e = event;
 		if (!e) return;
 		if (e.type === 'game:state') {
-			state = e as unknown as GameState;
+			const ns = e as unknown as GameState;
+			animateTransition(prevBoard, ns.board);
+			prevBoard = ns.board;
+			state = ns;
 			sel = null;
 			pendingPromo = null;
 			const c = (e as unknown as GameState).clock;
@@ -82,7 +98,7 @@
 		}, 250);
 		return () => clearInterval(id);
 	});
-	onDestroy(() => {});
+	onDestroy(() => { if (animTimer) clearTimeout(animTimer); });
 
 	function fmt(ms: number): string {
 		const s = Math.max(0, Math.ceil(ms / 1000));
@@ -100,6 +116,50 @@
 	// Orientamento: il nero vede la scacchiera ruotata.
 	const rowOrder = $derived(myColor === 'B' ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7]);
 	const colOrder = $derived(myColor === 'B' ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7]);
+
+	// Posizione visuale (0..7) di riga/colonna secondo l'orientamento del giocatore.
+	const dispRow = (r: number) => rowOrder.indexOf(r);
+	const dispCol = (c: number) => colOrder.indexOf(c);
+
+	/**
+	 * Confronta la board precedente con la nuova per dedurre la mossa e animarla:
+	 * il pezzo mosso "scivola" dall'origine alla destinazione, i pezzi catturati
+	 * dissolvono sulla loro casella. Degrada senza animazioni se reduceMotion.
+	 */
+	function animateTransition(oldB: (string | null)[][] | null, newB: (string | null)[][]) {
+		if (reduceMotion || !oldB) return;
+		const emptied: { r: number; c: number; p: string }[] = [];
+		const arrived: { r: number; c: number; p: string; prev: string | null }[] = [];
+		for (let r = 0; r < 8; r++) {
+			for (let c = 0; c < 8; c++) {
+				const o = oldB[r]?.[c] ?? null;
+				const n = newB[r]?.[c] ?? null;
+				if (o && !n) emptied.push({ r, c, p: o });
+				else if (n && n !== o) arrived.push({ r, c, p: n, prev: o });
+			}
+		}
+		// Solo mosse plausibili (normale, cattura, arrocco, en passant). Un reset completo → niente anim.
+		if (arrived.length === 0 || arrived.length > 2 || emptied.length > 3) return;
+		// Destinazione = casella arrivata che ha una sorgente dello stesso colore rimasta vuota.
+		let dest = arrived[0];
+		let src: { r: number; c: number; p: string } | null = null;
+		for (const a of arrived) {
+			const s = emptied.find((e) => e.p[0] === a.p[0]);
+			if (s) { dest = a; src = s; break; }
+		}
+		const mover = dest.p[0];
+		const caps: { r: number; c: number; p: string }[] = [];
+		for (const e of emptied) if (e !== src && e.p[0] !== mover) caps.push(e);
+		if (dest.prev && dest.prev[0] !== mover) caps.push({ r: dest.r, c: dest.c, p: dest.prev });
+
+		if (animTimer) clearTimeout(animTimer);
+		captureFx = caps;
+		if (src) {
+			flying = { piece: dest.p, toR: dest.r, toC: dest.c, dx: dispCol(src.c) - dispCol(dest.c), dy: dispRow(src.r) - dispRow(dest.r) };
+			hideDest = { r: dest.r, c: dest.c };
+		}
+		animTimer = setTimeout(() => { flying = null; hideDest = null; captureFx = []; }, 320);
+	}
 
 	function pieceAt(r: number, c: number): string | null {
 		return state?.board?.[r]?.[c] ?? null;
@@ -251,7 +311,7 @@
 						onclick={() => clickCell(r, c)}
 						aria-label="Casa {r},{c}"
 					>
-						{#if piece}
+						{#if piece && !(hideDest && hideDest.r === r && hideDest.c === c)}
 							<span class="piece" class:white={piece[0] === 'W'} class:black={piece[0] === 'B'}>
 								{GLYPH[piece[1]]}
 							</span>
@@ -259,6 +319,26 @@
 						{#if isTarget}<span class="hint" class:capture={!!piece}></span>{/if}
 					</button>
 				{/each}
+			{/each}
+
+			<!-- Pezzo in volo (origine → destinazione) -->
+			{#if flying}
+				<div
+					class="flying"
+					style="left:{dispCol(flying.toC) * 12.5}%; top:{dispRow(flying.toR) * 12.5}%; --dx:{flying.dx * 100}%; --dy:{flying.dy * 100}%;"
+				>
+					<span class="piece" class:white={flying.piece[0] === 'W'} class:black={flying.piece[0] === 'B'}>
+						{GLYPH[flying.piece[1]]}
+					</span>
+				</div>
+			{/if}
+			<!-- Pezzi catturati che dissolvono -->
+			{#each captureFx as cap (cap.r + ',' + cap.c)}
+				<div class="capture-fx" style="left:{dispCol(cap.c) * 12.5}%; top:{dispRow(cap.r) * 12.5}%;">
+					<span class="piece" class:white={cap.p[0] === 'W'} class:black={cap.p[0] === 'B'}>
+						{GLYPH[cap.p[1]]}
+					</span>
+				</div>
 			{/each}
 		</div>
 
@@ -392,6 +472,7 @@
 
 	/* ── Griglia scacchiera ── */
 	.grid {
+		position: relative;
 		display: grid;
 		grid-template-columns: repeat(8, 1fr);
 		width: min(92vw, 460px);
@@ -442,6 +523,38 @@
 	.piece.black {
 		color: var(--accent);
 		text-shadow: var(--glow-mag), 0 0 4px var(--accent);
+	}
+
+	/* ── Overlay animazioni pezzi ── */
+	.flying,
+	.capture-fx {
+		position: absolute;
+		width: 12.5%;
+		height: 12.5%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: none;
+	}
+	.flying {
+		z-index: 3;
+		animation: fly 0.28s cubic-bezier(0.25, 0.85, 0.35, 1);
+	}
+	@keyframes fly {
+		from { transform: translate(var(--dx), var(--dy)); }
+		to   { transform: translate(0, 0); }
+	}
+	.capture-fx {
+		z-index: 2;
+		animation: capfx 0.3s ease-out forwards;
+	}
+	@keyframes capfx {
+		0%   { transform: scale(1);    opacity: 1; }
+		55%  { transform: scale(1.4);  opacity: 0.65; }
+		100% { transform: scale(0.15); opacity: 0; }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.flying, .capture-fx { animation: none; display: none; }
 	}
 
 	/* ── Suggerimenti mosse legali ── */

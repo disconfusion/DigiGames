@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import type { BoardProps } from './board';
 	import GameResultOverlay from './GameResultOverlay.svelte';
 
@@ -20,11 +21,57 @@
 	let over = $state<{ winner: string | null } | null>(null);
 	let sel = $state<{ r: number; c: number } | null>(null);
 
+	// ── Animazioni pedine (diff client-side degli snapshot) ──
+	const reduceMotion =
+		typeof window !== 'undefined' &&
+		!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+	let prevBoard: Cell[][] | null = null;
+	let animTimer: ReturnType<typeof setTimeout> | null = null;
+	let flying = $state<{ cell: Cell; toR: number; toC: number; dx: number; dy: number } | null>(null);
+	let hideDest = $state<{ r: number; c: number } | null>(null);
+	let captureFx = $state<{ r: number; c: number; cell: Cell }[]>([]);
+	let kingPop = $state<{ r: number; c: number } | null>(null); // pedina appena promossa a dama
+
+	const cellKey = (x: Cell) => (x ? x.color + (x.king ? 'K' : 'm') : null);
+
+	/** Diff prev→new: la pedina mossa scivola, le catturate dissolvono, la promozione pulsa. */
+	function animateTransition(oldB: Cell[][] | null, newB: Cell[][]) {
+		if (reduceMotion || !oldB) return;
+		const emptied: { r: number; c: number; cell: Cell }[] = [];
+		const arrived: { r: number; c: number; cell: Cell; prev: Cell }[] = [];
+		for (let r = 0; r < 8; r++) {
+			for (let c = 0; c < 8; c++) {
+				const o = oldB[r]?.[c] ?? null;
+				const n = newB[r]?.[c] ?? null;
+				if (o && !n) emptied.push({ r, c, cell: o });
+				else if (n && cellKey(n) !== cellKey(o)) arrived.push({ r, c, cell: n, prev: o });
+			}
+		}
+		if (arrived.length !== 1 || emptied.length > 6) return; // dest unica; multi-cattura ammessa
+		const dest = arrived[0];
+		const mover = dest.cell!.color;
+		const src = emptied.find((e) => e.cell!.color === mover) ?? null;
+		const caps = emptied.filter((e) => e !== src && e.cell!.color !== mover);
+
+		if (animTimer) clearTimeout(animTimer);
+		captureFx = caps;
+		if (src) {
+			flying = { cell: dest.cell, toR: dest.r, toC: dest.c, dx: src.c - dest.c, dy: src.r - dest.r };
+			hideDest = { r: dest.r, c: dest.c };
+		}
+		// Promozione a dama: destinazione ora re, prima no.
+		kingPop = dest.cell!.king && !src?.cell?.king ? { r: dest.r, c: dest.c } : null;
+		animTimer = setTimeout(() => { flying = null; hideDest = null; captureFx = []; kingPop = null; }, 340);
+	}
+
 	$effect(() => {
 		const e = event;
 		if (!e) return;
 		if (e.type === 'game:state') {
-			state = e as unknown as GameState;
+			const ns = e as unknown as GameState;
+			animateTransition(prevBoard, ns.board);
+			prevBoard = ns.board;
+			state = ns;
 			sel = null;
 			if ((e as { status?: string }).status === 'PLAYING') over = null;
 		} else if (e.type === 'game:over') {
@@ -77,6 +124,8 @@
 	const startGame = () => send({ type: 'game:start' });
 
 	const ROWS = [0, 1, 2, 3, 4, 5, 6, 7];
+
+	onDestroy(() => { if (animTimer) clearTimeout(animTimer); });
 </script>
 
 <div class="dama">
@@ -117,13 +166,38 @@
 						onclick={() => clickCell(r, c)}
 						aria-label="Casa {r},{c}"
 					>
-						{#if cell}
-							<span class="piece" class:white={cell.color === 'W'} class:black={cell.color === 'B'}>
+						{#if cell && !(hideDest && hideDest.r === r && hideDest.c === c)}
+							<span
+								class="piece"
+								class:white={cell.color === 'W'}
+								class:black={cell.color === 'B'}
+								class:king-pop={kingPop && kingPop.r === r && kingPop.c === c}
+							>
 								{cell.king ? '♛' : ''}
 							</span>
 						{/if}
 					</button>
 				{/each}
+			{/each}
+
+			<!-- Pedina in volo (origine → destinazione) -->
+			{#if flying && flying.cell}
+				<div
+					class="flying"
+					style="left:{flying.toC * 12.5}%; top:{flying.toR * 12.5}%; --dx:{flying.dx * 100}%; --dy:{flying.dy * 100}%;"
+				>
+					<span class="piece" class:white={flying.cell.color === 'W'} class:black={flying.cell.color === 'B'}>
+						{flying.cell.king ? '♛' : ''}
+					</span>
+				</div>
+			{/if}
+			<!-- Pedine catturate che dissolvono -->
+			{#each captureFx as cap (cap.r + ',' + cap.c)}
+				{#if cap.cell}
+					<div class="capture-fx" style="left:{cap.c * 12.5}%; top:{cap.r * 12.5}%;">
+						<span class="piece" class:white={cap.cell.color === 'W'} class:black={cap.cell.color === 'B'}></span>
+					</div>
+				{/if}
 			{/each}
 		</div>
 
@@ -258,6 +332,7 @@
 
 	/* ── Griglia / tavola ──────────────────────────────────────────── */
 	.grid {
+		position: relative;
 		display: grid;
 		grid-template-columns: repeat(8, 1fr);
 		width: min(92vw, 480px);
@@ -340,6 +415,48 @@
 		color: var(--bg);
 		box-shadow: 0 0 10px var(--accent), inset 0 0 6px color-mix(in srgb, var(--accent) 50%, transparent);
 		text-shadow: var(--glow-mag);
+	}
+
+	/* ── Overlay animazioni pedine ─────────────────────────────────── */
+	.flying,
+	.capture-fx {
+		position: absolute;
+		width: 12.5%;
+		height: 12.5%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: none;
+	}
+	.flying {
+		z-index: 3;
+		animation: fly 0.3s cubic-bezier(0.25, 0.85, 0.35, 1);
+	}
+	@keyframes fly {
+		from { transform: translate(var(--dx), var(--dy)); }
+		to   { transform: translate(0, 0); }
+	}
+	.capture-fx {
+		z-index: 2;
+		animation: capfx 0.32s ease-out forwards;
+	}
+	@keyframes capfx {
+		0%   { transform: scale(1);    opacity: 1; }
+		55%  { transform: scale(1.35); opacity: 0.6; }
+		100% { transform: scale(0.15); opacity: 0; }
+	}
+	/* Pop di promozione a dama */
+	.king-pop {
+		animation: king-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+	}
+	@keyframes king-pop {
+		0%   { transform: scale(1); }
+		45%  { transform: scale(1.4); }
+		100% { transform: scale(1); }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.flying, .capture-fx { animation: none; display: none; }
+		.king-pop { animation: none; }
 	}
 
 	/* ── Pannello catture (pedine prese / perse) ───────────────────── */
