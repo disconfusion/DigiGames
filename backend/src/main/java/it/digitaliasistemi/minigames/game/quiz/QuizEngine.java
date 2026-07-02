@@ -11,6 +11,7 @@ import jakarta.inject.Inject;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /** Quiz a risposta multipla, fino a 8 giocatori, 5 domande a partita. */
 @ApplicationScoped
@@ -97,10 +98,13 @@ public class QuizEngine implements GameEngine {
                     // partita finita
                     room.status = Room.Status.DONE;
                     ctx.broadcast(buildGameOver(qs));
-                    List<Map<String, Object>> ranking = qs.ranking();
-                    String winner = ranking.isEmpty() ? null : (String) ranking.get(0).get("username");
+                    // Pareggio in testa: tutti i giocatori col punteggio massimo sono vincitori.
+                    // Se sono più di uno → DRAW per loro (token pareggio), altrimenti WIN al solo primo.
+                    Set<String> winners = qs.topScorers();
+                    boolean draw = winners.size() > 1;
                     for (String p : room.players) {
-                        leaderboard.record(p, "quiz", p.equals(winner) ? "WIN" : "LOSE");
+                        String result = winners.contains(p) ? (draw ? "DRAW" : "WIN") : "LOSE";
+                        leaderboard.record(p, "quiz", result);
                     }
                 }
             }
@@ -159,6 +163,10 @@ public class QuizEngine implements GameEngine {
         m.put("type", "game:over");
         m.put("status", "DONE");
         m.put("ranking", qs.ranking());
+        Set<String> winners = qs.topScorers();
+        m.put("winners", List.copyOf(winners));
+        m.put("draw", winners.size() > 1);
+        m.put("topScore", qs.topScore());
         return m;
     }
 

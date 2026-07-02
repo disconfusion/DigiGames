@@ -37,6 +37,8 @@
 
 	type GameOverState = {
 		ranking: { username: string; score: number }[];
+		winners: string[];
+		draw: boolean;
 	};
 
 	// -------------------------------------------------------------------------
@@ -61,8 +63,12 @@
 			gameState = s;
 			gameOver = null;
 		} else if (e.type === 'game:over') {
-			const o = e as unknown as { ranking: { username: string; score: number }[] };
-			gameOver = { ranking: o.ranking };
+			const o = e as unknown as {
+				ranking: { username: string; score: number }[];
+				winners?: string[];
+				draw?: boolean;
+			};
+			gameOver = { ranking: o.ranking, winners: o.winners ?? [], draw: !!o.draw };
 			gameState = null;
 		}
 	});
@@ -91,6 +97,11 @@
 
 	const isQuestion = $derived(gameState?.phase === 'QUESTION');
 	const isReveal = $derived(gameState?.phase === 'REVEAL');
+
+	/** Posizione 0-based per punteggio: i pari merito la condividono (ranking competitivo "1-1-3"). */
+	function standing(score: number): number {
+		return gameOver ? gameOver.ranking.filter((p) => p.score > score).length : 0;
+	}
 
 	/** In fase REVEAL: indice risposta data dal giocatore corrente. */
 	const myRevealAnswer = $derived(
@@ -121,11 +132,17 @@
 
 	<!-- ===== Schermata fine partita ===== -->
 	{:else if gameOver}
-		{@const myRank = gameOver.ranking.findIndex((p) => p.username === me.username)}
+		{@const amWinner = gameOver.winners.includes(me.username)}
+		{@const myEntry = gameOver.ranking.find((p) => p.username === me.username)}
+		{@const myPos = myEntry ? standing(myEntry.score) + 1 : -1}
 		<GameResultOverlay
-			result={myRank === 0 ? 'win' : 'lose'}
-			title={myRank === 0 ? 'PRIMO POSTO' : 'QUIZ FINITO'}
-			message={myRank >= 0 ? `Sei arrivato ${myRank + 1}º su ${gameOver.ranking.length}` : ''}
+			result={amWinner ? (gameOver.draw ? 'draw' : 'win') : 'lose'}
+			title={amWinner ? (gameOver.draw ? 'PAREGGIO' : 'PRIMO POSTO') : 'QUIZ FINITO'}
+			message={amWinner && gameOver.draw
+				? `Primo posto a pari merito con altri ${gameOver.winners.length - 1}`
+				: myPos > 0
+					? `Sei arrivato ${myPos}º su ${gameOver.ranking.length}`
+					: ''}
 			playAgainLabel="Nuovo quiz"
 			onPlayAgain={startQuiz}
 		>
@@ -135,10 +152,11 @@
 						<tr><th>#</th><th>Giocatore</th><th>Punti</th></tr>
 					</thead>
 					<tbody>
-						{#each gameOver.ranking as player, i (player.username)}
+						{#each gameOver.ranking as player (player.username)}
+							{@const pos = standing(player.score)}
 							<tr class:me={player.username === me.username}>
 								<td class="rank">
-									{#if i === 0}<Icon name="gold" size={24} title="1º" />{:else if i === 1}<Icon name="silver" size={24} title="2º" />{:else if i === 2}<Icon name="bronze" size={24} title="3º" />{:else}{i + 1}{/if}
+									{#if pos === 0}<Icon name="gold" size={24} title="1º" />{:else if pos === 1}<Icon name="silver" size={24} title="2º" />{:else if pos === 2}<Icon name="bronze" size={24} title="3º" />{:else}{pos + 1}{/if}
 								</td>
 								<td class="email">{player.username}</td>
 								<td class="score">{player.score}</td>

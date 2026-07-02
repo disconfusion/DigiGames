@@ -201,4 +201,39 @@ class QuizStateTest {
         // tentiamo di rispondere durante REVEAL
         assertFalse(qs.registerAnswer("alice@test.it", 0));
     }
+
+    // -------------------------------------------------------------------------
+    // Pareggio: topScore / topScorers
+    // -------------------------------------------------------------------------
+
+    @Test
+    void singleTopScorerWhenClearWinner() {
+        QuizState qs = newState("alice@test.it", "bob@test.it");
+        qs.registerAnswer("alice@test.it", 1); // corretta
+        qs.registerAnswer("bob@test.it", 0);   // sbagliata
+        qs.revealAnswers();
+        assertEquals(1, qs.topScore());
+        assertEquals(Set.of("alice@test.it"), qs.topScorers());
+    }
+
+    @Test
+    void multipleTopScorersOnTie() {
+        QuizState qs = newState("alice@test.it", "bob@test.it", "carl@test.it");
+        qs.registerAnswer("alice@test.it", 1); // corretta
+        qs.registerAnswer("bob@test.it", 1);   // corretta
+        qs.registerAnswer("carl@test.it", 0);  // sbagliata
+        qs.revealAnswers();
+        assertEquals(1, qs.topScore());
+        assertEquals(Set.of("alice@test.it", "bob@test.it"), qs.topScorers());
+    }
+
+    @Test
+    void allTiedAtZeroAreAllTopScorers() {
+        QuizState qs = newState("alice@test.it", "bob@test.it");
+        qs.registerAnswer("alice@test.it", 0); // sbagliata
+        qs.registerAnswer("bob@test.it", 0);   // sbagliata
+        qs.revealAnswers();
+        assertEquals(0, qs.topScore());
+        assertEquals(Set.of("alice@test.it", "bob@test.it"), qs.topScorers());
+    }
 }

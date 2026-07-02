@@ -126,4 +126,21 @@ public class QuizState {
     public synchronized boolean allAnswered(Set<String> currentPlayers) {
         return currentPlayers.stream().allMatch(answers::containsKey);
     }
+
+    /** Punteggio più alto raggiunto (0 se non ci sono giocatori). */
+    public synchronized int topScore() {
+        return scores.values().stream().mapToInt(Integer::intValue).max().orElse(0);
+    }
+
+    /**
+     * Giocatori col punteggio massimo. Se ne restituisce più di uno significa
+     * che c'è un pareggio in testa (tutti vincitori a pari merito).
+     */
+    public synchronized Set<String> topScorers() {
+        int top = topScore();
+        return scores.entrySet().stream()
+            .filter(e -> e.getValue() == top)
+            .map(Map.Entry::getKey)
+            .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+    }
 }
