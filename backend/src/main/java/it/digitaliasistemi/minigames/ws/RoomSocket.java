@@ -24,6 +24,9 @@ import java.util.Map;
 public class RoomSocket {
 
     static final UserData.TypedKey<String> USER = UserData.TypedKey.forString("user");
+    // Segna che il giocatore ha lasciato la stanza esplicitamente (msg "leave"/"room:close"):
+    // così onClose non ri-elabora la rimozione alla chiusura del socket.
+    static final UserData.TypedKey<Boolean> LEFT = UserData.TypedKey.forBoolean("left");
 
     @Inject RoomManager rooms;
     @Inject OpenConnections connections;
@@ -70,6 +73,27 @@ public class RoomSocket {
                 if (username == null) return;
                 broadcast(code, evt("chat", "from", username, "text", msg.path("text").asText("")));
             }
+            case "leave" -> {
+                // Uscita esplicita: rimuove il membro in QUALSIASI stato (anche PLAYING), a differenza
+                // della chiusura implicita del socket che lo tiene sospeso per il rientro.
+                String username = requireAuth(conn);
+                if (username == null) return;
+                conn.userData().put(LEFT, true);
+                leaveRoom(code, room, username);
+            }
+            case "room:close" -> {
+                // Solo l'host può chiudere la stanza per tutti.
+                String username = requireAuth(conn);
+                if (username == null) return;
+                if (!username.equals(room.hostEmail)) {
+                    conn.sendTextAndAwait(err("Solo l'host può chiudere la stanza"));
+                    return;
+                }
+                // LEFT solo dopo la validazione: un rifiuto non deve bloccare il cleanup del suo slot.
+                conn.userData().put(LEFT, true);
+                broadcast(code, evt("room:closed", "by", username));
+                rooms.remove(code);
+            }
             default -> {
                 String username = requireAuth(conn);
                 if (username == null) return;
@@ -89,10 +113,17 @@ public class RoomSocket {
         String code = conn.pathParam("code");
         Room room = rooms.get(code);
         if (username == null || room == null) return;
+        // Uscita esplicita già gestita da "leave"/"room:close": non ri-elaborare.
+        if (Boolean.TRUE.equals(conn.userData().get(LEFT))) return;
         // Partita in corso: il giocatore resta membro (slot "sospeso") e la stanza sopravvive,
         // così può rientrare dalla home ("Partite in corso"). Per gli altri resta seduto: niente broadcast.
         if (room.status == Room.Status.PLAYING) return;
         // Lobby (WAITING) o partita finita (DONE): libera lo slot e distruggi la stanza se vuota.
+        leaveRoom(code, room, username);
+    }
+
+    /** Rimuove il giocatore dalla stanza, notifica gli altri e distrugge la stanza se resta vuota. */
+    private void leaveRoom(String code, Room room, String username) {
         room.players.remove(username);
         broadcast(code, evt("player:left", "username", username, "players", room.players.size()));
         if (room.players.isEmpty()) rooms.remove(code);

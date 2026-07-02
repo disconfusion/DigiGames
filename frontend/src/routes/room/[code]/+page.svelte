@@ -9,7 +9,7 @@
 	import { parseAvatar, renderAvatar } from '$lib/avatar';
 	import Icon from '$lib/icons/Icon.svelte';
 
-	type RoomView = { code: string; gameSlug: string; players: number; maxPlayers: number };
+	type RoomView = { code: string; gameSlug: string; hostEmail: string; players: number; maxPlayers: number };
 	type UserInfo = { displayName: string; avatar: string | null; companion?: string | null; house?: string | null };
 
 	const SYSTEM = new Set(['player:joined', 'player:left', 'chat']);
@@ -35,6 +35,7 @@
 
 	const Board = $derived(room ? BOARDS[room.gameSlug] : undefined);
 	const opponents = $derived(playerNames.filter((u) => u !== meUsername));
+	const isHost = $derived(!!room && room.hostEmail === meUsername);
 
 	const face = (u: string) => renderAvatar(parseAvatar(userInfo[u]?.avatar ?? null));
 	const nameOf = (u: string) => (u === meUsername ? 'Tu' : (userInfo[u]?.displayName ?? u));
@@ -77,6 +78,12 @@
 				push(`${e.from}: ${e.text}`);
 				showBubble(String(e.from), String(e.text));
 				break;
+			case 'room:closed':
+				// L'host ha chiuso la stanza: torna alla home.
+				leaving = true;
+				conn?.close();
+				goto('/');
+				break;
 			default:
 				if (e.type === 'error') push(`⚠ ${e.message}`);
 				if (!SYSTEM.has(e.type)) gameEvent = e;
@@ -93,7 +100,24 @@
 		}
 	}
 
+	let leaving = false;
+
+	// Uscita esplicita: libera lo slot lato server (msg "leave") anche a partita in corso,
+	// poi chiude il socket e torna alla home.
 	function leave() {
+		if (leaving) return;
+		leaving = true;
+		conn?.send({ type: 'leave' });
+		conn?.close();
+		goto('/');
+	}
+
+	// Solo host: chiude la stanza per tutti i partecipanti.
+	function closeRoom() {
+		if (leaving) return;
+		if (!confirm('Chiudere la stanza per tutti i giocatori?')) return;
+		leaving = true;
+		conn?.send({ type: 'room:close' });
 		conn?.close();
 		goto('/');
 	}
@@ -138,7 +162,12 @@
 
 <div class="head">
 	<h1>Stanza {code}</h1>
-	<button class="leave" onclick={leave}>Esci</button>
+	<div class="actions">
+		{#if isHost}
+			<button class="close-room" onclick={closeRoom}>Chiudi stanza</button>
+		{/if}
+		<button class="leave" onclick={leave}>Esci</button>
+	</div>
 </div>
 
 {#if loadError}
@@ -226,7 +255,13 @@
 		color: var(--cyan);
 		text-shadow: var(--glow-cyan);
 	}
-	.leave {
+	.actions {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+	.leave,
+	.close-room {
 		background: transparent;
 		color: var(--danger);
 		border: 2px solid var(--danger);
@@ -240,8 +275,21 @@
 		min-height: 44px;
 		transition: box-shadow 0.12s;
 	}
+	.close-room {
+		color: var(--amber);
+		border-color: var(--amber);
+	}
 	.leave:hover {
 		box-shadow: 0 0 14px rgba(255, 82, 119, 0.5);
+	}
+	.close-room:hover {
+		box-shadow: 0 0 14px rgba(255, 207, 63, 0.5);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.leave,
+		.close-room {
+			transition: none;
+		}
 	}
 	.status {
 		color: var(--muted);

@@ -94,7 +94,7 @@ Variabili d'ambiente in prod (Fly secrets): `DB_URL`, `DB_USER`, `DB_PASSWORD`.
 
 Segnalazioni utenti.
 
-- [ ] Se hosti una partita e poi esci o finisci di giocare, la stanza rimane aperta e non si può chiudere (@emanuele.taglia)
+- [x] Se hosti una partita e poi esci o finisci di giocare, la stanza rimane aperta e non si può chiudere (@emanuele.taglia) — risolto: uscita esplicita ("Esci") libera lo slot anche a partita in corso e distrugge la stanza se vuota; l'host può chiuderla per tutti ("Chiudi stanza")
 - [ ] Quiz: gestire la casistica di pareggio (@manuchao)
 - [x] Impiccato: se una parola contiene più di due vocali non può essere completata (@manuchao) — risolto: ora si può tentare l'intera parola in qualsiasi momento
 - [ ] Togliere le emoji dalla personalizzazione account, o sostituirle con nuove animazioni e sprite (@spacevampire)
