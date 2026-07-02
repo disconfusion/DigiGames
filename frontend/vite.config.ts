@@ -15,9 +15,15 @@ try {
 		.slice(0, 8);
 } catch { /* git non disponibile (CI senza repo) */ }
 
+// Identificativo di build: cambia a ogni deploy (nuovo commit → nuovo sha; se git non è
+// disponibile in fase di build, fallback al timestamp così resta comunque unico per build).
+// Usato dalla home per far riapparire la modale "Ultime Fix" dopo ogni deploy.
+const buildId = gitCommit !== 'dev' ? gitCommit : String(Date.now());
+
 export default defineConfig({
 	define: {
 		__GIT_COMMIT__: JSON.stringify(gitCommit),
+		__BUILD_ID__: JSON.stringify(buildId),
 		__WHATSNEW__: JSON.stringify(whatsnew)
 	},
 	plugins: [

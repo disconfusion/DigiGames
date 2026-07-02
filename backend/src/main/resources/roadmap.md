@@ -30,7 +30,7 @@
 
 ## Altre fix
 
-- [x] Modale "Ultime Fix" editabile dall'Admin
+- [x] Modale "Ultime Fix" editabile dall'Admin — ricompare sia quando l'Admin aggiorna il testo sia dopo ogni deploy (marker `revisione:build-id`), così gli utenti la rivedono al primo accesso post-deploy
 - [ ] Regole dell'Impiccato del giorno personalizzabili dall'Admin
 - [ ] Callout con messaggi dall'Admin nella sezione "Impiccato del giorno" per giornate speciali / info utili
 

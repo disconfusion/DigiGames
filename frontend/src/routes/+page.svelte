@@ -108,13 +108,17 @@
 		try {
 			const a = await api<{ content: string; revision: number }>('/api/announcement');
 			whatsNew = a;
-			const seen = Number(localStorage.getItem(SEEN_KEY) ?? '0');
-			if (a.content.trim() && a.revision > seen) showWhatsNew = true;
+			// Marker = revisione admin + id di build: la modale riappare sia se l'admin
+			// aggiorna il testo (revision) sia dopo ogni deploy (build-id diverso).
+			const seen = localStorage.getItem(SEEN_KEY);
+			if (a.content.trim() && seen !== seenMarker(a.revision)) showWhatsNew = true;
 		} catch { /* silenzioso */ }
 	}
 
+	const seenMarker = (revision: number) => `${revision}:${__BUILD_ID__}`;
+
 	function closeWhatsNew() {
-		localStorage.setItem(SEEN_KEY, String(whatsNew.revision));
+		localStorage.setItem(SEEN_KEY, seenMarker(whatsNew.revision));
 		showWhatsNew = false;
 		maybeShowGifts();
 	}

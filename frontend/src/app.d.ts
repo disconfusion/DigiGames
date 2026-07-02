@@ -11,6 +11,7 @@ declare global {
 }
 
 declare const __GIT_COMMIT__: string;
+declare const __BUILD_ID__: string;
 declare const __WHATSNEW__: string[];
 
 export {};
