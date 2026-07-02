@@ -46,14 +46,59 @@ Variabili d'ambiente in prod (Fly secrets): `DB_URL`, `DB_USER`, `DB_PASSWORD`.
 
 ## Stato (roadmap)
 
-- [x] **Step 1** — Auth (whitelist dominio + JWT + bcrypt), lobby/stanze, scheletro WebSocket real-time
-- [x] **Step 2** — Impiccato (co-op, parola random server-side)
-- [x] **Step 3** — Forza 4 (2 giocatori a turni, win detection)
-- [x] **Step 4** — Quiz (multiplayer, banca domande IT, fasi QUESTION/REVEAL, punteggi)
-- [x] **Step 5** — Battaglia navale (2 fasi, informazione nascosta via viste per-giocatore)
-- [x] **Step 6** — Campo minato (co-op, flood-fill, mine nascoste lato server)
-- [ ] Step 7 — Impiccato del giorno (parola unica giornaliera + classifica tentativi)
-- [ ] Step 8 — Leaderboard globale + persistenza risultati su Postgres
+> **Fonte di verità: [`backend/src/main/resources/roadmap.md`](backend/src/main/resources/roadmap.md)** (mostrata anche sul sito in `/roadmap`).
+> Questa sezione ne è un mirror: aggiornare sempre il file, poi riallineare qui.
+
+<!-- ROADMAP:START -->
+### FIX UI/UX
+
+- [x] Monitoraggio dei pezzi persi/conquistati (scacchi, dama, battaglia navale)
+- [x] Restyling header
+- [x] Toast quando arrivano notifiche
+- [x] Scritta di game over e win con animazioni annesse
+- [x] Visibili tutte le mosse dell'utente nella sezione "Impiccato del giorno"
+- [x] Regole dell'Impiccato del giorno visibili nella view
+- [x] Feedback al click dei pulsanti nella sezione Admin, uniformato alle altre interazioni
+- [x] Card e view troppo compresse: più responsive per schermi grandi
+- [x] View della roadmap con anteprima Markdown
+- [x] Sezione "Partite in corso" nella home: rientrare nelle partite attive con altri utenti (ora restano sospese, si rientra solo col codice invito)
+
+#### Nuove animazioni
+
+- [ ] Restyling animazioni dei pezzi di scacchi e dama
+- [x] Esplosioni e buchi nell'acqua in Battaglia navale
+- [x] Campo minato
+- [x] Forza 4
+
+### Game Loop / Game design
+
+- [x] Alpha test: sistema di crediti (Token) con acquisto di "poteri" usabili in partita
+- [ ] Alpha test: pack opening di carte a tema inside joke interni
+- [ ] Accessori avatar comprabili con i crediti — invio doni fra utenti
+- [x] Companion acquistabili dallo shop (animati a mano)
+- [x] Leaderboard coi punti accumulati al posto della colonna vittorie (che passa in seconda posizione)
+- [x] Alpha test: clan/casate (temporaneamente le 4 di Hogwarts), badge casata personalizzabile nella sezione personale
+- [x] Impiccato: tentativo dell'intera parola in qualsiasi momento (giusto = vittoria, sbagliato = eliminazione diretta) — sblocca gli stalli in cui non si possono più chiamare lettere/vocali
+
+#### Altre fix
+
+- [x] Modale "Ultime Fix" editabile dall'Admin
+- [ ] Regole dell'Impiccato del giorno personalizzabili dall'Admin
+- [ ] Callout con messaggi dall'Admin nella sezione "Impiccato del giorno" per giornate speciali / info utili
+
+### Tecnico / Infra
+
+- [ ] Efficientare storage e cancellazione dati dal DB: Neon offre solo ~0,5 GB, quindi strutturare il progetto attorno a questo limite (retention e purge dei dati storici)
+
+### Bug Fixing
+
+Segnalazioni utenti.
+
+- [ ] Se hosti una partita e poi esci o finisci di giocare, la stanza rimane aperta e non si può chiudere (@emanuele.taglia)
+- [ ] Quiz: gestire la casistica di pareggio (@manuchao)
+- [x] Impiccato: se una parola contiene più di due vocali non può essere completata (@manuchao) — risolto: ora si può tentare l'intera parola in qualsiasi momento
+- [ ] Togliere le emoji dalla personalizzazione account, o sostituirle con nuove animazioni e sprite (@spacevampire)
+<!-- ROADMAP:END -->
 
 Tutti i giochi sono coperti da unit test (logica pura) e test d'integrazione WebSocket.
 

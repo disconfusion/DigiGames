@@ -19,10 +19,13 @@ public class HangmanState {
     private final Set<Character> guessed = new LinkedHashSet<>();
     private final Set<Character> wrong = new LinkedHashSet<>();
     private Status status = Status.PLAYING;
+    private String winner;
 
     // Turn tracking — empty list = nessun controllo turno (usato nei test)
     private final List<String> players;
     private int turnIndex = 0;
+    // Giocatori eliminati (tentativo di parola sbagliato): fuori dai turni, non possono più giocare
+    private final Set<String> eliminated = new LinkedHashSet<>();
 
     // Config
     private final HangmanConfig config;
@@ -78,21 +81,23 @@ public class HangmanState {
         return players.isEmpty() || player.equals(currentTurn());
     }
 
-    /** Avanza al prossimo giocatore con budget lettere; se nessuno può giocare → LOST. */
+    /** True se il giocatore è stato eliminato (tentativo di parola errato). */
+    public synchronized boolean isEliminated(String player) {
+        return eliminated.contains(player);
+    }
+
+    /** Avanza al prossimo giocatore attivo (non eliminato e con budget lettere); se nessuno può giocare → LOST. */
     private void advanceTurn() {
         if (players.isEmpty()) return;
-        if (config.lettersPerPlayer() <= 0) {
-            turnIndex = (turnIndex + 1) % players.size();
-            return;
-        }
         for (int i = 1; i <= players.size(); i++) {
             int idx = (turnIndex + i) % players.size();
-            if (hasLetterBudget(players.get(idx))) {
+            String p = players.get(idx);
+            if (!isEliminated(p) && hasLetterBudget(p)) {
                 turnIndex = idx;
                 return;
             }
         }
-        // Nessun giocatore ha più lettere disponibili e la parola non è completa
+        // Nessun giocatore attivo può ancora giocare e la parola non è completa
         if (status == Status.PLAYING) status = Status.LOST;
     }
 
@@ -104,6 +109,7 @@ public class HangmanState {
      * limite vocali raggiunto, o partita finita.
      */
     public synchronized boolean guess(char input, String player) {
+        if (isEliminated(player)) return false;
         if (!isMyTurn(player)) return false;
         char c = Character.toLowerCase(input);
         if (status != Status.PLAYING) return false;
@@ -131,6 +137,48 @@ public class HangmanState {
         if (vowel && !hasVowelBudget()) return false;
         if (vowel) vowelsCalled++;
         applyGuess(c);
+        return true;
+    }
+
+    /**
+     * Tenta di indovinare l'intera parola. Consentito in QUALSIASI momento (anche fuori turno),
+     * finché la partita è in corso e il giocatore non è già eliminato — così si sblocca lo stallo
+     * in cui non è più possibile chiamare lettere/vocali ma la parola resta incompleta.
+     * <ul>
+     *   <li>Parola corretta → vittoria (WON), tutte le lettere rivelate, {@code winner} = giocatore.</li>
+     *   <li>Parola errata → eliminazione diretta del giocatore. Se non resta nessun giocatore
+     *       attivo → sconfitta (LOST); altrimenti la partita prosegue per gli altri.</li>
+     * </ul>
+     * Ritorna false se la mossa non è ammissibile (partita finita, giocatore eliminato, input vuoto).
+     */
+    public synchronized boolean guessWord(String attempt, String player) {
+        if (status != Status.PLAYING) return false;
+        if (attempt == null) return false;
+        if (player != null && isEliminated(player)) return false;
+        String a = attempt.trim().toLowerCase();
+        if (a.isEmpty()) return false;
+
+        if (a.equals(word)) {
+            for (char c : word.toCharArray()) {
+                if (Character.isLetter(c)) guessed.add(c);
+            }
+            winner = player;
+            status = Status.WON;
+            return true;
+        }
+
+        // Parola sbagliata → eliminazione diretta
+        if (player != null && !players.isEmpty()) {
+            eliminated.add(player);
+            if (eliminated.size() >= players.size()) {
+                status = Status.LOST; // tutti eliminati
+            } else if (player.equals(currentTurn())) {
+                advanceTurn();
+            }
+        } else {
+            // Modalità senza lista giocatori (test/contesto singolo) → sconfitta immediata
+            status = Status.LOST;
+        }
         return true;
     }
 
@@ -162,6 +210,8 @@ public class HangmanState {
     }
 
     public synchronized Status status() { return status; }
+    public synchronized String winner() { return winner; }
+    public synchronized Set<String> eliminated() { return new LinkedHashSet<>(eliminated); }
     public synchronized Set<Character> wrong() { return new LinkedHashSet<>(wrong); }
     public synchronized Set<Character> guessed() { return new LinkedHashSet<>(guessed); }
     public synchronized int wrongCount() { return wrong.size(); }

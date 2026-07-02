@@ -55,15 +55,37 @@ public class HangmanEngine implements GameEngine {
                 }
                 if (hs.guess(letter.charAt(0), ctx.senderEmail())) {
                     ctx.broadcast(state(hs, ctx.senderEmail(), letter));
-                    if (hs.status() != HangmanState.Status.PLAYING) {
-                        ctx.broadcast(over(hs));
-                        room.status = Room.Status.DONE;
-                        String lbResult = hs.status() == HangmanState.Status.WON ? "WIN" : "LOSE";
-                        for (String p : room.players) leaderboard.record(p, "hangman", lbResult);
-                    }
+                    finishIfOver(ctx, room, hs);
+                }
+            }
+            case "guessWord" -> {
+                if (!(room.game instanceof HangmanState hs)) {
+                    ctx.replyToSender(error("Partita non avviata"));
+                    return;
+                }
+                // Consentito in qualsiasi momento (nessun controllo turno): lo State valida stato/eliminazione.
+                String attempt = payload.path("word").asText("");
+                if (hs.guessWord(attempt, ctx.senderEmail())) {
+                    ctx.broadcast(state(hs, ctx.senderEmail(), null));
+                    finishIfOver(ctx, room, hs);
+                } else {
+                    ctx.replyToSender(error("Tentativo non valido"));
                 }
             }
             default -> ctx.replyToSender(error("Azione sconosciuta: " + type));
+        }
+    }
+
+    /** Se la partita è finita: broadcast game:over, chiude la stanza e registra i risultati. */
+    private void finishIfOver(GameContext ctx, Room room, HangmanState hs) {
+        if (hs.status() == HangmanState.Status.PLAYING) return;
+        ctx.broadcast(over(hs));
+        room.status = Room.Status.DONE;
+        boolean won = hs.status() == HangmanState.Status.WON;
+        for (String p : room.players) {
+            // Gli eliminati perdono anche se la parola viene indovinata da un altro giocatore.
+            String r = won && !hs.isEliminated(p) ? "WIN" : "LOSE";
+            leaderboard.record(p, "hangman", r);
         }
     }
 
@@ -81,6 +103,8 @@ public class HangmanEngine implements GameEngine {
         m.put("vowelsCalled", hs.vowelsCalled());
         m.put("lettersPerPlayer", hs.lettersPerPlayer());
         m.put("lettersUsed", hs.lettersUsed());
+        m.put("eliminated", hs.eliminated().stream().toList());
+        m.put("winner", hs.winner());
         m.put("status", hs.status().name());
         m.put("currentTurn", hs.currentTurn());
         if (by != null) m.put("lastBy", by);
@@ -93,6 +117,8 @@ public class HangmanEngine implements GameEngine {
         m.put("type", "game:over");
         m.put("status", hs.status().name());
         m.put("word", hs.word());
+        m.put("winner", hs.winner());
+        m.put("eliminated", hs.eliminated().stream().toList());
         return m;
     }
 

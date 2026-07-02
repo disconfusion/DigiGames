@@ -9,6 +9,8 @@ export type HangmanGameState = {
 	vowelsCalled: number;
 	lettersPerPlayer: number;
 	lettersUsed: Record<string, number>;
+	eliminated: string[];
+	winner: string | null;
 	status: 'PLAYING' | 'WON' | 'LOST';
 	currentTurn: string | null;
 	lastBy?: string;

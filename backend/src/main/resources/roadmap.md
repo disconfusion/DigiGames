@@ -26,6 +26,7 @@
 - [x] Companion acquistabili dallo shop (animati a mano)
 - [x] Leaderboard coi punti accumulati al posto della colonna vittorie (che passa in seconda posizione)
 - [x] Alpha test: clan/casate (temporaneamente le 4 di Hogwarts), badge casata personalizzabile nella sezione personale
+- [x] Impiccato: tentativo dell'intera parola in qualsiasi momento (giusto = vittoria, sbagliato = eliminazione diretta) — sblocca gli stalli in cui non si possono più chiamare lettere/vocali
 
 ## Altre fix
 
@@ -36,3 +37,12 @@
 # Tecnico / Infra
 
 - [ ] Efficientare storage e cancellazione dati dal DB: Neon offre solo ~0,5 GB, quindi strutturare il progetto attorno a questo limite (retention e purge dei dati storici)
+
+# Bug Fixing
+
+Segnalazioni utenti.
+
+- [ ] Se hosti una partita e poi esci o finisci di giocare, la stanza rimane aperta e non si può chiudere (@emanuele.taglia)
+- [ ] Quiz: gestire la casistica di pareggio (@manuchao)
+- [x] Impiccato: se una parola contiene più di due vocali non può essere completata (@manuchao) — risolto: ora si può tentare l'intera parola in qualsiasi momento
+- [ ] Togliere le emoji dalla personalizzazione account, o sostituirle con nuove animazioni e sprite (@spacevampire)

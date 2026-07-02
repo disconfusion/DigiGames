@@ -44,7 +44,15 @@
 	const myLettersUsed    = $derived(state?.lettersUsed?.[me.username] ?? 0);
 	const letterBudgetOver = $derived(letterLimit > 0 && myLettersUsed >= letterLimit);
 
-	const canPlay  = $derived(playing && isMyTurn && !letterBudgetOver);
+	const amEliminated = $derived((state?.eliminated ?? []).includes(me.username));
+	const canPlay  = $derived(playing && isMyTurn && !letterBudgetOver && !amEliminated);
+	// Tentativo parola: consentito in qualsiasi momento finché gioco in corso e non eliminato.
+	const canGuessWord = $derived(playing && !amEliminated);
+
+	// Esito personale: se ho perso pur essendo stato indovinato da altri, resta una sconfitta.
+	const iWon = $derived(over?.status === 'WON' && !amEliminated);
+
+	let wordGuess = $state('');
 
 	function blocked(l: string): boolean {
 		return used.has(l) || (VOWELS.has(l) && vowelBudgetOver);
@@ -52,6 +60,15 @@
 
 	function tryLetter(l: string) {
 		if (canPlay && !blocked(l)) send({ type: 'guess', letter: l });
+	}
+
+	function submitWord(e: Event) {
+		e.preventDefault();
+		const w = wordGuess.trim();
+		if (!w || !canGuessWord) return;
+		if (!confirm(`Tentare la parola "${w}"? Se è sbagliata verrai eliminato dalla partita.`)) return;
+		send({ type: 'guessWord', word: w });
+		wordGuess = '';
 	}
 	const startGame = () => send({ type: 'game:start' });
 
@@ -103,11 +120,33 @@
 			{/if}
 		{/if}
 
+		<!-- Tentativo parola intera — rischioso: se sbagliato = eliminazione diretta -->
+		{#if canGuessWord}
+			<form class="word-guess" onsubmit={submitWord}>
+				<input
+					class="word-input"
+					type="text"
+					bind:value={wordGuess}
+					placeholder="Indovina la parola…"
+					autocomplete="off"
+					autocapitalize="none"
+					spellcheck="false"
+					aria-label="Indovina l'intera parola"
+				/>
+				<button class="risk" type="submit" disabled={!wordGuess.trim()}>Rischia</button>
+			</form>
+			<p class="hint">Puoi tentare la parola in qualsiasi momento. Se sbagli, sei eliminato.</p>
+		{:else if amEliminated && playing}
+			<div class="eliminated-banner">
+				<Icon name="cross" size={16} /> Sei stato eliminato — attendi la fine della partita.
+			</div>
+		{/if}
+
 		{#if over}
 			<GameResultOverlay
-				result={over.status === 'WON' ? 'win' : 'lose'}
-				title={over.status === 'WON' ? 'INDOVINATA' : 'IMPICCATO'}
-				message={over.status === 'WON' ? '' : `La parola era: ${over.word.toUpperCase()}`}
+				result={iWon ? 'win' : 'lose'}
+				title={iWon ? 'INDOVINATA' : amEliminated ? 'ELIMINATO' : 'IMPICCATO'}
+				message={iWon ? '' : `La parola era: ${over.word.toUpperCase()}`}
 				playAgainLabel="Nuova parola"
 				onPlayAgain={startGame}
 			/>
@@ -249,6 +288,81 @@
 		border: 1px solid var(--line);
 	}
 
+	/* === Tentativo parola intera === */
+	.word-guess {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		justify-content: center;
+		width: 100%;
+		max-width: 420px;
+	}
+
+	.word-input {
+		flex: 1 1 200px;
+		min-height: 44px;
+		padding: 0.5rem 0.8rem;
+		border: 1px solid var(--accent);
+		border-radius: 6px;
+		background: var(--inset);
+		color: var(--text);
+		font-family: var(--font-ui), sans-serif;
+		font-size: 0.95rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	.word-input:focus {
+		outline: none;
+		box-shadow: var(--glow-mag);
+	}
+
+	.risk {
+		min-height: 44px;
+		padding: 0 1.1rem;
+		border: 2px solid var(--danger);
+		border-radius: 6px;
+		background: transparent;
+		color: var(--danger);
+		font-family: var(--font-ui), sans-serif;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		cursor: pointer;
+		transition: background 0.15s, box-shadow 0.15s;
+	}
+
+	.risk:not(:disabled):hover {
+		background: color-mix(in srgb, var(--danger) 20%, transparent);
+		box-shadow: 0 0 8px color-mix(in srgb, var(--danger) 50%, transparent);
+	}
+
+	.risk:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+
+	.hint {
+		color: var(--muted);
+		font-family: var(--font-ui), sans-serif;
+		font-size: 0.78rem;
+		margin: 0;
+		text-align: center;
+	}
+
+	.eliminated-banner {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.5rem 1rem;
+		border: 1px solid var(--danger);
+		border-radius: 8px;
+		background: color-mix(in srgb, var(--danger) 15%, var(--inset));
+		color: var(--danger);
+		font-family: var(--font-ui), sans-serif;
+		font-size: 0.85rem;
+		text-shadow: 0 0 6px var(--danger);
+	}
+
 	/* === Risultato partita === */
 	.result {
 		font-family: var(--font-display), monospace;
@@ -376,7 +490,8 @@
 	/* === Riduzione movimento per accessibilità === */
 	@media (prefers-reduced-motion: reduce) {
 		.key,
-		.start {
+		.start,
+		.risk {
 			transition: none;
 		}
 	}
