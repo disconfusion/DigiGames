@@ -158,6 +158,61 @@
 		});
 	}
 
+	// Export segnalazioni in Markdown (formato pronto per la skill /fix-plan)
+	function bugTitle(b: Bug): string {
+		const first = (b.description ?? '').trim().split('\n')[0].trim();
+		if (!first) return 'senza descrizione';
+		return first.length > 70 ? first.slice(0, 70).trimEnd() + '…' : first;
+	}
+
+	function buildBugsMarkdown(): string {
+		const today = new Date().toISOString().slice(0, 10);
+		const n = bugs.length;
+		const head = `# Segnalazioni bug DigiGames\nEsportate il ${today} · ${n} segnalazion${n === 1 ? 'e' : 'i'}\n`;
+		const body = bugs
+			.map((b, i) => {
+				const date = b.createdAt.slice(0, 16).replace('T', ' ');
+				return [
+					`## #${i + 1} — [${b.game}] ${bugTitle(b)}`,
+					'',
+					`- **ID:** ${b.id}`,
+					`- **Gioco:** ${gameLabel(b.game)} (${b.game})`,
+					`- **Autore:** ${b.displayName} (@${b.username})`,
+					`- **Data:** ${date}`,
+					'',
+					(b.description ?? '').trim(),
+					'',
+					'---'
+				].join('\n');
+			})
+			.join('\n\n');
+		return `${head}\n${body}\n`;
+	}
+
+	function downloadBugs() {
+		if (!bugs.length) return;
+		const blob = new Blob([buildBugsMarkdown()], { type: 'text/markdown;charset=utf-8' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `bug-digigames-${new Date().toISOString().slice(0, 10)}.md`;
+		document.body.appendChild(a);
+		a.click();
+		a.remove();
+		URL.revokeObjectURL(url);
+		showToast('Segnalazioni esportate', 'success');
+	}
+
+	async function copyBugs() {
+		if (!bugs.length) return;
+		try {
+			await navigator.clipboard.writeText(buildBugsMarkdown());
+			showToast('Segnalazioni copiate negli appunti', 'success');
+		} catch {
+			showToast('Copia non riuscita: usa "Scarica .md"', 'error');
+		}
+	}
+
 	function resetStats(u: AdminUser) {
 		if (!confirm(`Azzerare le statistiche di ${u.displayName}?`)) return;
 		run(
@@ -259,10 +314,19 @@
 
 {#if tab === 'bugs'}
 	<section class="panel">
-		<h2><Icon name="bug" size={18} /> Segnalazioni bug ({bugs.length})</h2>
+		<div class="panel-head">
+			<h2><Icon name="bug" size={18} /> Segnalazioni bug ({bugs.length})</h2>
+			{#if bugs.length}
+				<div class="export-actions">
+					<button onclick={downloadBugs}>Scarica .md</button>
+					<button onclick={copyBugs}>Copia</button>
+				</div>
+			{/if}
+		</div>
 		{#if bugs.length === 0}
 			<p class="muted">Nessuna segnalazione.</p>
 		{:else}
+			<p class="muted hint">Export in Markdown di tutte le segnalazioni, pronto da passare a Claude / alla skill <code>/fix-plan</code> per il piano di fixing.</p>
 			<ul class="bugs">
 				{#each bugs as b (b.id)}
 					<li>
@@ -454,6 +518,27 @@
 	h2 {
 		font-size: 1.05rem;
 		margin: 0 0 0.75rem;
+	}
+	.panel-head {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 0.75rem;
+		flex-wrap: wrap;
+	}
+	.panel-head h2 {
+		margin: 0;
+	}
+	.export-actions {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+	.hint code {
+		font-family: ui-monospace, monospace;
+		background: var(--inset);
+		padding: 0.05rem 0.35rem;
+		border-radius: 4px;
 	}
 	.muted {
 		color: var(--muted);
