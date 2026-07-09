@@ -1,17 +1,25 @@
 package it.digitaliasistemi.minigames.game.tris;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
  * Stato puro del Tris (tris/filetto): 2 giocatori, griglia 3x3.
  * "X" muove per primo. Server autorità: ogni mossa è validata qui.
+ *
+ * <p>Modalità "sparizione" (opzionale): ogni giocatore può avere al massimo {@value #MAX_MARKS}
+ * segni sulla griglia. Piazzando il segno oltre il limite, il proprio segno più vecchio sparisce
+ * (FIFO per segno). Elimina i pareggi: la board non si riempie mai del tutto.
  */
 public class TrisState {
 
     public enum Status { PLAYING, WON, DRAW }
 
     public static final int SIZE = 3;
+    /** Segni max per giocatore in modalità sparizione. */
+    public static final int MAX_MARKS = 3;
 
     private static final int[][] LINES = {
         {0, 1, 2}, {3, 4, 5}, {6, 7, 8}, // righe
@@ -27,11 +35,25 @@ public class TrisState {
     private Status status = Status.PLAYING;
     private String winner; // email vincitore, null se nessuno
 
+    // Modalità sparizione
+    private final boolean vanish;
+    private final Deque<Integer> historyX = new ArrayDeque<>(); // celle di X in ordine di piazzamento
+    private final Deque<Integer> historyO = new ArrayDeque<>();
+
     public TrisState(String playerX, String playerO) {
+        this(playerX, playerO, false);
+    }
+
+    public TrisState(String playerX, String playerO, boolean vanish) {
         this.playerX = playerX;
         this.playerO = playerO;
+        this.vanish = vanish;
         seats.put(playerX, "X");
         seats.put(playerO, "O");
+    }
+
+    private Deque<Integer> historyFor(String mark) {
+        return "X".equals(mark) ? historyX : historyO;
     }
 
     /** Email del giocatore di turno. */
@@ -50,7 +72,18 @@ public class TrisState {
         String mark = seats.get(email);
         if (mark == null || !mark.equals(turnMark)) return false;
 
-        cells[pos] = mark;
+        if (vanish) {
+            Deque<Integer> hist = historyFor(mark);
+            // Oltre il limite: il segno più vecchio dello stesso giocatore sparisce (FIFO).
+            if (hist.size() >= MAX_MARKS) {
+                Integer oldest = hist.pollFirst();
+                if (oldest != null) cells[oldest] = null;
+            }
+            cells[pos] = mark;
+            hist.addLast(pos);
+        } else {
+            cells[pos] = mark;
+        }
 
         if (isWin(mark)) {
             status = Status.WON;
@@ -86,6 +119,21 @@ public class TrisState {
             }
         }
         return grid;
+    }
+
+    public boolean vanish() { return vanish; }
+
+    /**
+     * Cella (0..8) del segno che sparirà al prossimo piazzamento del giocatore di turno, o -1 se
+     * nessuno sparirà (modalità classica, partita finita, o il giocatore ha meno di {@value #MAX_MARKS}
+     * segni). Usato dal frontend per evidenziare la pedina in uscita.
+     */
+    public synchronized int vanishNext() {
+        if (!vanish || status != Status.PLAYING) return -1;
+        Deque<Integer> hist = historyFor(turnMark);
+        if (hist.size() < MAX_MARKS) return -1;
+        Integer oldest = hist.peekFirst();
+        return oldest == null ? -1 : oldest;
     }
 
     public synchronized Status status() { return status; }

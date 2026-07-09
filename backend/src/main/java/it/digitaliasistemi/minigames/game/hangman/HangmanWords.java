@@ -29,6 +29,16 @@ public final class HangmanWords {
         return WORDS.get(RNG.nextInt(WORDS.size()));
     }
 
+    /** Parola casuale diversa da {@code previous} (evita la stessa parola due volte di fila nella stessa stanza). */
+    public static String randomExcluding(String previous) {
+        if (previous == null || WORDS.size() <= 1) return random();
+        String w;
+        do {
+            w = WORDS.get(RNG.nextInt(WORDS.size()));
+        } while (w.equals(previous));
+        return w;
+    }
+
     public static String daily(LocalDate date) {
         int idx = (int) Math.abs(date.toEpochDay() % WORDS.size());
         return WORDS.get(idx);

@@ -39,6 +39,10 @@
 
 	const face = (u: string) => renderAvatar(parseAvatar(userInfo[u]?.avatar ?? null));
 	const nameOf = (u: string) => (u === meUsername ? 'Tu' : (userInfo[u]?.displayName ?? u));
+	// Mappa username → displayName passata ai board, così mostrano il nome invece dell'username.
+	const nameMap = $derived(
+		Object.fromEntries(Object.entries(userInfo).map(([u, i]) => [u, i.displayName]))
+	);
 	const companionOf = (u: string) => userInfo[u]?.companion ?? '';
 	const houseOf = (u: string) => userInfo[u]?.house ?? '';
 
@@ -74,6 +78,14 @@
 				removePlayer(String(e.username));
 				push(`◀ ${e.username} è uscito`);
 				break;
+			case 'room:members': {
+				// Snapshot completo dei membri (inviato al join/refresh): sostituisce la lista locale,
+				// così chi entra dopo vede subito tutti i giocatori già presenti.
+				const list = Array.isArray(e.players) ? (e.players as string[]) : [];
+				playerNames = meUsername && !list.includes(meUsername) ? [...list, meUsername] : list;
+				players = playerNames.length;
+				break;
+			}
 			case 'chat':
 				push(`${e.from}: ${e.text}`);
 				showBubble(String(e.from), String(e.text));
@@ -204,7 +216,7 @@
 
 		<section class="panel board-panel">
 			{#if Board && auth.session}
-				<Board send={sendMsg} event={gameEvent} me={auth.session} />
+				<Board send={sendMsg} event={gameEvent} me={auth.session} names={nameMap} />
 			{:else}
 				<p class="muted">Gioco "{room?.gameSlug}" non disponibile.</p>
 			{/if}

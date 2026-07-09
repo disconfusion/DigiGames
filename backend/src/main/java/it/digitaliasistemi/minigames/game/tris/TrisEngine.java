@@ -47,7 +47,8 @@ public class TrisEngine implements GameEngine {
                     return;
                 }
                 List<String> seated = new ArrayList<>(room.players);
-                TrisState ts = new TrisState(seated.get(0), seated.get(1));
+                boolean vanish = room.options != null && room.options.path("vanish").asBoolean(false);
+                TrisState ts = new TrisState(seated.get(0), seated.get(1), vanish);
                 room.game = ts;
                 room.status = Room.Status.PLAYING;
                 ctx.broadcast(snapshot(ts));
@@ -94,6 +95,8 @@ public class TrisEngine implements GameEngine {
         m.put("seats", ts.seats());
         m.put("status", ts.status().name());
         m.put("winner", ts.winner());
+        m.put("vanish", ts.vanish());
+        m.put("vanishNext", ts.vanishNext());
         return m;
     }
 

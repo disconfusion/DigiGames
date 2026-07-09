@@ -18,6 +18,7 @@ import it.digitaliasistemi.minigames.rooms.RoomManager;
 import jakarta.inject.Inject;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @WebSocket(path = "/ws/room/{code}")
@@ -65,6 +66,10 @@ public class RoomSocket {
                 conn.userData().put(USER, username);
                 room.players.add(username);
                 broadcast(code, evt("player:joined", "username", username, "players", room.players.size()));
+                // Snapshot completo dei membri al solo nuovo socket: chi entra dopo (o ricarica la
+                // pagina) altrimenti non conoscerebbe i giocatori già presenti, perché i loro
+                // "player:joined" sono stati trasmessi prima che questo socket esistesse.
+                conn.sendTextAndAwait(evt("room:members", "players", List.copyOf(room.players)));
                 GameEngine engine = engines.get(room.gameSlug);
                 if (engine != null) engine.onJoin(ctx(conn, room, username));
             }

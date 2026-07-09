@@ -34,7 +34,9 @@ public class HangmanEngine implements GameEngine {
         switch (type) {
             case "game:start" -> {
                 HangmanConfig cfg = HangmanConfig.fromJson(room.options);
-                HangmanState hs = new HangmanState(HangmanWords.random(), new ArrayList<>(room.players), cfg);
+                // Evita di riproporre la stessa parola due volte di fila nella stessa stanza.
+                String prev = room.game instanceof HangmanState old ? old.word() : null;
+                HangmanState hs = new HangmanState(HangmanWords.randomExcluding(prev), new ArrayList<>(room.players), cfg);
                 room.game = hs;
                 room.status = Room.Status.PLAYING;
                 ctx.broadcast(state(hs, ctx.senderEmail(), null));
@@ -63,7 +65,10 @@ public class HangmanEngine implements GameEngine {
                     ctx.replyToSender(error("Partita non avviata"));
                     return;
                 }
-                // Consentito in qualsiasi momento (nessun controllo turno): lo State valida stato/eliminazione.
+                if (!hs.isMyTurn(ctx.senderEmail())) {
+                    ctx.replyToSender(error("Non è il tuo turno"));
+                    return;
+                }
                 String attempt = payload.path("word").asText("");
                 if (hs.guessWord(attempt, ctx.senderEmail())) {
                     ctx.broadcast(state(hs, ctx.senderEmail(), null));

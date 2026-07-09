@@ -50,6 +50,21 @@
 	const ownedCompanions = $derived(companions.filter((c) => c.owned));
 	const equippedCompanion = $derived(companions.find((c) => c.equipped)?.id ?? '');
 
+	// #4 — varietà nell'orbita dei companion: ogni companion ha velocità, verso, raggio e pulse
+	// diversi, scelti in modo deterministico dal suo id (stesso companion = stessa orbita).
+	const ORBIT_VARIANTS = [
+		{ dur: '7s', dir: 'normal', radius: '-58px', bob: '2.6s' },
+		{ dur: '5s', dir: 'reverse', radius: '-64px', bob: '1.9s' },
+		{ dur: '9s', dir: 'normal', radius: '-52px', bob: '3.2s' },
+		{ dur: '6s', dir: 'reverse', radius: '-60px', bob: '2.2s' }
+	];
+	function orbitHash(id: string): number {
+		let h = 0;
+		for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+		return Math.abs(h);
+	}
+	const orbit = $derived(ORBIT_VARIANTS[orbitHash(equippedCompanion) % ORBIT_VARIANTS.length]);
+
 	type House = { id: string; name: string };
 	let houseList = $state<House[]>([]);
 	let myHouse = $state('');
@@ -170,7 +185,13 @@
 			<div class="avatar-stage">
 				<pre class="avatar-preview">{preview}</pre>
 				{#if equippedCompanion}
-					<div class="orbit"><div class="orbit-pos"><Icon name={equippedCompanion} size={28} title="Companion" /></div></div>
+					<div class="orbit" style:--orbit-dur={orbit.dur} style:animation-direction={orbit.dir}>
+						<div class="orbit-pos" style:--orbit-radius={orbit.radius}>
+							<div class="orbit-bob" style:--bob-dur={orbit.bob}>
+								<Icon name={equippedCompanion} size={28} title="Companion" />
+							</div>
+						</div>
+					</div>
 				{/if}
 			</div>
 			<div class="controls">
@@ -536,15 +557,30 @@
 		width: 0;
 		height: 0;
 		pointer-events: none;
-		animation: orbit 7s linear infinite;
+		/* durata e verso variano per companion (custom props / animation-direction inline) */
+		animation: orbit var(--orbit-dur, 7s) linear infinite;
 	}
 	.orbit-pos {
 		position: absolute;
-		transform: translate(-50%, -50%) translateY(-58px);
+		/* il raggio varia per companion */
+		transform: translate(-50%, -50%) translateY(var(--orbit-radius, -58px));
+	}
+	/* Pulse proprio del companion, con ritmo variabile per companion */
+	.orbit-bob {
+		animation: companion-bob var(--bob-dur, 2.6s) ease-in-out infinite;
 	}
 	@keyframes orbit {
 		to {
 			transform: rotate(360deg);
+		}
+	}
+	@keyframes companion-bob {
+		0%,
+		100% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(1.18);
 		}
 	}
 
@@ -616,7 +652,8 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.orbit {
+		.orbit,
+		.orbit-bob {
 			animation: none;
 		}
 	}

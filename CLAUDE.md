@@ -54,4 +54,9 @@ Frontend: board in `frontend/src/lib/games/<X>Board.svelte`, registrato in `regi
 ## Convenzioni
 - ⚠️ `backend/src/main/resources/privateKey.pem` è nel repo → tenere il repo **privato**.
 
+## Git remotes
+Repo mirrorato su due host: `origin` = github.com/disconfusion/DigiGames, `gitlab` = gitlab.digitalia.cloud/.../tobica-iulian/digigames. **Ogni push va fatto su entrambi i remote**, così restano sempre sincronizzati (`git push origin <branch> && git push gitlab <branch>`).
+
 ⚠️ **Roadmap = `backend/src/main/resources/roadmap.md` (fonte di verità).** È mostrata nel sito alla pagina `/roadmap`: `DataInitializer` riallinea la tabella `roadmap` al file a ogni avvio (anche cold-start Render), e `/api/roadmap` la serve al frontend. **Ogni volta che si marca un punto come fatto (`[ ]` → `[x]`) o si modifica la roadmap, aggiornare SEMPRE `roadmap.md` nel repo**, così il default del sito resta sincronizzato col codice.
+
+⚠️ **Modale "Ultime Fix/Novità" (`Announcement`) — aggiornarla a ogni fix/deploy.** Il testo di default e la revisione baseline vivono **in codice**: `DEFAULT_ANNOUNCEMENT` + `DEFAULT_ANNOUNCEMENT_REVISION` in `admin/DataInitializer.java`. **A ogni fix rilevante o push su `1.0`, aggiornare il testo con le novità e incrementare `DEFAULT_ANNOUNCEMENT_REVISION`.** All'avvio (anche cold-start Render) l'upsert allinea i DB con revisione inferiore — fresh install **e prod inclusi** — così le novità compaiono da sole al deploy; se l'Admin ha aggiornato la modale a una revisione superiore da `/admin`, **quella vince** e non viene sovrascritta. La modale riappare comunque a ogni deploy (marker `revision:build-id` in home). ⚠️ **Niente emoji** nel testo (convenzione UI: solo icone pixel-art).

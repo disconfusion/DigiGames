@@ -8,11 +8,13 @@
 	let {
 		send,
 		event,
-		me
+		me,
+		names
 	}: {
 		send: (msg: Record<string, unknown>) => void;
 		event: RoomEvent | null;
 		me: { username: string; displayName: string };
+		names?: Record<string, string>;
 	} = $props();
 
 	let state = $state<HangmanGameState | null>(null);
@@ -36,6 +38,10 @@
 	const used     = $derived(new Set([...(state?.guessed ?? []), ...(state?.wrong ?? [])]));
 	const frame    = $derived(gallows(state?.wrongCount ?? 0, state?.accessories ?? [], state?.status === 'LOST'));
 	const isMyTurn = $derived(state?.currentTurn == null || state.currentTurn === me.username);
+	// Nome leggibile del giocatore di turno (displayName se disponibile, altrimenti username).
+	const turnName = $derived(
+		state?.currentTurn ? (names?.[state.currentTurn] ?? state.currentTurn) : ''
+	);
 
 	const vowelLimit      = $derived(state?.maxVowels ?? 0);
 	const vowelBudgetOver  = $derived(vowelLimit > 0 && (state?.vowelsCalled ?? 0) >= vowelLimit);
@@ -46,8 +52,8 @@
 
 	const amEliminated = $derived((state?.eliminated ?? []).includes(me.username));
 	const canPlay  = $derived(playing && isMyTurn && !letterBudgetOver && !amEliminated);
-	// Tentativo parola: consentito in qualsiasi momento finché gioco in corso e non eliminato.
-	const canGuessWord = $derived(playing && !amEliminated);
+	// Tentativo parola: consentito solo nel proprio turno, finché gioco in corso e non eliminato.
+	const canGuessWord = $derived(playing && isMyTurn && !amEliminated);
 
 	// Esito personale: se ho perso pur essendo stato indovinato da altri, resta una sconfitta.
 	const iWon = $derived(over?.status === 'WON' && !amEliminated);
@@ -116,7 +122,7 @@
 			{#if isMyTurn}
 				<div class="turn-badge my-turn">Tocca a te!</div>
 			{:else}
-				<div class="turn-badge wait">Tocca a <strong>{state.currentTurn}</strong></div>
+				<div class="turn-badge wait">Tocca a <strong>{turnName}</strong></div>
 			{/if}
 		{/if}
 
@@ -135,7 +141,7 @@
 				/>
 				<button class="risk" type="submit" disabled={!wordGuess.trim()}>Rischia</button>
 			</form>
-			<p class="hint">Puoi tentare la parola in qualsiasi momento. Se sbagli, sei eliminato.</p>
+			<p class="hint">Puoi tentare la parola nel tuo turno. Se sbagli, sei eliminato.</p>
 		{:else if amEliminated && playing}
 			<div class="eliminated-banner">
 				<Icon name="cross" size={16} /> Sei stato eliminato — attendi la fine della partita.

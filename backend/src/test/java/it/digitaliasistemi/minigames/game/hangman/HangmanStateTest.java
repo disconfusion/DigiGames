@@ -94,13 +94,17 @@ class HangmanStateTest {
     }
 
     @Test
-    void wordGuessAllowedOutOfTurn() {
+    void wordGuessRejectedOutOfTurn() {
         var s = new HangmanState("cane", List.of("alice", "bob"));
-        // turno di alice, ma bob può comunque tentare la parola
+        // turno di alice: bob NON può tentare la parola fuori turno
         assertEquals("alice", s.currentTurn());
-        assertTrue(s.guessWord("cane", "bob"));
+        assertFalse(s.guessWord("cane", "bob"));
+        assertEquals(HangmanState.Status.PLAYING, s.status());
+        assertNull(s.winner());
+        // alice, di turno, può rischiare la parola
+        assertTrue(s.guessWord("cane", "alice"));
         assertEquals(HangmanState.Status.WON, s.status());
-        assertEquals("bob", s.winner());
+        assertEquals("alice", s.winner());
     }
 
     @Test

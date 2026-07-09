@@ -3,7 +3,7 @@
 	import GameResultOverlay from './GameResultOverlay.svelte';
 	import Icon from '$lib/icons/Icon.svelte';
 
-	let { send, event, me }: BoardProps = $props();
+	let { send, event, me, names }: BoardProps = $props();
 
 	type Cell = {
 		revealed: boolean;
@@ -42,6 +42,9 @@
 	const minesLeft = $derived((state?.minesTotal ?? 0) - (state?.flagsUsed ?? 0));
 	const isMyTurn  = $derived(state?.currentTurn == null || state.currentTurn === me.username);
 	const canPlay   = $derived(playing && isMyTurn);
+	const turnName  = $derived(
+		state?.currentTurn ? (names?.[state.currentTurn] ?? state.currentTurn) : ''
+	);
 
 	function handleCellClick(r: number, c: number) {
 		if (!canPlay) return;
@@ -105,7 +108,7 @@
 		{#if isMyTurn}
 			<div class="turn-badge my-turn">Tocca a te! Rivela o piazza una bandierina.</div>
 		{:else}
-			<div class="turn-badge wait">Tocca a <strong>{state.currentTurn}</strong></div>
+			<div class="turn-badge wait">Tocca a <strong>{turnName}</strong></div>
 		{/if}
 	{/if}
 

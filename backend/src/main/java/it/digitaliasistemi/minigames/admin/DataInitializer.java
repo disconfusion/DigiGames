@@ -19,6 +19,30 @@ public class DataInitializer {
 
     private static final Logger LOG = Logger.getLogger(DataInitializer.class);
 
+    /**
+     * Testo di default della modale "Ultime Fix" + revisione baseline. Vive nel codice: a ogni
+     * deploy va aggiornato il testo e incrementata {@link #DEFAULT_ANNOUNCEMENT_REVISION}, così le
+     * novità compaiono da sole (l'upsert in {@code onStart} allinea i DB con revisione inferiore).
+     */
+    private static final int DEFAULT_ANNOUNCEMENT_REVISION = 2;
+    private static final String DEFAULT_ANNOUNCEMENT = """
+        ## Novità e fix
+
+        **Nuovo — Tris a sparizione**: modalità opzionale in cui ogni giocatore tiene al massimo 3 segni; piazzando il 4° sparisce il più vecchio. Niente più pareggi!
+
+        **Impiccato**
+        - La parola si può tentare solo nel proprio turno
+        - Niente più stessa parola due volte di fila
+
+        **Stanze multiplayer**
+        - Lista giocatori sempre corretta entrando o ricaricando la pagina
+        - Le stanze abbandonate ora si chiudono da sole
+
+        **Companion** — orbite più varie attorno all'avatar
+
+        Buon divertimento!
+        """;
+
     @Transactional
     void onStart(@Observes StartupEvent ev) {
         if (!AppUser.usernameExists("admin")) {
@@ -46,18 +70,21 @@ public class DataInitializer {
             LOG.info("Roadmap allineata a roadmap.md");
         }
 
-        // Modale "Ultime Fix": creata di default solo se assente (poi gestita dall'admin).
-        if (Announcement.getFirst() == null) {
-            Announcement a = new Announcement();
-            a.content = "## Novità\n\n"
-                + "- Icone pixel-art animate per tutti i giochi\n"
-                + "- **Companion** acquistabili dallo shop\n"
-                + "- **Casate** con classifica casate\n"
-                + "- Header rinnovato\n\n"
-                + "Buon divertimento!";
-            a.revision = 1;
+        // Modale "Ultime Fix": il testo di default vive nel codice con una revisione baseline.
+        // Viene applicato ai DB assenti o rimasti indietro (revision < baseline), così le novità di
+        // ogni deploy compaiono da sole; se l'Admin l'ha aggiornata a una revisione superiore (da
+        // /admin), quella vince e non viene sovrascritta.
+        Announcement a = Announcement.getFirst();
+        if (a == null) {
+            a = new Announcement();
+            a.content = DEFAULT_ANNOUNCEMENT;
+            a.revision = DEFAULT_ANNOUNCEMENT_REVISION;
             a.persist();
-            LOG.info("Announcement (Ultime Fix) di default creato");
+            LOG.infof("Announcement (Ultime Fix) di default creato (rev %d)", DEFAULT_ANNOUNCEMENT_REVISION);
+        } else if (a.revision < DEFAULT_ANNOUNCEMENT_REVISION) {
+            a.content = DEFAULT_ANNOUNCEMENT;
+            a.revision = DEFAULT_ANNOUNCEMENT_REVISION;
+            LOG.infof("Announcement allineata al default di codice (rev %d)", DEFAULT_ANNOUNCEMENT_REVISION);
         }
     }
 

@@ -9,4 +9,6 @@ export type BoardProps = {
 	send: (msg: Record<string, unknown>) => void;
 	event: RoomEvent | null;
 	me: { username: string; displayName: string };
+	/** Mappa username → displayName degli utenti in stanza, per mostrare i nomi al posto degli username. */
+	names?: Record<string, string>;
 };

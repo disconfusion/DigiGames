@@ -12,6 +12,8 @@
 		seats: Record<string, string>; // email -> "X" | "O"
 		status: GameStatus;
 		winner: string | null;
+		vanish?: boolean; // modalità sparizione attiva
+		vanishNext?: number; // cella (0..8) che sparirà al prossimo piazzamento, -1 se nessuna
 	}
 
 	let state = $state<GameState | null>(null);
@@ -36,6 +38,8 @@
 	const isPlaying = $derived(state?.status === 'PLAYING');
 
 	const flat = $derived(state?.board ? state.board.flat() : Array(9).fill(null));
+	const vanishMode = $derived(state?.vanish ?? false);
+	const vanishNext = $derived(state?.vanishNext ?? -1);
 
 	function play(pos: number) {
 		if (!isPlaying || !isMyTurn) return;
@@ -63,19 +67,29 @@
 				<p class="info wait">Aspetta l'avversario (tu sei <strong>{myMark}</strong>)</p>
 			{/if}
 		{/if}
+		{#if state && vanishMode}
+			<span class="mode-chip">Modalità sparizione</span>
+		{/if}
 	</div>
 
 	<div class="grid">
 		{#each flat as cell, pos (pos)}
+			{@const vanishing = vanishMode && pos === vanishNext}
 			<button
 				class="cell"
 				class:x={cell === 'X'}
 				class:o={cell === 'O'}
+				class:vanishing
 				disabled={!isPlaying || !isMyTurn || !!cell || !!over}
 				onclick={() => play(pos)}
-				aria-label="Casella {pos + 1}{cell ? ': ' + cell : ''}"
+				aria-label="Casella {pos + 1}{cell ? ': ' + cell : ''}{vanishing
+					? ' — sparirà al prossimo piazzamento'
+					: ''}"
 			>
 				{cell ?? ''}
+				{#if vanishing}
+					<span class="vanish-tip" role="tooltip">sparirà al prossimo piazzamento</span>
+				{/if}
 			</button>
 		{/each}
 	</div>
@@ -197,6 +211,7 @@
 
 	/* ── Cella singola ── */
 	.cell {
+		position: relative;
 		width: 5.5rem;
 		height: 5.5rem;
 		min-height: 44px;
@@ -239,6 +254,91 @@
 		border-color: color-mix(in srgb, var(--accent) 50%, transparent);
 	}
 
+	/* ── Modalità sparizione ── */
+	.mode-chip {
+		font-family: var(--font-ui, 'Orbitron', sans-serif);
+		font-size: 0.68rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--accent);
+		border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+		border-radius: 20px;
+		padding: 0.15rem 0.6rem;
+		text-shadow: var(--glow-mag);
+	}
+
+	/* Pedina che sparirà al prossimo piazzamento: glitch tremolante */
+	.cell.vanishing {
+		animation: glitch 0.7s steps(2, jump-none) infinite;
+	}
+	.cell.vanishing::before {
+		content: '';
+		position: absolute;
+		inset: -2px;
+		border: 2px dashed var(--danger);
+		border-radius: 4px;
+		opacity: 0.8;
+		pointer-events: none;
+	}
+
+	@keyframes glitch {
+		0% {
+			transform: translate(0, 0);
+			text-shadow: 1px 0 var(--danger), -1px 0 var(--cyan);
+			opacity: 1;
+		}
+		25% {
+			transform: translate(-1px, 1px);
+			text-shadow: -2px 0 var(--danger), 2px 0 var(--cyan);
+			opacity: 0.75;
+		}
+		50% {
+			transform: translate(1px, -1px);
+			text-shadow: 2px 0 var(--cyan), -2px 0 var(--danger);
+			opacity: 0.95;
+		}
+		75% {
+			transform: translate(-1px, 0);
+			text-shadow: 1px 1px var(--danger), -1px -1px var(--cyan);
+			opacity: 0.7;
+		}
+		100% {
+			transform: translate(0, 0);
+			text-shadow: 1px 0 var(--danger), -1px 0 var(--cyan);
+			opacity: 1;
+		}
+	}
+
+	/* Tooltip sopra la pedina in uscita */
+	.vanish-tip {
+		position: absolute;
+		bottom: calc(100% + 6px);
+		left: 50%;
+		transform: translateX(-50%);
+		background: var(--danger);
+		color: #fff;
+		font-family: var(--font-ui, 'Orbitron', sans-serif);
+		font-size: 0.6rem;
+		line-height: 1.1;
+		letter-spacing: 0.03em;
+		text-transform: uppercase;
+		white-space: nowrap;
+		padding: 0.25rem 0.45rem;
+		border-radius: 4px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+		pointer-events: none;
+		z-index: 6;
+	}
+	.vanish-tip::after {
+		content: '';
+		position: absolute;
+		top: 100%;
+		left: 50%;
+		transform: translateX(-50%);
+		border: 5px solid transparent;
+		border-top-color: var(--danger);
+	}
+
 	/* ── Legenda giocatori ── */
 	.legend {
 		display: flex;
@@ -271,6 +371,10 @@
 		.btn,
 		.cell {
 			transition: none;
+		}
+		/* Niente glitch animato: resta il bordo tratteggiato rosso + tooltip come indicatore statico */
+		.cell.vanishing {
+			animation: none;
 		}
 	}
 

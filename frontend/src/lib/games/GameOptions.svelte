@@ -6,6 +6,7 @@
 
 	let quizSource = $state<'local' | 'opentdb' | 'mixed'>('local');
 	let chessMinutes = $state(0);
+	let trisVanish = $state(false);
 	let hmPreset = $state<'classic' | 'custom'>('classic');
 	let hmOptions = $state<HangmanOptions>({ ...CLASSIC_OPTIONS, accessories: [] });
 
@@ -33,12 +34,16 @@
 			options = { source: quizSource };
 		} else if (game === 'chess') {
 			options = { minutesPerPlayer: chessMinutes };
+		} else if (game === 'tris') {
+			options = { vanish: trisVanish };
 		} else {
 			options = undefined;
 		}
 	});
 
-	const hasOptions = $derived(game === 'hangman' || game === 'quiz' || game === 'chess');
+	const hasOptions = $derived(
+		game === 'hangman' || game === 'quiz' || game === 'chess' || game === 'tris'
+	);
 </script>
 
 {#if hasOptions}
@@ -58,6 +63,17 @@
 					<option value="mixed">Mista (locale + OpenTDB)</option>
 				</select>
 				<span class="hint">OpenTDB è gratuito ma in inglese; su errore di rete si usa la banca locale.</span>
+			</div>
+		{:else if game === 'tris'}
+			<div class="opt">
+				<label class="switch">
+					<input type="checkbox" bind:checked={trisVanish} />
+					<span>Modalità sparizione</span>
+				</label>
+				<span class="hint">
+					Ogni giocatore tiene al massimo 3 segni: piazzando il 4°, il proprio più vecchio
+					sparisce. Niente pareggi.
+				</span>
 			</div>
 		{:else if game === 'hangman'}
 			<div class="preset-row">
@@ -144,6 +160,20 @@
 	.hint {
 		color: var(--muted);
 		font-size: 0.78rem;
+	}
+	.switch {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.9rem;
+		color: var(--text);
+		cursor: pointer;
+	}
+	.switch input {
+		width: 1.1rem;
+		height: 1.1rem;
+		accent-color: var(--accent);
+		cursor: pointer;
 	}
 	.preset-row {
 		display: flex;

@@ -26,7 +26,7 @@
 - [x] Companion acquistabili dallo shop (animati a mano)
 - [x] Leaderboard coi punti accumulati al posto della colonna vittorie (che passa in seconda posizione)
 - [x] Alpha test: clan/casate (temporaneamente le 4 di Hogwarts), badge casata personalizzabile nella sezione personale
-- [x] Impiccato: tentativo dell'intera parola in qualsiasi momento (giusto = vittoria, sbagliato = eliminazione diretta) — sblocca gli stalli in cui non si possono più chiamare lettere/vocali
+- [x] Impiccato: tentativo dell'intera parola nel proprio turno (giusto = vittoria, sbagliato = eliminazione diretta) — sblocca gli stalli in cui non si possono più chiamare lettere/vocali
 
 ## Altre fix
 
@@ -42,7 +42,13 @@
 
 Segnalazioni utenti.
 
-- [x] Se hosti una partita e poi esci o finisci di giocare, la stanza rimane aperta e non si può chiudere (@emanuele.taglia) — risolto: uscita esplicita ("Esci") libera lo slot anche a partita in corso e distrugge la stanza se vuota; l'host può chiuderla per tutti ("Chiudi stanza")
+- [x] Se hosti una partita e poi esci o finisci di giocare, la stanza rimane aperta e non si può chiudere (@emanuele.taglia) — risolto: uscita esplicita ("Esci") libera lo slot anche a partita in corso e distrugge la stanza se vuota; l'host può chiuderla per tutti ("Chiudi stanza"); inoltre le stanze abbandonate (host che chiude la scheda, o partita finita non chiusa) vengono ora rimosse automaticamente da un reaper dopo un breve periodo senza connessioni
 - [x] Quiz: gestire la casistica di pareggio (@manuchao) — risolto: tutti i giocatori col punteggio massimo sono vincitori; se più di uno → DRAW (token pareggio), medaglie a pari merito nella classifica
-- [x] Impiccato: se una parola contiene più di due vocali non può essere completata (@manuchao) — risolto: ora si può tentare l'intera parola in qualsiasi momento
+- [x] Impiccato: se una parola contiene più di due vocali non può essere completata (@manuchao) — risolto: si può tentare l'intera parola nel proprio turno (sblocca lo stallo del limite vocali)
 - [x] Togliere le emoji dalla personalizzazione account, o sostituirle con nuove animazioni e sprite (@spacevampire) — risolto: frecce selettore avatar e messaggi ✓/⚠ ora usano sprite pixel-art (`arrow_left`/`arrow_right`/`warning`/`check`) invece dei glifi Unicode
+- [x] Impiccato: si poteva indovinare la parola durante il turno avversario (@spacevampire, @petrillimatteo) — risolto: il tentativo dell'intera parola è ora consentito solo nel proprio turno
+- [x] Impiccato: usciva due volte di fila la stessa parola (@manuchao) — risolto: la nuova parola è sempre diversa dalla precedente nella stessa stanza
+- [x] Stanze: alcuni utenti vedevano meno giocatori del reale, o lista/turno sballati dopo un refresh o entrando a metà partita (@spacevampire, @petrillimatteo) — risolto: al join/refresh il server invia lo snapshot completo dei membri della stanza
+- [x] Indicatore di turno: mostra il nome visualizzato (displayName) invece dell'username in Impiccato e Campo minato (@manuchao, @petrillimatteo)
+- [x] Tris: nuova modalità "sparizione" (@spacevampire) — ogni giocatore tiene al massimo 3 segni, il 4° piazzamento fa sparire il più vecchio dello stesso simbolo; niente pareggi
+- [x] Companion: orbite più varie attorno all'avatar — velocità, verso, raggio e pulse diversi per companion (@spacevampire)

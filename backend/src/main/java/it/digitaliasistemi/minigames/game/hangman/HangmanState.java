@@ -141,20 +141,23 @@ public class HangmanState {
     }
 
     /**
-     * Tenta di indovinare l'intera parola. Consentito in QUALSIASI momento (anche fuori turno),
-     * finché la partita è in corso e il giocatore non è già eliminato — così si sblocca lo stallo
-     * in cui non è più possibile chiamare lettere/vocali ma la parola resta incompleta.
+     * Tenta di indovinare l'intera parola. Consentito SOLO nel proprio turno, finché la partita è
+     * in corso e il giocatore non è già eliminato. Serve comunque a sbloccare lo stallo in cui non
+     * è più possibile chiamare lettere/vocali (es. limite vocali raggiunto) ma la parola resta
+     * incompleta: al proprio turno si può sempre rischiare la parola intera.
      * <ul>
      *   <li>Parola corretta → vittoria (WON), tutte le lettere rivelate, {@code winner} = giocatore.</li>
      *   <li>Parola errata → eliminazione diretta del giocatore. Se non resta nessun giocatore
      *       attivo → sconfitta (LOST); altrimenti la partita prosegue per gli altri.</li>
      * </ul>
-     * Ritorna false se la mossa non è ammissibile (partita finita, giocatore eliminato, input vuoto).
+     * Ritorna false se la mossa non è ammissibile (partita finita, fuori turno, giocatore eliminato,
+     * input vuoto).
      */
     public synchronized boolean guessWord(String attempt, String player) {
         if (status != Status.PLAYING) return false;
         if (attempt == null) return false;
         if (player != null && isEliminated(player)) return false;
+        if (player != null && !isMyTurn(player)) return false;
         String a = attempt.trim().toLowerCase();
         if (a.isEmpty()) return false;
 
