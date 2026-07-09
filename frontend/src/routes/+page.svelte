@@ -764,12 +764,19 @@
 		max-width: 460px;
 		border: 2px solid var(--accent);
 		box-shadow: var(--glow-mag);
+		box-sizing: border-box;
+		/* Responsive: mai più alta del viewport; head + azioni restano visibili, il corpo scrolla */
+		max-height: 90vh;
+		max-height: 90dvh;
+		display: flex;
+		flex-direction: column;
 	}
 	.modal-head {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
 		margin-bottom: 0.75rem;
+		flex-shrink: 0;
 	}
 	.modal-head h2 {
 		margin: 0;
@@ -797,6 +804,9 @@
 		color: var(--text);
 		font-family: var(--font-term);
 		font-size: 1.1rem;
+		/* Corpo scrollabile dentro la modale a altezza limitata */
+		overflow-y: auto;
+		min-height: 0;
 	}
 	.gift-list {
 		list-style: none;
@@ -805,6 +815,9 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+		/* Corpo scrollabile dentro la modale a altezza limitata */
+		overflow-y: auto;
+		min-height: 0;
 	}
 	.gift-list li {
 		display: flex;
@@ -824,6 +837,7 @@
 	.modal-actions {
 		display: flex;
 		justify-content: flex-end;
+		flex-shrink: 0;
 	}
 	.ok {
 		width: auto;
