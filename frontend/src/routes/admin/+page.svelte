@@ -15,6 +15,14 @@
 		description: string;
 		createdAt: string;
 	};
+	type Suggestion = {
+		id: number;
+		username: string;
+		displayName: string;
+		kind: string;
+		description: string;
+		createdAt: string;
+	};
 	type AdminUser = { username: string; displayName: string; role: string };
 	type PowerPrice = { id: string; game: string; label: string; emoji: string; cost: number; defaultCost: number };
 	type Grantables = {
@@ -22,9 +30,10 @@
 		companions: { id: string; name: string }[];
 	};
 
-	type Tab = 'bugs' | 'daily' | 'roadmap' | 'announcement' | 'users' | 'prices' | 'grants';
+	type Tab = 'bugs' | 'suggestions' | 'daily' | 'roadmap' | 'announcement' | 'users' | 'prices' | 'grants';
 	const TABS: { id: Tab; label: string; icon: string }[] = [
 		{ id: 'bugs', label: 'Bug', icon: 'bug' },
+		{ id: 'suggestions', label: 'Suggerimenti', icon: 'pencil' },
 		{ id: 'daily', label: 'Parola del giorno', icon: 'calendar' },
 		{ id: 'roadmap', label: 'Roadmap', icon: 'map' },
 		{ id: 'announcement', label: 'Ultime Fix', icon: 'rocket' },
@@ -35,6 +44,7 @@
 	let tab = $state<Tab>('bugs');
 
 	let bugs = $state<Bug[]>([]);
+	let suggestions = $state<Suggestion[]>([]);
 	let users = $state<AdminUser[]>([]);
 	let prices = $state<PowerPrice[]>([]);
 	let priceEdits = $state<Record<string, number>>({});
@@ -64,6 +74,7 @@
 	async function load() {
 		try {
 			bugs = await api<Bug[]>('/api/bugs');
+			suggestions = await api<Suggestion[]>('/api/suggestions');
 			users = await api<AdminUser[]>('/api/admin/users');
 		} catch (e) {
 			showToast((e as Error).message, 'error');
@@ -213,6 +224,70 @@
 		}
 	}
 
+	// Suggerimenti feature/gioco
+	const kindLabel = (k: string) => (k === 'game' ? 'Nuovo gioco' : 'Nuova feature');
+
+	function firstLine(desc: string): string {
+		const first = (desc ?? '').trim().split('\n')[0].trim();
+		if (!first) return 'senza descrizione';
+		return first.length > 70 ? first.slice(0, 70).trimEnd() + '…' : first;
+	}
+
+	function deleteSuggestion(id: number) {
+		run(`sugg-${id}`, () => api(`/api/suggestions/${id}`, { method: 'DELETE' }), () => {
+			suggestions = suggestions.filter((s) => s.id !== id);
+			showToast('Suggerimento eliminato', 'success');
+		});
+	}
+
+	function buildSuggestionsMarkdown(): string {
+		const today = new Date().toISOString().slice(0, 10);
+		const n = suggestions.length;
+		const head = `# Suggerimenti DigiGames\nEsportati il ${today} · ${n} suggeriment${n === 1 ? 'o' : 'i'}\n`;
+		const body = suggestions
+			.map((s, i) => {
+				const date = s.createdAt.slice(0, 16).replace('T', ' ');
+				return [
+					`## #${i + 1} — [${kindLabel(s.kind)}] ${firstLine(s.description)}`,
+					'',
+					`- **ID:** ${s.id}`,
+					`- **Tipo:** ${kindLabel(s.kind)}`,
+					`- **Autore:** ${s.displayName} (@${s.username})`,
+					`- **Data:** ${date}`,
+					'',
+					(s.description ?? '').trim(),
+					'',
+					'---'
+				].join('\n');
+			})
+			.join('\n\n');
+		return `${head}\n${body}\n`;
+	}
+
+	function downloadSuggestions() {
+		if (!suggestions.length) return;
+		const blob = new Blob([buildSuggestionsMarkdown()], { type: 'text/markdown;charset=utf-8' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `suggerimenti-digigames-${new Date().toISOString().slice(0, 10)}.md`;
+		document.body.appendChild(a);
+		a.click();
+		a.remove();
+		URL.revokeObjectURL(url);
+		showToast('Suggerimenti esportati', 'success');
+	}
+
+	async function copySuggestions() {
+		if (!suggestions.length) return;
+		try {
+			await navigator.clipboard.writeText(buildSuggestionsMarkdown());
+			showToast('Suggerimenti copiati negli appunti', 'success');
+		} catch {
+			showToast('Copia non riuscita: usa "Scarica .md"', 'error');
+		}
+	}
+
 	function resetStats(u: AdminUser) {
 		if (!confirm(`Azzerare le statistiche di ${u.displayName}?`)) return;
 		run(
@@ -307,7 +382,7 @@
 <nav class="tabs">
 	{#each TABS as t (t.id)}
 		<button class="tab" class:active={tab === t.id} onclick={() => (tab = t.id)}>
-			<Icon name={t.icon} size={16} /> {t.label}{#if t.id === 'bugs' && bugs.length}<span class="count">{bugs.length}</span>{/if}
+			<Icon name={t.icon} size={16} /> {t.label}{#if t.id === 'bugs' && bugs.length}<span class="count">{bugs.length}</span>{/if}{#if t.id === 'suggestions' && suggestions.length}<span class="count">{suggestions.length}</span>{/if}
 		</button>
 	{/each}
 </nav>
@@ -336,6 +411,34 @@
 						</div>
 						<p class="bug-desc">{b.description}</p>
 						<button class="danger" disabled={busy[`bug-${b.id}`]} onclick={() => deleteBug(b.id)}>Elimina</button>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+	</section>
+{:else if tab === 'suggestions'}
+	<section class="panel">
+		<div class="panel-head">
+			<h2><Icon name="pencil" size={18} /> Suggerimenti ({suggestions.length})</h2>
+			{#if suggestions.length}
+				<div class="export-actions">
+					<button onclick={downloadSuggestions}>Scarica .md</button>
+					<button onclick={copySuggestions}>Copia</button>
+				</div>
+			{/if}
+		</div>
+		{#if suggestions.length === 0}
+			<p class="muted">Nessun suggerimento.</p>
+		{:else}
+			<ul class="bugs">
+				{#each suggestions as s (s.id)}
+					<li>
+						<div class="bug-meta">
+							<strong>{s.displayName}</strong>
+							<span class="muted">@{s.username} · {kindLabel(s.kind)} · {s.createdAt.slice(0, 16).replace('T', ' ')}</span>
+						</div>
+						<p class="bug-desc">{s.description}</p>
+						<button class="danger" disabled={busy[`sugg-${s.id}`]} onclick={() => deleteSuggestion(s.id)}>Elimina</button>
 					</li>
 				{/each}
 			</ul>

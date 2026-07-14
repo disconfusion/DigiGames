@@ -2,8 +2,9 @@ package it.digitaliasistemi.minigames.rooms;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Stanza di gioco tenuta in memoria (Fly.io = singola istanza, nessun Redis).
@@ -21,7 +22,9 @@ public class Room {
     /** Opzioni di gioco scelte alla creazione (interpretate dall'engine, es. config impiccato). Può essere null. */
     public final JsonNode options;
     public volatile Status status = Status.WAITING;
-    public final Set<String> players = ConcurrentHashMap.newKeySet();
+    /** Membri della stanza, in ordine di ingresso (LinkedHashSet): l'ordine dei posti in UI e la
+     *  rotazione dei turni derivano da qui, così restano deterministici e coerenti tra loro. */
+    public final Set<String> players = Collections.synchronizedSet(new LinkedHashSet<>());
 
     /** Stato della partita in corso (tipo dipende da gameSlug, es. HangmanState). Null se non avviata. */
     public volatile Object game;

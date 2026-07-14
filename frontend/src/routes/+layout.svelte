@@ -12,6 +12,7 @@
 	import ToastContainer from '$lib/ToastContainer.svelte';
 	import GamePicker from '$lib/games/GamePicker.svelte';
 	import Icon from '$lib/icons/Icon.svelte';
+	import Modal from '$lib/components/Modal.svelte';
 
 	// Etichetta gioco da slug (per i toast invito)
 	const gameLabel = (slug: unknown): string =>
@@ -64,6 +65,41 @@
 			bugErr = (e as Error).message;
 		} finally {
 			bugSending = false;
+		}
+	}
+
+	// Modale suggerimento feature/gioco
+	let showSuggest = $state(false);
+	let suggestKind = $state<'feature' | 'game'>('feature');
+	let suggestDesc = $state('');
+	let suggestMsg = $state('');
+	let suggestErr = $state('');
+	let suggestSending = $state(false);
+
+	function openSuggest() {
+		suggestKind = 'feature';
+		suggestDesc = '';
+		suggestMsg = '';
+		suggestErr = '';
+		showSuggest = true;
+	}
+
+	async function submitSuggest() {
+		if (!suggestDesc.trim()) return;
+		suggestSending = true;
+		suggestErr = '';
+		try {
+			await api('/api/suggestions', {
+				method: 'POST',
+				body: JSON.stringify({ kind: suggestKind, description: suggestDesc })
+			});
+			suggestMsg = '✓ Grazie per il suggerimento!';
+			suggestDesc = '';
+			setTimeout(() => (showSuggest = false), 1200);
+		} catch (e) {
+			suggestErr = (e as Error).message;
+		} finally {
+			suggestSending = false;
 		}
 	}
 
@@ -171,6 +207,7 @@
 					{#if companion}<Icon name={companion} size={16} title="Companion" />{/if}
 					<span class="who-name">{auth.session.displayName}</span>
 				</a>
+				<button class="icon-btn suggest" onclick={openSuggest} title="Suggerisci feature/gioco" aria-label="Suggerisci feature o gioco"><Icon name="pencil" size={16} /></button>
 				<button class="icon-btn bug" onclick={openBug} title="Segnala bug" aria-label="Segnala bug"><Icon name="bug" size={16} /></button>
 				<button class="icon-btn" onclick={doLogout} title="Esci">Esci</button>
 			</div>
@@ -201,39 +238,58 @@
 <ToastContainer />
 
 {#if showBug}
-	<div
-		class="modal-backdrop"
-		role="presentation"
-		onclick={() => (showBug = false)}
-	>
-		<div class="modal" role="dialog" aria-modal="true" onclick={(e) => e.stopPropagation()}>
-			<div class="modal-head">
-				<h2><Icon name="bug" size={18} title="Bug" /> Segnala un bug</h2>
-				<button class="x" onclick={() => (showBug = false)} aria-label="Chiudi">✕</button>
-			</div>
-			<div class="field">
-				<span class="field-label">Gioco / area interessata</span>
-				<GamePicker bind:value={bugGame} items={BUG_AREAS} iconSize={28} />
-			</div>
-			<label class="field">
-				Descrizione del problema
-				<textarea
-					bind:value={bugDesc}
-					rows="5"
-					maxlength="2000"
-					placeholder="Cosa è successo? Come riprodurlo?"
-				></textarea>
-			</label>
-			{#if bugErr}<p class="bug-err">{bugErr}</p>{/if}
-			{#if bugMsg}<p class="bug-ok">{bugMsg}</p>{/if}
-			<div class="modal-actions">
-				<button class="cancel" onclick={() => (showBug = false)}>Annulla</button>
-				<button class="send" onclick={submitBug} disabled={bugSending || !bugDesc.trim()}>
-					{bugSending ? 'Invio…' : 'Invia segnalazione'}
-				</button>
-			</div>
+	<Modal title="Segnala un bug" icon="bug" onClose={() => (showBug = false)}>
+		<div class="field">
+			<span class="field-label">Gioco / area interessata</span>
+			<GamePicker bind:value={bugGame} items={BUG_AREAS} iconSize={28} />
 		</div>
-	</div>
+		<label class="field">
+			Descrizione del problema
+			<textarea
+				bind:value={bugDesc}
+				rows="5"
+				maxlength="2000"
+				placeholder="Cosa è successo? Come riprodurlo?"
+			></textarea>
+		</label>
+		{#if bugErr}<p class="bug-err">{bugErr}</p>{/if}
+		{#if bugMsg}<p class="bug-ok">{bugMsg}</p>{/if}
+		{#snippet actions()}
+			<button class="cancel" onclick={() => (showBug = false)}>Annulla</button>
+			<button class="send" onclick={submitBug} disabled={bugSending || !bugDesc.trim()}>
+				{bugSending ? 'Invio…' : 'Invia segnalazione'}
+			</button>
+		{/snippet}
+	</Modal>
+{/if}
+
+{#if showSuggest}
+	<Modal title="Suggerisci feature/gioco" icon="pencil" onClose={() => (showSuggest = false)}>
+		<label class="field">
+			Tipo di suggerimento
+			<select bind:value={suggestKind}>
+				<option value="feature">Nuova feature</option>
+				<option value="game">Nuovo gioco</option>
+			</select>
+		</label>
+		<label class="field">
+			La tua idea
+			<textarea
+				bind:value={suggestDesc}
+				rows="5"
+				maxlength="2000"
+				placeholder="Descrivi la feature o il gioco che vorresti…"
+			></textarea>
+		</label>
+		{#if suggestErr}<p class="bug-err">{suggestErr}</p>{/if}
+		{#if suggestMsg}<p class="bug-ok">{suggestMsg}</p>{/if}
+		{#snippet actions()}
+			<button class="cancel" onclick={() => (showSuggest = false)}>Annulla</button>
+			<button class="send" onclick={submitSuggest} disabled={suggestSending || !suggestDesc.trim()}>
+				{suggestSending ? 'Invio…' : 'Invia suggerimento'}
+			</button>
+		{/snippet}
+	</Modal>
 {/if}
 
 <style>
@@ -354,6 +410,9 @@
 	.icon-btn.bug {
 		color: var(--amber);
 	}
+	.icon-btn.suggest {
+		color: var(--cyan);
+	}
 	.login-link {
 		color: var(--cyan);
 		text-decoration: none;
@@ -454,43 +513,6 @@
 			padding: 1rem 0.8rem;
 		}
 	}
-	.modal-backdrop {
-		position: fixed;
-		inset: 0;
-		background: rgba(0, 0, 0, 0.6);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 1rem;
-		/* sopra le scanline globali (z-index 9998 in retro-crt-theme.css) */
-		z-index: 10000;
-	}
-	.modal {
-		background: var(--panel);
-		border-radius: 14px;
-		padding: 1.25rem;
-		width: 100%;
-		max-width: 460px;
-		border: 2px solid var(--accent);
-		box-shadow: var(--glow-mag);
-	}
-	.modal-head {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 0.75rem;
-	}
-	.modal-head h2 {
-		margin: 0;
-		font-size: 1.15rem;
-	}
-	.x {
-		background: none;
-		border: none;
-		color: var(--muted);
-		font-size: 1.1rem;
-		cursor: pointer;
-	}
 	.field {
 		display: flex;
 		flex-direction: column;
@@ -509,12 +531,8 @@
 		font: inherit;
 		resize: vertical;
 	}
-	.modal-actions {
-		display: flex;
-		justify-content: flex-end;
-		gap: 0.6rem;
-	}
-	.modal-actions button {
+	.cancel,
+	.send {
 		padding: 0.55rem 1.1rem;
 		border: none;
 		border-radius: 8px;

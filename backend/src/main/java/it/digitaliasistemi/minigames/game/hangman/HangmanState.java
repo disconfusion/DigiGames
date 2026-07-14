@@ -1,5 +1,6 @@
 package it.digitaliasistemi.minigames.game.hangman;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -45,7 +46,8 @@ public class HangmanState {
     /** Costruttore di produzione con regole personalizzate. */
     public HangmanState(String word, List<String> players, HangmanConfig config) {
         this.word = word.toLowerCase();
-        this.players = List.copyOf(players);
+        // Roster mutabile e ordinato: entrate/uscite a partita in corso modificano i turni.
+        this.players = new ArrayList<>(players);
         this.config = config;
     }
 
@@ -99,6 +101,51 @@ public class HangmanState {
         }
         // Nessun giocatore attivo può ancora giocare e la parola non è completa
         if (status == Status.PLAYING) status = Status.LOST;
+    }
+
+    /** Roster ordinato dei giocatori (ordine dei turni). */
+    public synchronized List<String> players() { return new ArrayList<>(players); }
+
+    /** Aggiunge un giocatore in coda al roster (entrata a partita in corso); false se già presente. */
+    public synchronized boolean addPlayer(String player) {
+        if (player == null || players.contains(player)) return false;
+        players.add(player);
+        return true;
+    }
+
+    /**
+     * Rimuove un giocatore dal roster (uscita a partita in corso) aggiustando il turno, così non
+     * resta un "turno fantasma" che blocca la partita. Se dopo la rimozione non resta nessuno e la
+     * partita è in corso → LOST.
+     */
+    public synchronized boolean removePlayer(String player) {
+        int idx = players.indexOf(player);
+        if (idx < 0) return false;
+        boolean wasCurrent = player.equals(currentTurn());
+        String current = wasCurrent ? null : currentTurn();
+        players.remove(idx);
+        eliminated.remove(player);
+        lettersUsed.remove(player);
+        if (players.isEmpty()) {
+            turnIndex = 0;
+            if (status == Status.PLAYING) status = Status.LOST;
+            return true;
+        }
+        if (wasCurrent) {
+            // Lo slot liberato è ora occupato dal giocatore successivo (o wrap al primo).
+            turnIndex = idx % players.size();
+            if (status == Status.PLAYING) ensureCurrentPlayable();
+        } else {
+            // Mantiene il turno sullo stesso giocatore, seguendone il nuovo indice.
+            turnIndex = players.indexOf(current);
+        }
+        return true;
+    }
+
+    /** Se il giocatore di turno non può più giocare (eliminato/senza budget), passa al prossimo attivo. */
+    private void ensureCurrentPlayable() {
+        String c = currentTurn();
+        if (c != null && (isEliminated(c) || !hasLetterBudget(c))) advanceTurn();
     }
 
     // --- Mosse --------------------------------------------------------------

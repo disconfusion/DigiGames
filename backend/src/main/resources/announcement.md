@@ -1,18 +1,18 @@
 ## Novità e fix
 
-**Nuovo — Tris a sparizione**: modalità opzionale in cui ogni giocatore tiene al massimo 3 segni; piazzando il 4° sparisce il più vecchio. Niente più pareggi!
+**Impiccato multiplayer** — turni più solidi
+- Ordine dei turni stabile e coerente con i posti mostrati a schermo
+- Chi entra a partita già iniziata viene inserito nel giro e gioca dal turno successivo
+- Se un giocatore esce, il turno passa avanti da solo: niente più partite bloccate
+- Con il cappello non sparisce più la corda del disegno
 
-**Impiccato**
-- La parola si può tentare solo nel proprio turno
-- Niente più stessa parola due volte di fila
+**Modali** — su mobile non restano più intrappolate: se il contenuto è troppo alto scorre all'interno, con il tasto chiudi sempre raggiungibile (si chiudono anche con Esc o toccando fuori)
 
-**Stanze multiplayer**
-- Lista giocatori sempre corretta entrando o ricaricando la pagina
-- Le stanze abbandonate ora si chiudono da sole
+**Parola del Giorno** — quando la parola è scelta dall'admin ora viene segnalato nella pagina
 
-**Companion** — orbite più varie attorno all'avatar
+**Nuovo — Suggerisci feature/gioco**: pulsante in alto per proporre idee di nuove funzioni o giochi
 
 Buon divertimento!
 
 ---
-_Aggiornato: 9 luglio 2026 — batch fix segnalazioni utenti + Tris a sparizione (commit `c9498cb`)._
+_Aggiornato: 14 luglio 2026 — batch fix segnalazioni (Impiccato turni/roster, modali mobile) + suggerimenti feature/gioco._

@@ -20,4 +20,7 @@ public interface GameEngine {
 
     /** Chiamato quando un giocatore entra: l'engine può allinearlo allo stato corrente. */
     default void onJoin(GameContext ctx) {}
+
+    /** Chiamato quando un giocatore lascia esplicitamente la stanza: l'engine può aggiornare lo stato. */
+    default void onLeave(GameContext ctx) {}
 }

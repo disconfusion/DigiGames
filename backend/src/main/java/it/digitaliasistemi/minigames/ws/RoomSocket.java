@@ -84,7 +84,7 @@ public class RoomSocket {
                 String username = requireAuth(conn);
                 if (username == null) return;
                 conn.userData().put(LEFT, true);
-                leaveRoom(code, room, username);
+                leaveRoom(code, room, username, conn);
             }
             case "room:close" -> {
                 // Solo l'host può chiudere la stanza per tutti.
@@ -124,14 +124,25 @@ public class RoomSocket {
         // così può rientrare dalla home ("Partite in corso"). Per gli altri resta seduto: niente broadcast.
         if (room.status == Room.Status.PLAYING) return;
         // Lobby (WAITING) o partita finita (DONE): libera lo slot e distruggi la stanza se vuota.
-        leaveRoom(code, room, username);
+        leaveRoom(code, room, username, conn);
     }
 
     /** Rimuove il giocatore dalla stanza, notifica gli altri e distrugge la stanza se resta vuota. */
-    private void leaveRoom(String code, Room room, String username) {
+    private void leaveRoom(String code, Room room, String username, WebSocketConnection conn) {
+        boolean wasPlaying = room.status == Room.Status.PLAYING;
         room.players.remove(username);
         broadcast(code, evt("player:left", "username", username, "players", room.players.size()));
-        if (room.players.isEmpty()) rooms.remove(code);
+        if (room.players.isEmpty()) {
+            rooms.remove(code);
+            return;
+        }
+        // Uscita esplicita a partita in corso: l'engine aggiorna il roster dei turni (niente turno
+        // fantasma / stallo). Alla chiusura implicita del socket wasPlaying è false (onClose esce
+        // prima durante PLAYING), quindi qui non tocchiamo lo stato di gioco.
+        if (wasPlaying) {
+            GameEngine engine = engines.get(room.gameSlug);
+            if (engine != null) engine.onLeave(ctx(conn, room, username));
+        }
     }
 
     private GameContext ctx(WebSocketConnection conn, Room room, String username) {

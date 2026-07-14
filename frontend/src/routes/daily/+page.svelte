@@ -16,6 +16,7 @@
 		status: 'PLAYING' | 'WON' | 'LOST';
 		winner: string | null;
 		word: string | null;
+		custom: boolean; // parola scelta manualmente dall'admin
 		// stato per-utente
 		letterUsed: boolean;
 		wordAttemptUsed: boolean;
@@ -120,6 +121,10 @@
 <div class="daily">
 	<h1><Icon name="calendar" size={22} title="Parola del Giorno" /> Parola del Giorno</h1>
 	<p class="sub">Uno slot lettera + un tentativo parola a testa. Chi indovina vince 10 punti!</p>
+
+	{#if state?.custom}
+		<p class="custom-word"><Icon name="tools" size={16} /> Parola scelta dall'admin</p>
+	{/if}
 
 	<details class="rules">
 		<summary><Icon name="book" size={16} /> Come si gioca</summary>
@@ -255,6 +260,20 @@
 		text-align: center;
 	}
 	.sub { color: var(--muted); margin: 0; text-align: center; }
+	.custom-word {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin: 0;
+		padding: 0.3rem 0.8rem;
+		border-radius: 20px;
+		border: 1px solid var(--amber);
+		background: color-mix(in srgb, var(--amber) 12%, var(--inset));
+		color: var(--amber);
+		font-family: var(--font-ui);
+		font-size: 0.8rem;
+		letter-spacing: 0.03em;
+	}
 	.muted { color: var(--muted); }
 	.err { color: var(--danger); font-family: var(--font-term); font-size: 1.1rem; }
 

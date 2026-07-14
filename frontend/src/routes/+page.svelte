@@ -9,6 +9,7 @@
 	import GamePicker from '$lib/games/GamePicker.svelte';
 	import Icon from '$lib/icons/Icon.svelte';
 	import Markdown from '$lib/Markdown.svelte';
+	import Modal from '$lib/components/Modal.svelte';
 	import { notifications } from '$lib/notifications.svelte';
 
 	const SEEN_KEY = 'digiGamesSeenAnnouncement';
@@ -205,45 +206,33 @@
 </script>
 
 {#if showWhatsNew}
-	<div class="modal-backdrop" role="presentation" onclick={closeWhatsNew}>
-		<div class="modal" role="dialog" aria-modal="true" onclick={(e) => e.stopPropagation()}>
-			<div class="modal-head">
-				<h2><Icon name="rocket" size={20} title="Novità" /> Novità</h2>
-				<button class="x" onclick={closeWhatsNew} aria-label="Chiudi">✕</button>
-			</div>
-			<div class="features"><Markdown source={whatsNew.content} /></div>
-			<div class="modal-actions">
-				<button class="ok" onclick={closeWhatsNew}>Capito!</button>
-			</div>
-		</div>
-	</div>
+	<Modal title="Novità" icon="rocket" onClose={closeWhatsNew}>
+		<div class="features"><Markdown source={whatsNew.content} /></div>
+		{#snippet actions()}
+			<button class="ok" onclick={closeWhatsNew}>Capito!</button>
+		{/snippet}
+	</Modal>
 {/if}
 
 {#if showGifts}
-	<div class="modal-backdrop" role="presentation" onclick={closeGifts}>
-		<div class="modal" role="dialog" aria-modal="true" onclick={(e) => e.stopPropagation()}>
-			<div class="modal-head">
-				<h2><Icon name="party" size={20} title="Regali" /> Regali ricevuti!</h2>
-				<button class="x" onclick={closeGifts} aria-label="Chiudi">✕</button>
-			</div>
-			<p class="muted">L'admin ti ha fatto un regalo:</p>
-			<ul class="gift-list">
-				{#each gifts as g, i (i)}
-					<li>
-						<Icon name={g.type === 'tokens' ? 'coin' : (g.itemId ?? 'party')} size={30} title={g.label} />
-						<span>
-							{#if g.type === 'tokens'}<strong>{g.amount}</strong> Token
-							{:else if g.type === 'power'}<strong>{g.amount}×</strong> {g.label}
-							{:else}{g.label}{/if}
-						</span>
-					</li>
-				{/each}
-			</ul>
-			<div class="modal-actions">
-				<button class="ok" onclick={closeGifts}>Fantastico!</button>
-			</div>
-		</div>
-	</div>
+	<Modal title="Regali ricevuti!" icon="party" onClose={closeGifts}>
+		<p class="muted">L'admin ti ha fatto un regalo:</p>
+		<ul class="gift-list">
+			{#each gifts as g, i (i)}
+				<li>
+					<Icon name={g.type === 'tokens' ? 'coin' : (g.itemId ?? 'party')} size={30} title={g.label} />
+					<span>
+						{#if g.type === 'tokens'}<strong>{g.amount}</strong> Token
+						{:else if g.type === 'power'}<strong>{g.amount}×</strong> {g.label}
+						{:else}{g.label}{/if}
+					</span>
+				</li>
+			{/each}
+		</ul>
+		{#snippet actions()}
+			<button class="ok" onclick={closeGifts}>Fantastico!</button>
+		{/snippet}
+	</Modal>
 {/if}
 
 <h1 class="title">SELECT YOUR GAME</h1>
@@ -746,57 +735,8 @@
 			--s: 1;
 		}
 	}
-	.modal-backdrop {
-		position: fixed;
-		inset: 0;
-		background: rgba(0, 0, 0, 0.6);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 1rem;
-		z-index: 10000;
-	}
-	.modal {
-		background: var(--panel);
-		border-radius: 14px;
-		padding: 1.25rem;
-		width: 100%;
-		max-width: 460px;
-		border: 2px solid var(--accent);
-		box-shadow: var(--glow-mag);
-		box-sizing: border-box;
-		/* Responsive: mai più alta del viewport; head + azioni restano visibili, il corpo scrolla */
-		max-height: 90vh;
-		max-height: 90dvh;
-		display: flex;
-		flex-direction: column;
-	}
-	.modal-head {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 0.75rem;
-		flex-shrink: 0;
-	}
-	.modal-head h2 {
-		margin: 0;
-		font-family: var(--font-display);
-		font-size: 0.9rem;
-		color: var(--cyan);
-		text-shadow: var(--glow-cyan);
-	}
-	.x {
-		background: none;
-		border: none;
-		color: var(--muted);
-		font-size: 1.1rem;
-		cursor: pointer;
-		width: auto;
-		margin: 0;
-		padding: 0;
-	}
 	.features {
-		margin: 0 0 1rem 1.25rem;
+		margin: 0 0 0 1.25rem;
 		padding: 0;
 		display: flex;
 		flex-direction: column;
@@ -804,20 +744,14 @@
 		color: var(--text);
 		font-family: var(--font-term);
 		font-size: 1.1rem;
-		/* Corpo scrollabile dentro la modale a altezza limitata */
-		overflow-y: auto;
-		min-height: 0;
 	}
 	.gift-list {
 		list-style: none;
 		padding: 0;
-		margin: 0.5rem 0 1rem;
+		margin: 0.5rem 0 0;
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
-		/* Corpo scrollabile dentro la modale a altezza limitata */
-		overflow-y: auto;
-		min-height: 0;
 	}
 	.gift-list li {
 		display: flex;
@@ -833,11 +767,6 @@
 	}
 	.gift-list strong {
 		color: var(--amber);
-	}
-	.modal-actions {
-		display: flex;
-		justify-content: flex-end;
-		flex-shrink: 0;
 	}
 	.ok {
 		width: auto;

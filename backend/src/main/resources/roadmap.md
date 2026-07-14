@@ -52,3 +52,8 @@ Segnalazioni utenti.
 - [x] Indicatore di turno: mostra il nome visualizzato (displayName) invece dell'username in Impiccato e Campo minato (@manuchao, @petrillimatteo)
 - [x] Tris: nuova modalità "sparizione" (@spacevampire) — ogni giocatore tiene al massimo 3 segni, il 4° piazzamento fa sparire il più vecchio dello stesso simbolo; niente pareggi
 - [x] Companion: orbite più varie attorno all'avatar — velocità, verso, raggio e pulse diversi per companion (@spacevampire)
+- [x] Modale non chiudibile da mobile quando troppo alta: straborda e non scrolla (@spacevampire) — risolto: componente Modale condiviso con altezza max 90dvh, corpo scrollabile, header/azioni sempre visibili, chiusura via Esc/backdrop e safe-area mobile
+- [x] Impiccato: turni sballati / stallo dopo refresh, uscita o ingresso a metà partita (@spacevampire, @petrillimatteo) — risolto: roster dei turni ordinato (ordine d'ingresso), chi entra a partita in corso viene aggiunto in coda, chi esce viene tolto e il turno avanza da solo; il roster viaggia nello snapshot game:state
+- [x] Impiccato: con il cappello spariva la corda dal disegno — risolto: la tesa del cappello non sovrascrive più la corda
+- [x] Impiccato del giorno: se la parola è scelta dall'admin ora è segnalato nella pagina (@admin)
+- [x] Sezione "Suggerisci feature/gioco" per proporre nuove funzioni o giochi (@admin) — inviabile da qualsiasi utente, visibile ed esportabile dall'Admin

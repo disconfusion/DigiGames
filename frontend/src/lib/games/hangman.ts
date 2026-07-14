@@ -13,6 +13,7 @@ export type HangmanGameState = {
 	winner: string | null;
 	status: 'PLAYING' | 'WON' | 'LOST';
 	currentTurn: string | null;
+	players?: string[];
 	lastBy?: string;
 	lastLetter?: string;
 };
@@ -72,10 +73,9 @@ export function gallows(wrongCount: number, accessories: string[], lost: boolean
 		'======='.split('')
 	];
 
-	// Cappello sopra la testa (riga 1)
+	// Cappello sopra la testa (riga 1) — solo la tesa: NON sovrascrive la corda (col1)
 	if (hat) {
 		rows[1][0] = '_';
-		rows[1][1] = '#';
 		rows[1][2] = '_';
 	}
 	// Testa (riga 2)

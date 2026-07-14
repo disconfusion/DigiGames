@@ -153,6 +153,7 @@ public class DailyHangmanService {
         }
 
         String revealedWord = "PLAYING".equals(shared.status) ? null : word;
+        boolean custom = shared.customWord != null && !shared.customWord.isBlank();
 
         return new DailyStateDTO(
             masked.toString(),
@@ -163,6 +164,7 @@ public class DailyHangmanService {
             shared.status,
             shared.winner,
             revealedWord,
+            custom,
             attempt.letterUsed,
             attempt.wordAttemptUsed,
             attempt.won,

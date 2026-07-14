@@ -10,6 +10,7 @@ import jakarta.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @ApplicationScoped
@@ -23,8 +24,27 @@ public class HangmanEngine implements GameEngine {
 
     @Override
     public void onJoin(GameContext ctx) {
-        if (ctx.room().game instanceof HangmanState hs) {
-            ctx.replyToSender(state(hs, null, null));
+        Room room = ctx.room();
+        if (room.game instanceof HangmanState hs) {
+            // Chi entra a partita in corso viene aggiunto in coda al roster dei turni (gioca dal
+            // giro successivo, con budget lettere pieno). Così non resta "seduto ma senza turno".
+            boolean added = room.status == Room.Status.PLAYING
+                    && hs.status() == HangmanState.Status.PLAYING
+                    && hs.addPlayer(ctx.senderEmail());
+            if (added) {
+                ctx.broadcast(state(hs, null, null)); // tutti vedono il nuovo giocatore nel roster
+            } else {
+                ctx.replyToSender(state(hs, null, null));
+            }
+        }
+    }
+
+    @Override
+    public void onLeave(GameContext ctx) {
+        Room room = ctx.room();
+        if (room.game instanceof HangmanState hs && hs.removePlayer(ctx.senderEmail())) {
+            ctx.broadcast(state(hs, null, null));
+            finishIfOver(ctx, room, hs);
         }
     }
 
@@ -87,7 +107,7 @@ public class HangmanEngine implements GameEngine {
         ctx.broadcast(over(hs));
         room.status = Room.Status.DONE;
         boolean won = hs.status() == HangmanState.Status.WON;
-        for (String p : room.players) {
+        for (String p : List.copyOf(room.players)) {
             // Gli eliminati perdono anche se la parola viene indovinata da un altro giocatore.
             String r = won && !hs.isEliminated(p) ? "WIN" : "LOSE";
             leaderboard.record(p, "hangman", r);
@@ -109,6 +129,7 @@ public class HangmanEngine implements GameEngine {
         m.put("lettersPerPlayer", hs.lettersPerPlayer());
         m.put("lettersUsed", hs.lettersUsed());
         m.put("eliminated", hs.eliminated().stream().toList());
+        m.put("players", hs.players());
         m.put("winner", hs.winner());
         m.put("status", hs.status().name());
         m.put("currentTurn", hs.currentTurn());
