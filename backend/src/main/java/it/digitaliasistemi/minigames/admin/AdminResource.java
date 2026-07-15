@@ -7,6 +7,7 @@ import it.digitaliasistemi.minigames.domain.DailyAttempt;
 import it.digitaliasistemi.minigames.domain.MatchResult;
 import it.digitaliasistemi.minigames.domain.Roadmap;
 import it.digitaliasistemi.minigames.domain.Announcement;
+import it.digitaliasistemi.minigames.domain.DailyRules;
 import it.digitaliasistemi.minigames.gift.GiftService;
 import it.digitaliasistemi.minigames.shop.CompanionCatalog;
 import it.digitaliasistemi.minigames.shop.CompanionService;
@@ -170,6 +171,23 @@ public class AdminResource {
         return Response.ok(Map.of("message", "Ultime Fix aggiornate", "revision", a.revision)).build();
     }
 
+    /** Aggiorna il testo delle regole della Parola del Giorno (puro-DB, edit permanente). */
+    @PUT
+    @Path("/daily-rules")
+    @Transactional
+    public Response setDailyRules(DailyRulesRequest req) {
+        String content = req != null && req.content() != null ? req.content() : "";
+        DailyRules r = DailyRules.getFirst();
+        if (r == null) {
+            r = new DailyRules();
+            r.content = content;
+            r.persist();
+        } else {
+            r.content = content;
+        }
+        return Response.ok(Map.of("message", "Regole della Parola del Giorno aggiornate")).build();
+    }
+
     /** Elenco poteri con prezzo corrente e default (gestione prezzi shop). */
     @GET
     @Path("/power-prices")
@@ -257,4 +275,6 @@ public class AdminResource {
     public record RoadmapRequest(String content) {}
 
     public record AnnouncementRequest(String content) {}
+
+    public record DailyRulesRequest(String content) {}
 }

@@ -5,6 +5,7 @@
 	import { api } from '$lib/api';
 	import { notifications } from '$lib/notifications.svelte';
 	import Icon from '$lib/icons/Icon.svelte';
+	import Markdown from '$lib/Markdown.svelte';
 
 	type DailyState = {
 		// stato condiviso
@@ -40,6 +41,7 @@
 	];
 
 	let state = $state<DailyState | null>(null);
+	let rules = $state('');
 	let loadError = $state('');
 	let loading = $state(true);
 	let busy = $state(false);
@@ -70,6 +72,10 @@
 
 	onMount(async () => {
 		if (!auth.session) { goto('/login'); return; }
+		// Le regole cambiano di rado: caricate una volta sola, non a ogni reload da WS.
+		try {
+			rules = (await api<{ content: string }>('/api/daily-rules')).content;
+		} catch { /* fallback: pannello regole vuoto */ }
 		await load();
 		loading = false;
 	});
@@ -131,18 +137,12 @@
 		<p class="custom-word"><Icon name="tools" size={16} /> Parola scelta dall'admin</p>
 	{/if}
 
-	<details class="rules">
-		<summary><Icon name="book" size={16} /> Come si gioca</summary>
-		<ul>
-			<li><Icon name="globe" size={16} /> Ogni giorno <strong>una sola parola</strong>, uguale per tutti i colleghi.</li>
-			<li><Icon name="letters" size={16} /> Hai <strong>una lettera</strong> e <strong>un tentativo di parola intera</strong> per tutta la giornata.</li>
-			<li><Icon name="draw" size={16} /> Gli errori sono <strong>condivisi</strong>: a {state?.maxWrong ?? 6} errori totali la parola è persa per tutti.</li>
-			<li><Icon name="party" size={16} /> Indovini la parola → <strong>vinci +10 punti</strong>.</li>
-			<li><Icon name="lose" size={16} /> Sbagli il tentativo di parola → <strong>eliminato</strong> per oggi: puoi solo guardare.</li>
-			<li><Icon name="sync" size={16} /> Aggiornamento <strong>in tempo reale</strong> quando gli altri giocano.</li>
-			<li><Icon name="clock" size={16} /> Nuova parola a <strong>mezzanotte (ora di Roma)</strong>.</li>
-		</ul>
-	</details>
+	{#if rules.trim()}
+		<details class="rules">
+			<summary><Icon name="book" size={16} /> Come si gioca</summary>
+			<Markdown source={rules} />
+		</details>
+	{/if}
 
 	{#if loading}
 		<p class="muted">Caricamento…</p>
@@ -326,20 +326,6 @@
 	.rules[open] summary::before {
 		content: '▾ ';
 	}
-	.rules ul {
-		margin: 0.4rem 0 0.6rem;
-		padding-left: 1.2rem;
-		display: flex;
-		flex-direction: column;
-		gap: 0.4rem;
-	}
-	.rules li {
-		font-family: var(--font-term);
-		font-size: 1rem;
-		line-height: 1.4;
-		color: var(--text);
-	}
-	.rules strong { color: var(--amber); }
 	@media (prefers-reduced-motion: reduce) {
 		.rules summary::before { transition: none; }
 	}

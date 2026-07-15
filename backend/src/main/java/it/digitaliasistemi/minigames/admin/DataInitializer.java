@@ -5,6 +5,7 @@ import io.quarkus.runtime.StartupEvent;
 import it.digitaliasistemi.minigames.domain.AppUser;
 import it.digitaliasistemi.minigames.domain.Roadmap;
 import it.digitaliasistemi.minigames.domain.Announcement;
+import it.digitaliasistemi.minigames.domain.DailyRules;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.transaction.Transactional;
@@ -62,6 +63,17 @@ public class DataInitializer {
             a.content = announcementContent;
             a.revision += 1;
             LOG.infof("Announcement allineata a announcement.md (rev %d)", a.revision);
+        }
+
+        // Regole della Parola del Giorno: puro-DB, editabili dall'admin e permanenti.
+        // A differenza di roadmap/announcement NON vengono riallineate a un file: si seeda
+        // il default SOLO se la riga manca (prima installazione o dev drop-and-create),
+        // così un edit da /admin non viene mai sovrascritto al riavvio.
+        if (DailyRules.getFirst() == null) {
+            DailyRules dr = new DailyRules();
+            dr.content = DailyRules.DEFAULT;
+            dr.persist();
+            LOG.info("Regole Parola del Giorno seedate col default");
         }
     }
 

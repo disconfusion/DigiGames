@@ -159,6 +159,7 @@
 		loadRoadmap();
 		loadAnnouncement();
 		loadDailyCallout();
+		loadDailyRules();
 		loadPrices();
 		loadGrantables();
 	});
@@ -323,12 +324,32 @@
 	let customWord = $state('');
 	let calloutMessage = $state('');
 	let roadmapContent = $state('');
+	let dailyRules = $state('');
 
 	async function loadDailyCallout() {
 		try {
 			const s = await api<{ callout: string | null }>('/api/daily');
 			calloutMessage = s.callout ?? '';
 		} catch { /* ignora */ }
+	}
+
+	async function loadDailyRules() {
+		try {
+			const r = await api<{ content: string }>('/api/daily-rules');
+			dailyRules = r.content;
+		} catch { /* ignora */ }
+	}
+
+	function saveDailyRules() {
+		run(
+			'daily-rules',
+			() =>
+				api<{ message: string }>('/api/admin/daily-rules', {
+					method: 'PUT',
+					body: JSON.stringify({ content: dailyRules })
+				}),
+			(r) => showToast(r.message, 'success')
+		);
 	}
 
 	function saveCallout() {
@@ -483,6 +504,13 @@
 			<button type="submit" disabled={busy['callout']}>Salva callout</button>
 		</form>
 		<p class="muted hint">Banner visibile a tutti in <a href="/daily" target="_blank">/daily</a> per giornate speciali o info utili. Lascia vuoto e salva per rimuoverlo. Si azzera da solo al cambio giorno (mezzanotte, ora di Roma).</p>
+
+		<h2 class="sub-h"><Icon name="book" size={18} /> Regole del gioco</h2>
+		<form class="roadmap-form" onsubmit={(e) => { e.preventDefault(); saveDailyRules(); }}>
+			<textarea placeholder="Scrivi le regole in Markdown (elenco puntato, **grassetto**…)…" bind:value={dailyRules} rows="10"></textarea>
+			<button type="submit" disabled={busy['daily-rules']}>Salva regole</button>
+		</form>
+		<p class="muted hint">Pannello "Come si gioca" mostrato in <a href="/daily" target="_blank">/daily</a>. La modifica è permanente (non viene riallineata al riavvio). Lascia vuoto per nascondere il pannello.</p>
 	</section>
 {:else if tab === 'roadmap'}
 	<section class="panel">
