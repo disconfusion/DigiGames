@@ -10,10 +10,11 @@
 		HATS,
 		parseAvatar,
 		serializeAvatar,
-		renderAvatar,
 		type AvatarSpec
 	} from '$lib/avatar';
 	import Icon from '$lib/icons/Icon.svelte';
+	import Avatar from '$lib/Avatar.svelte';
+	import { showToast } from '$lib/notifications.svelte';
 
 	type Profile = { username: string; displayName: string; avatar: string | null; role: string };
 	type AuthResponse = { token: string; username: string; displayName: string; role: string };
@@ -41,6 +42,7 @@
 	const gameLabel = (g: string) => GAME_LABELS[g] ?? g;
 
 	type Companion = { id: string; name: string; description: string; cost: number; owned: boolean; equipped: boolean };
+	type Accessory = { id: string; name: string; description: string; slot: string; cost: number; owned: boolean; equipped: boolean };
 
 	let profile = $state<Profile | null>(null);
 	let stats = $state<Stats | null>(null);
@@ -49,6 +51,12 @@
 	let companions = $state<Companion[]>([]);
 	const ownedCompanions = $derived(companions.filter((c) => c.owned));
 	const equippedCompanion = $derived(companions.find((c) => c.equipped)?.id ?? '');
+
+	let accessories = $state<Accessory[]>([]);
+	const ownedAccessories = $derived(accessories.filter((a) => a.owned));
+	const equippedAccessories = $derived(
+		accessories.filter((a) => a.equipped).map((a) => ({ id: a.id, slot: a.slot }))
+	);
 
 	// #4 — varietà nell'orbita dei companion: ogni companion ha velocità, verso, raggio e pulse
 	// diversi, scelti in modo deterministico dal suo id (stesso companion = stessa orbita).
@@ -88,11 +96,89 @@
 		}
 	}
 
+	async function equipAccessory(a: Accessory) {
+		try {
+			const r = await api<{ equipped: { id: string; slot: string }[] }>(
+				`/api/shop/accessories/${a.id}/equip`,
+				{ method: 'POST' }
+			);
+			const eq = new Set(r.equipped.map((e) => e.id));
+			accessories = accessories.map((x) => ({ ...x, equipped: eq.has(x.id) }));
+		} catch (e) {
+			loadError = (e as Error).message;
+		}
+	}
+
+	// ── Regala a un collega (dono user→user) ─────────────────────────────────
+	type GiftUser = { username: string; displayName: string };
+	type GiftItem = { id: string; name?: string; label?: string; slot?: string; cost: number; ownedByRecipient?: boolean };
+	type GiftOptions = { balance: number; companions: GiftItem[]; accessories: GiftItem[]; powers: GiftItem[] };
+
+	let giftUsers = $state<GiftUser[]>([]);
+	let giftTo = $state('');
+	let giftKind = $state<'tokens' | 'power' | 'companion' | 'accessory'>('tokens');
+	let giftAmount = $state(50);
+	let giftOptions = $state<GiftOptions | null>(null);
+	let giftPowerId = $state('');
+	let giftCompanionId = $state('');
+	let giftAccessoryId = $state('');
+	let giftBusy = $state(false);
+
+	async function loadGiftOptions(to: string) {
+		try {
+			giftOptions = await api<GiftOptions>(`/api/gifts/options?to=${encodeURIComponent(to)}`);
+			giftPowerId = giftOptions.powers[0]?.id ?? '';
+			giftCompanionId = giftOptions.companions.find((c) => !c.ownedByRecipient)?.id ?? '';
+			giftAccessoryId = giftOptions.accessories.find((a) => !a.ownedByRecipient)?.id ?? '';
+		} catch (e) {
+			showToast((e as Error).message, 'error');
+		}
+	}
+
+	$effect(() => {
+		if (giftTo) loadGiftOptions(giftTo);
+	});
+
+	// Il cosmetico selezionato è già posseduto dal destinatario? (blocca l'invio lato UI)
+	const giftBlocked = $derived.by(() => {
+		if (!giftOptions) return false;
+		if (giftKind === 'companion')
+			return giftOptions.companions.find((c) => c.id === giftCompanionId)?.ownedByRecipient ?? false;
+		if (giftKind === 'accessory')
+			return giftOptions.accessories.find((a) => a.id === giftAccessoryId)?.ownedByRecipient ?? false;
+		return false;
+	});
+
+	async function sendGift() {
+		if (!giftTo || giftBusy || giftBlocked) return;
+		const body =
+			giftKind === 'tokens'
+				? { toUsername: giftTo, type: 'tokens', amount: giftAmount }
+				: giftKind === 'power'
+					? { toUsername: giftTo, type: 'power', id: giftPowerId }
+					: giftKind === 'companion'
+						? { toUsername: giftTo, type: 'companion', id: giftCompanionId }
+						: { toUsername: giftTo, type: 'accessory', id: giftAccessoryId };
+		giftBusy = true;
+		try {
+			const r = await api<{ message: string; balance: number }>('/api/gifts/send', {
+				method: 'POST',
+				body: JSON.stringify(body)
+			});
+			showToast(r.message, 'success');
+			if (giftOptions) giftOptions.balance = r.balance;
+			loadGiftOptions(giftTo); // aggiorna i flag "già posseduto"
+		} catch (e) {
+			showToast((e as Error).message, 'error');
+		} finally {
+			giftBusy = false;
+		}
+	}
+
 	const winRate = $derived(stats && stats.total > 0 ? Math.round((stats.wins / stats.total) * 100) : 0);
 
 	// Avatar
 	let spec = $state<AvatarSpec>({ eyes: 0, nose: 0, mouth: 0, hat: 0 });
-	const preview = $derived(renderAvatar(spec));
 
 	// Form displayName
 	let displayName = $state('');
@@ -117,9 +203,12 @@
 			stats = await api<Stats>('/api/me/stats');
 			const cr = await api<{ companions: Companion[] }>('/api/shop/companions');
 			companions = cr.companions;
+			const ar = await api<{ accessories: Accessory[] }>('/api/shop/accessories');
+			accessories = ar.accessories;
 			const hr = await api<{ houses: House[]; mine: string }>('/api/houses');
 			houseList = hr.houses;
 			myHouse = hr.mine;
+			giftUsers = await api<GiftUser[]>('/api/users');
 		} catch (e) {
 			loadError = (e as Error).message;
 		}
@@ -183,7 +272,7 @@
 		<h2><Icon name="smiley" size={18} title="Avatar" /> Avatar</h2>
 		<div class="avatar-builder">
 			<div class="avatar-stage">
-				<pre class="avatar-preview">{preview}</pre>
+				<Avatar avatar={serializeAvatar(spec)} accessories={equippedAccessories} fontSize={18} />
 				{#if equippedCompanion}
 					<div class="orbit" style:--orbit-dur={orbit.dur} style:animation-direction={orbit.dir}>
 						<div class="orbit-pos" style:--orbit-radius={orbit.radius}>
@@ -267,6 +356,89 @@
 			</div>
 			<p class="hint">Clicca per equipaggiare/togliere. Appare nell'header, attorno all'avatar e nelle stanze.</p>
 		{/if}
+	</section>
+
+	<section class="panel">
+		<h2><Icon name="acc_corona" size={18} title="Accessori" /> Accessori</h2>
+		{#if ownedAccessories.length === 0}
+			<p class="hint">Non possiedi accessori. Compratene nello <a href="/shop">shop</a>! Si indossano sul volto: uno per slot (testa/occhi/bocca), combinabili.</p>
+		{:else}
+			<div class="companion-grid">
+				{#each ownedAccessories as a (a.id)}
+					<button class="comp" class:on={a.equipped} onclick={() => equipAccessory(a)} title={a.name}>
+						<Icon name={a.id} size={40} title={a.name} />
+						<span class="comp-name">{a.name}</span>
+						{#if a.equipped}<span class="comp-tag">ON</span>{/if}
+					</button>
+				{/each}
+			</div>
+			<p class="hint">Clicca per indossare/togliere. Uno per slot: puoi combinare testa + occhi + bocca.</p>
+		{/if}
+	</section>
+
+	<section class="panel">
+		<h2><Icon name="party" size={18} title="Regala" /> Regala a un collega</h2>
+		<div class="gift-form">
+			<label>Destinatario
+				<select bind:value={giftTo}>
+					<option value="" disabled>Scegli un collega…</option>
+					{#each giftUsers as u (u.username)}
+						<option value={u.username}>{u.displayName} (@{u.username})</option>
+					{/each}
+				</select>
+			</label>
+			{#if giftTo && giftOptions}
+				<p class="gift-balance"><Icon name="coin" size={14} /> Saldo: <strong>{giftOptions.balance}</strong> Token</p>
+				<label>Cosa regalare
+					<select bind:value={giftKind}>
+						<option value="tokens">Token</option>
+						<option value="power">Potere (consumabile)</option>
+						<option value="companion">Companion</option>
+						<option value="accessory">Accessorio</option>
+					</select>
+				</label>
+				{#if giftKind === 'tokens'}
+					<label>Quantità Token
+						<input type="number" min="1" bind:value={giftAmount} />
+					</label>
+				{:else if giftKind === 'power'}
+					<label>Potere
+						<select bind:value={giftPowerId}>
+							{#each giftOptions.powers as p (p.id)}
+								<option value={p.id}>{p.label} — {p.cost} Token</option>
+							{/each}
+						</select>
+					</label>
+				{:else if giftKind === 'companion'}
+					<label>Companion
+						<select bind:value={giftCompanionId}>
+							{#each giftOptions.companions as c (c.id)}
+								<option value={c.id} disabled={c.ownedByRecipient}>
+									{c.name} — {c.cost} Token{c.ownedByRecipient ? ' (già posseduto)' : ''}
+								</option>
+							{/each}
+						</select>
+					</label>
+				{:else}
+					<label>Accessorio
+						<select bind:value={giftAccessoryId}>
+							{#each giftOptions.accessories as a (a.id)}
+								<option value={a.id} disabled={a.ownedByRecipient}>
+									{a.name} — {a.cost} Token{a.ownedByRecipient ? ' (già posseduto)' : ''}
+								</option>
+							{/each}
+						</select>
+					</label>
+				{/if}
+				{#if giftBlocked}
+					<p class="err"><Icon name="warning" size={14} /> Il destinatario possiede già questo oggetto.</p>
+				{/if}
+				<button onclick={sendGift} disabled={giftBusy || giftBlocked}>
+					{giftBusy ? '…' : 'Invia regalo'}
+				</button>
+			{/if}
+		</div>
+		<p class="hint">Paghi tu con i tuoi Token: i Token si trasferiscono dal tuo saldo, i cosmetici/poteri si comprano in regalo. Il collega li vede alla prossima apertura.</p>
 	</section>
 
 	<section class="panel">
@@ -649,6 +821,41 @@
 		font-size: 0.7rem;
 		font-family: var(--font-ui);
 		letter-spacing: 0.02em;
+	}
+
+	/* Form regali user→user */
+	.gift-form {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		max-width: 24rem;
+	}
+	.gift-form label {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		font-size: 0.85rem;
+		color: var(--muted);
+	}
+	.gift-form select,
+	.gift-form input {
+		padding: 0.5rem 0.6rem;
+		border-radius: 8px;
+		border: 1px solid #334155;
+		background: #0f172a;
+		color: var(--text);
+		font-size: 0.95rem;
+	}
+	.gift-form button {
+		align-self: flex-start;
+	}
+	.gift-balance {
+		margin: 0;
+		font-size: 0.85rem;
+		color: var(--amber);
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
 	}
 
 	@media (prefers-reduced-motion: reduce) {

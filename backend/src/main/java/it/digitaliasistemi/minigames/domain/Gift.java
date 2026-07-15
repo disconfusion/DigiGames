@@ -9,9 +9,10 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Regalo assegnato dall'admin a un utente (Token, potere o companion), in attesa di essere
- * mostrato nella modale al prossimo accesso. Viene cancellato dopo la visione (ack) → la
- * tabella resta sempre piccola (limite storage Neon, vedi CLAUDE.md).
+ * Regalo pendente per un utente (Token, potere, companion o accessorio), in attesa di essere
+ * mostrato nella modale al prossimo accesso. Il mittente può essere l'admin (from* null) o un
+ * altro utente (dono user→user). Viene cancellato dopo la visione (ack) → la tabella resta
+ * sempre piccola (limite storage Neon, vedi CLAUDE.md).
  */
 @Entity
 @Table(name = "gift")
@@ -21,9 +22,17 @@ public class Gift extends PanacheEntity {
     @Column(nullable = false)
     public String username;
 
-    /** "tokens" | "power" | "companion". */
+    /** "tokens" | "power" | "companion" | "accessory". */
     @Column(nullable = false)
     public String type;
+
+    /** Username del mittente per i doni user→user; null se assegnato dall'admin. */
+    @Column
+    public String fromUsername;
+
+    /** Nome visualizzato del mittente (mostrato nella modale); null se admin. */
+    @Column
+    public String fromDisplayName;
 
     /** Sprite id del potere/companion; null per i Token. */
     public String itemId;

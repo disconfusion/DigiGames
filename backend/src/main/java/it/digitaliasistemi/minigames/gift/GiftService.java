@@ -12,15 +12,24 @@ import java.util.Map;
 @ApplicationScoped
 public class GiftService {
 
-    /** Registra un regalo pendente per l'utente. */
+    /** Registra un regalo pendente per l'utente (mittente admin). */
     @Transactional
     public void record(String username, String type, String itemId, String label, int amount) {
+        recordFrom(username, type, itemId, label, amount, null, null);
+    }
+
+    /** Registra un regalo pendente indicando il mittente (dono user→user). */
+    @Transactional
+    public void recordFrom(String username, String type, String itemId, String label, int amount,
+                           String fromUsername, String fromDisplayName) {
         Gift g = new Gift();
         g.username = username;
         g.type = type;
         g.itemId = itemId;
         g.label = label;
         g.amount = amount;
+        g.fromUsername = fromUsername;
+        g.fromDisplayName = fromDisplayName;
         g.persist();
     }
 
@@ -32,6 +41,7 @@ public class GiftService {
             m.put("itemId", g.itemId);
             m.put("label", g.label);
             m.put("amount", g.amount);
+            m.put("fromDisplayName", g.fromDisplayName);
             return m;
         }).toList();
     }

@@ -22,7 +22,7 @@
 
 - [x] Alpha test: sistema di crediti (Token) con acquisto di "poteri" usabili in partita
 - [ ] Alpha test: pack opening di carte a tema inside joke interni
-- [ ] Accessori avatar comprabili con i crediti — invio doni fra utenti
+- [x] Accessori avatar comprabili con i crediti — invio doni fra utenti
 - [x] Companion acquistabili dallo shop (animati a mano)
 - [x] Leaderboard coi punti accumulati al posto della colonna vittorie (che passa in seconda posizione)
 - [x] Alpha test: clan/casate (temporaneamente le 4 di Hogwarts), badge casata personalizzabile nella sezione personale
@@ -32,7 +32,7 @@
 
 - [x] Modale "Ultime Fix" editabile dall'Admin — ricompare sia quando l'Admin aggiorna il testo sia dopo ogni deploy (marker `revisione:build-id`), così gli utenti la rivedono al primo accesso post-deploy
 - [ ] Regole dell'Impiccato del giorno personalizzabili dall'Admin
-- [ ] Callout con messaggi dall'Admin nella sezione "Impiccato del giorno" per giornate speciali / info utili
+- [x] Callout con messaggi dall'Admin nella sezione "Impiccato del giorno" per giornate speciali / info utili
 
 # Tecnico / Infra
 

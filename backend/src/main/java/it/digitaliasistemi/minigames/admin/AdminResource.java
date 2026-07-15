@@ -112,6 +112,20 @@ public class AdminResource {
         return Response.ok(Map.of("message", "Parola impostata: " + word)).build();
     }
 
+    /** Imposta o rimuove (se vuoto) il callout della Parola del Giorno per oggi. */
+    @POST
+    @Path("/daily/callout")
+    public Response dailySetCallout(DailyCalloutRequest req) {
+        String msg = req != null ? req.message() : null;
+        if (msg != null && msg.length() > 500) {
+            return Response.status(400).entity(Map.of("message", "Callout troppo lungo (max 500 caratteri)")).build();
+        }
+        dailyService.adminSetCallout(LocalDate.now(ROME), msg);
+        notifyBus.broadcast("daily:update");
+        boolean cleared = msg == null || msg.isBlank();
+        return Response.ok(Map.of("message", cleared ? "Callout rimosso" : "Callout impostato")).build();
+    }
+
     /** Reset completo della parola del giorno → riparte con parola automatica. */
     @POST
     @Path("/daily/reset")
@@ -237,6 +251,8 @@ public class AdminResource {
     public record ResetPasswordRequest(String newPassword) {}
 
     public record DailyWordRequest(String word) {}
+
+    public record DailyCalloutRequest(String message) {}
 
     public record RoadmapRequest(String content) {}
 

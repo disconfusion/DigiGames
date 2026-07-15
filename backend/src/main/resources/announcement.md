@@ -12,7 +12,13 @@
 
 **Nuovo — Suggerisci feature/gioco**: pulsante in alto per proporre idee di nuove funzioni o giochi
 
+**Nuovo — Accessori avatar**: comprabili nello shop con i Token e indossati sul volto del tuo avatar (corona, cilindro, cuffie, occhiali, occhiali da sole, baffi). Sono combinabili, uno per zona (testa, occhi, bocca), e si vedono nel profilo e nelle stanze di gioco.
+
+**Nuovo — Regala a un collega**: dalla tua Area personale puoi regalare Token, poteri, companion o accessori a un altro utente. Paghi tu con i tuoi Token; se il collega possiede già quel companion o accessorio non è regalabile.
+
+**Parola del Giorno — Callout dell'admin**: un banner con messaggi e info per le giornate speciali, in cima alla pagina.
+
 Buon divertimento!
 
 ---
-_Aggiornato: 14 luglio 2026 — batch fix segnalazioni (Impiccato turni/roster, modali mobile) + suggerimenti feature/gioco._
+_Aggiornato: 15 luglio 2026 — accessori avatar comprabili, regali fra utenti, callout Parola del Giorno._

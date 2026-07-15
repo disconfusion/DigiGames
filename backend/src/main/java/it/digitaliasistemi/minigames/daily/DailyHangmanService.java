@@ -108,6 +108,13 @@ public class DailyHangmanService {
         DailyAttempt.delete("date", date);
     }
 
+    /** Imposta (o rimuove, se vuoto) il callout dell'admin per la giornata. */
+    @Transactional
+    public void adminSetCallout(LocalDate date, String message) {
+        DailyWordState shared = getOrCreateShared(date);
+        shared.calloutMessage = (message != null && !message.isBlank()) ? message.trim() : null;
+    }
+
     /** Elimina stato condiviso e tentativi di oggi → riparte con parola automatica. */
     @Transactional
     public void adminResetDaily(LocalDate date) {
@@ -165,6 +172,7 @@ public class DailyHangmanService {
             shared.winner,
             revealedWord,
             custom,
+            shared.calloutMessage,
             attempt.letterUsed,
             attempt.wordAttemptUsed,
             attempt.won,

@@ -4,7 +4,7 @@
 	import { auth } from '$lib/auth.svelte';
 	import { api } from '$lib/api';
 	import { gameLabel } from '$lib/games/catalog';
-	import { parseAvatar, renderAvatar } from '$lib/avatar';
+	import Avatar from '$lib/Avatar.svelte';
 	import GameOptions from '$lib/games/GameOptions.svelte';
 	import GamePicker from '$lib/games/GamePicker.svelte';
 	import Icon from '$lib/icons/Icon.svelte';
@@ -34,8 +34,9 @@
 		won: boolean;
 		eliminated: boolean;
 	};
-	type UserView = { username: string; displayName: string; avatar: string | null; online: boolean };
-	type GiftItem = { type: 'tokens' | 'power' | 'companion'; itemId: string | null; label: string; amount: number };
+	type Accessory = { id: string; slot: string };
+	type UserView = { username: string; displayName: string; avatar: string | null; online: boolean; accessories?: Accessory[] };
+	type GiftItem = { type: 'tokens' | 'power' | 'companion' | 'accessory'; itemId: string | null; label: string; amount: number; fromDisplayName: string | null };
 
 	let daily = $state<DailyState | null>(null);
 	let users = $state<UserView[]>([]);
@@ -202,7 +203,15 @@
 		if (c) goto(`/room/${c}`);
 	}
 
-	const avatarFace = (u: UserView) => renderAvatar(parseAvatar(u.avatar));
+	// Ricarica i regali quando ne arriva uno in tempo reale (evento WS "gift")
+	let lastGiftSeen = 0;
+	$effect(() => {
+		const t = notifications.lastGift;
+		if (t > lastGiftSeen) {
+			lastGiftSeen = t;
+			loadGifts();
+		}
+	});
 </script>
 
 {#if showWhatsNew}
@@ -216,7 +225,7 @@
 
 {#if showGifts}
 	<Modal title="Regali ricevuti!" icon="party" onClose={closeGifts}>
-		<p class="muted">L'admin ti ha fatto un regalo:</p>
+		<p class="muted">Hai ricevuto:</p>
 		<ul class="gift-list">
 			{#each gifts as g, i (i)}
 				<li>
@@ -225,6 +234,7 @@
 						{#if g.type === 'tokens'}<strong>{g.amount}</strong> Token
 						{:else if g.type === 'power'}<strong>{g.amount}×</strong> {g.label}
 						{:else}{g.label}{/if}
+						{#if g.fromDisplayName}<span style="opacity:0.7"> · da {g.fromDisplayName}</span>{/if}
 					</span>
 				</li>
 			{/each}
@@ -313,7 +323,7 @@
 						type="button"
 					>
 						<span class="presence" class:online={u.online} title={u.online ? 'Online' : 'Offline'}></span>
-						<pre class="mini-face">{avatarFace(u)}</pre>
+						<Avatar avatar={u.avatar} accessories={u.accessories ?? []} fontSize={7.2} bg={false} />
 						<span class="uname">{u.displayName}</span>
 						{#if selected.has(u.username)}<span class="check">✓</span>{/if}
 					</button>

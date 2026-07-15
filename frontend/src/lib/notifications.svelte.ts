@@ -7,6 +7,7 @@ export const notifications = $state({
 	lastInvite: 0,
 	lastDailyUpdate: 0,
 	lastPresenceUpdate: 0,
+	lastGift: 0,
 	toasts: [] as Toast[]
 });
 
@@ -42,4 +43,8 @@ export function onDailyUpdate() {
 
 export function onPresenceUpdate() {
 	notifications.lastPresenceUpdate = Date.now();
+}
+
+export function onGiftReceived() {
+	notifications.lastGift = Date.now();
 }

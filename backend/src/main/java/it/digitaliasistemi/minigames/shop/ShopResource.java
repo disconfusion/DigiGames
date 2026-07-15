@@ -19,6 +19,7 @@ public class ShopResource {
 
     @Inject ShopService shop;
     @Inject CompanionService companions;
+    @Inject AccessoryService accessories;
     @Inject TokenService tokens;
     @Inject JsonWebToken jwt;
 
@@ -73,5 +74,39 @@ public class ShopResource {
         }
         String eq = companions.equippedId(jwt.getSubject());
         return Response.ok(Map.of("equipped", eq != null ? eq : "")).build();
+    }
+
+    // ---- Accessori avatar (cosmetici, multi-slot) ----
+
+    /** Catalogo accessori + saldo + accessori equipaggiati (id+slot). */
+    @GET
+    @Path("/accessories")
+    public Map<String, Object> accessories() {
+        String u = jwt.getSubject();
+        return Map.of(
+            "balance", tokens.balance(u),
+            "accessories", accessories.catalog(u),
+            "equipped", accessories.equipped(u)
+        );
+    }
+
+    /** Acquista l'accessorio indicato. */
+    @POST
+    @Path("/accessories/{id}/buy")
+    public Response buyAccessory(@PathParam("id") String id) {
+        AccessoryService.BuyResult r = accessories.buy(jwt.getSubject(), id);
+        Map<String, Object> body = Map.of("message", r.message(), "balance", r.balance());
+        return r.ok() ? Response.ok(body).build() : Response.status(400).entity(body).build();
+    }
+
+    /** Equipaggia/toglie l'accessorio (toggle sullo slot). */
+    @POST
+    @Path("/accessories/{id}/equip")
+    public Response equipAccessory(@PathParam("id") String id) {
+        boolean ok = accessories.equip(jwt.getSubject(), id);
+        if (!ok) {
+            return Response.status(400).entity(Map.of("message", "Accessorio non posseduto")).build();
+        }
+        return Response.ok(Map.of("equipped", accessories.equipped(jwt.getSubject()))).build();
     }
 }

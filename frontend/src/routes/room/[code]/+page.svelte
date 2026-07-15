@@ -6,11 +6,12 @@
 	import { api } from '$lib/api';
 	import { connectRoom, type RoomEvent, type RoomConnection } from '$lib/ws';
 	import { BOARDS } from '$lib/games/registry';
-	import { parseAvatar, renderAvatar } from '$lib/avatar';
 	import Icon from '$lib/icons/Icon.svelte';
+	import Avatar from '$lib/Avatar.svelte';
 
+	type Accessory = { id: string; slot: string };
 	type RoomView = { code: string; gameSlug: string; hostEmail: string; players: number; maxPlayers: number };
-	type UserInfo = { displayName: string; avatar: string | null; companion?: string | null; house?: string | null };
+	type UserInfo = { displayName: string; avatar: string | null; companion?: string | null; house?: string | null; accessories?: Accessory[] };
 
 	const SYSTEM = new Set(['player:joined', 'player:left', 'chat']);
 	const code: string = page.params.code ?? '';
@@ -37,7 +38,8 @@
 	const opponents = $derived(playerNames.filter((u) => u !== meUsername));
 	const isHost = $derived(!!room && room.hostEmail === meUsername);
 
-	const face = (u: string) => renderAvatar(parseAvatar(userInfo[u]?.avatar ?? null));
+	const avatarOf = (u: string) => userInfo[u]?.avatar ?? null;
+	const accsOf = (u: string): Accessory[] => userInfo[u]?.accessories ?? [];
 	const nameOf = (u: string) => (u === meUsername ? 'Tu' : (userInfo[u]?.displayName ?? u));
 	// Mappa username → displayName passata ai board, così mostrano il nome invece dell'username.
 	const nameMap = $derived(
@@ -136,13 +138,13 @@
 
 	async function loadAvatars() {
 		try {
-			const me = await api<{ username: string; displayName: string; avatar: string | null; companion: string | null; house: string | null }>('/api/me');
-			const others = await api<{ username: string; displayName: string; avatar: string | null; companion: string | null; house: string | null }[]>(
+			const me = await api<{ username: string; displayName: string; avatar: string | null; companion: string | null; house: string | null; accessories: Accessory[] }>('/api/me');
+			const others = await api<{ username: string; displayName: string; avatar: string | null; companion: string | null; house: string | null; accessories: Accessory[] }[]>(
 				'/api/users'
 			);
 			const map: Record<string, UserInfo> = {};
-			map[me.username] = { displayName: me.displayName, avatar: me.avatar, companion: me.companion, house: me.house };
-			for (const u of others) map[u.username] = { displayName: u.displayName, avatar: u.avatar, companion: u.companion, house: u.house };
+			map[me.username] = { displayName: me.displayName, avatar: me.avatar, companion: me.companion, house: me.house, accessories: me.accessories };
+			for (const u of others) map[u.username] = { displayName: u.displayName, avatar: u.avatar, companion: u.companion, house: u.house, accessories: u.accessories };
 			userInfo = map;
 		} catch {
 			// avatar non disponibili: si userà il volto di default
@@ -197,7 +199,7 @@
 				{#if bubbles[username]}
 					<div class="bubble {side}">{bubbles[username].text}</div>
 				{/if}
-				<pre class="face">{face(username)}</pre>
+				<Avatar avatar={avatarOf(username)} accessories={accsOf(username)} fontSize={9.6} bg={false} />
 				{#if houseOf(username)}
 					<div class="seat-house"><Icon name={houseOf(username)} size={22} title="Casata" /></div>
 				{/if}
@@ -225,7 +227,7 @@
 		<div class="rail">
 			{#if opponents.length === 0}
 				<div class="seat right empty">
-					<div class="avatar-box dim"><pre class="face">{renderAvatar(parseAvatar(null))}</pre></div>
+					<div class="avatar-box dim"><Avatar avatar={null} fontSize={9.6} bg={false} /></div>
 					<span class="seat-name">In attesa…</span>
 				</div>
 			{:else}

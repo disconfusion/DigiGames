@@ -35,6 +35,10 @@ public class DailyWordState extends PanacheEntity {
     @Column
     public String customWord;
 
+    /** Callout dell'admin per la giornata (info/annuncio in cima alla pagina), null se assente. */
+    @Column(columnDefinition = "text")
+    public String calloutMessage;
+
     public static DailyWordState findByDate(LocalDate date) {
         return find("date", date).firstResult();
     }

@@ -13,6 +13,7 @@ public record DailyStateDTO(
     String winner,   // username vincitore, null se ancora in gioco
     String word,     // rivelata solo quando status != PLAYING
     boolean custom,  // true se la parola è stata scelta manualmente dall'admin
+    String callout,  // messaggio callout dell'admin per la giornata, null se assente
 
     // Stato per-utente
     boolean letterUsed,

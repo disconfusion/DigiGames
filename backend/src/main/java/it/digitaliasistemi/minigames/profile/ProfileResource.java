@@ -28,6 +28,7 @@ public class ProfileResource {
     @Inject AuthService auth;
     @Inject LeaderboardService leaderboard;
     @Inject it.digitaliasistemi.minigames.shop.CompanionService companions;
+    @Inject it.digitaliasistemi.minigames.shop.AccessoryService accessories;
     @Inject it.digitaliasistemi.minigames.house.HouseService houses;
 
     @GET
@@ -35,7 +36,8 @@ public class ProfileResource {
         AppUser u = AppUser.findByUsername(jwt.getSubject());
         if (u == null) return notFound();
         return Response.ok(new ProfileView(u.username, u.displayName, u.avatar, u.role,
-            companions.equippedId(u.username), houses.houseOf(u.username))).build();
+            companions.equippedId(u.username), houses.houseOf(u.username),
+            accessories.equipped(u.username))).build();
     }
 
     @GET
@@ -98,7 +100,8 @@ public class ProfileResource {
         return Response.status(status).entity(Map.of("message", message)).build();
     }
 
-    public record ProfileView(String username, String displayName, String avatar, String role, String companion, String house) {}
+    public record ProfileView(String username, String displayName, String avatar, String role, String companion, String house,
+                              java.util.List<it.digitaliasistemi.minigames.shop.AccessoryService.EquippedView> accessories) {}
 
     public record UpdateProfileRequest(String displayName, String avatar) {}
 

@@ -28,9 +28,22 @@
 		equipped: boolean;
 	};
 
+	type Accessory = {
+		id: string;
+		name: string;
+		description: string;
+		slot: string;
+		cost: number;
+		owned: boolean;
+		equipped: boolean;
+	};
+
+	const SLOT_LABEL: Record<string, string> = { testa: 'Testa', occhi: 'Occhi', bocca: 'Bocca' };
+
 	let balance = $state(0);
 	let powers = $state<Power[]>([]);
 	let companions = $state<Companion[]>([]);
+	let accessories = $state<Accessory[]>([]);
 	let loading = $state(true);
 	let error = $state('');
 	let busy = $state<Record<string, boolean>>({});
@@ -53,6 +66,9 @@
 			const c = await api<{ balance: number; companions: Companion[] }>('/api/shop/companions');
 			balance = c.balance;
 			companions = c.companions;
+			const a = await api<{ balance: number; accessories: Accessory[] }>('/api/shop/accessories');
+			balance = a.balance;
+			accessories = a.accessories;
 		} catch (e) {
 			error = (e as Error).message;
 		} finally {
@@ -121,6 +137,44 @@
 			busy = { ...busy, [c.id]: false };
 		}
 	}
+
+	async function buyAccessory(a: Accessory) {
+		if (busy[a.id] || balance < a.cost) return;
+		busy = { ...busy, [a.id]: true };
+		try {
+			const r = await api<{ message: string; balance: number }>(`/api/shop/accessories/${a.id}/buy`, {
+				method: 'POST'
+			});
+			balance = r.balance;
+			// il backend auto-equipaggia se lo slot è libero
+			const slotTaken = accessories.some((x) => x.slot === a.slot && x.equipped);
+			accessories = accessories.map((x) =>
+				x.id === a.id ? { ...x, owned: true, equipped: !slotTaken } : x
+			);
+			showToast(r.message, 'success');
+		} catch (e) {
+			showToast((e as Error).message, 'error');
+		} finally {
+			busy = { ...busy, [a.id]: false };
+		}
+	}
+
+	async function equipAccessory(a: Accessory) {
+		if (busy[a.id]) return;
+		busy = { ...busy, [a.id]: true };
+		try {
+			const r = await api<{ equipped: { id: string; slot: string }[] }>(
+				`/api/shop/accessories/${a.id}/equip`,
+				{ method: 'POST' }
+			);
+			const eq = new Set(r.equipped.map((e) => e.id));
+			accessories = accessories.map((x) => ({ ...x, equipped: eq.has(x.id) }));
+		} catch (e) {
+			showToast((e as Error).message, 'error');
+		} finally {
+			busy = { ...busy, [a.id]: false };
+		}
+	}
 </script>
 
 <div class="shop">
@@ -183,6 +237,38 @@
 						{:else}
 							<button onclick={() => buyCompanion(c)} disabled={busy[c.id] || !affordable}>
 								{busy[c.id] ? '…' : affordable ? 'Acquista' : 'Token insuff.'}
+							</button>
+						{/if}
+					</article>
+				{/each}
+			</div>
+		</section>
+
+		<section class="game-block companions">
+			<h2>Accessori avatar</h2>
+			<p class="sub">Cosmetici indossati sul volto del tuo avatar. Uno per slot (testa/occhi/bocca): puoi combinarli. Compaiono nel profilo, nelle stanze e in classifica.</p>
+			<div class="grid">
+				{#each accessories as a (a.id)}
+					{@const affordable = balance >= a.cost}
+					<article class="power companion" class:owned={a.owned}>
+						<div class="emoji"><Icon name={a.id} size={40} title={a.name} /></div>
+						<h3>{a.name}</h3>
+						<p class="slot-tag">{SLOT_LABEL[a.slot] ?? a.slot}</p>
+						<p class="desc">{a.description}</p>
+						<div class="foot">
+							{#if a.owned}
+								<span class="have">Posseduto</span>
+							{:else}
+								<span class="cost" class:cheap={affordable} class:dear={!affordable}><Icon name="coin" size={14} /> {a.cost}</span>
+							{/if}
+						</div>
+						{#if a.owned}
+							<button class="equip" class:on={a.equipped} disabled={busy[a.id]} onclick={() => equipAccessory(a)}>
+								{a.equipped ? 'Indossato ✓' : 'Indossa'}
+							</button>
+						{:else}
+							<button onclick={() => buyAccessory(a)} disabled={busy[a.id] || !affordable}>
+								{busy[a.id] ? '…' : affordable ? 'Acquista' : 'Token insuff.'}
 							</button>
 						{/if}
 					</article>
@@ -356,5 +442,16 @@
 	}
 	.companions > .sub {
 		margin: 0 0 0.75rem;
+	}
+	.slot-tag {
+		margin: 0;
+		align-self: flex-start;
+		font-size: 0.68rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--cyan);
+		border: 1px solid var(--cyan);
+		border-radius: 999px;
+		padding: 0.05rem 0.5rem;
 	}
 </style>

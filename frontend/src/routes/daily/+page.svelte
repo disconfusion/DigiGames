@@ -17,6 +17,7 @@
 		winner: string | null;
 		word: string | null;
 		custom: boolean; // parola scelta manualmente dall'admin
+		callout: string | null; // messaggio dell'admin per la giornata
 		// stato per-utente
 		letterUsed: boolean;
 		wordAttemptUsed: boolean;
@@ -121,6 +122,10 @@
 <div class="daily">
 	<h1><Icon name="calendar" size={22} title="Parola del Giorno" /> Parola del Giorno</h1>
 	<p class="sub">Uno slot lettera + un tentativo parola a testa. Chi indovina vince 10 punti!</p>
+
+	{#if state?.callout}
+		<div class="callout" role="status"><Icon name="speech" size={18} /> <span>{state.callout}</span></div>
+	{/if}
 
 	{#if state?.custom}
 		<p class="custom-word"><Icon name="tools" size={16} /> Parola scelta dall'admin</p>
@@ -274,6 +279,22 @@
 		font-size: 0.8rem;
 		letter-spacing: 0.03em;
 	}
+	.callout {
+		width: 100%;
+		display: flex;
+		align-items: flex-start;
+		gap: 0.6rem;
+		padding: 0.7rem 1rem;
+		border-radius: 10px;
+		border: 1px solid var(--cyan);
+		background: color-mix(in srgb, var(--cyan) 10%, var(--panel));
+		color: var(--text);
+		font-family: var(--font-term);
+		font-size: 1rem;
+		line-height: 1.4;
+		box-shadow: var(--glow-cyan);
+	}
+	.callout span { white-space: pre-wrap; overflow-wrap: anywhere; flex: 1; }
 	.muted { color: var(--muted); }
 	.err { color: var(--danger); font-family: var(--font-term); font-size: 1.1rem; }
 

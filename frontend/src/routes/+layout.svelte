@@ -8,7 +8,7 @@
 	import { api } from '$lib/api';
 	import { GAME_CATALOG } from '$lib/games/catalog';
 	import { connectNotify, type NotifyConnection } from '$lib/ws';
-	import { notifications, onInviteReceived, setInviteCount, onDailyUpdate, onPresenceUpdate, showToast } from '$lib/notifications.svelte';
+	import { notifications, onInviteReceived, setInviteCount, onDailyUpdate, onPresenceUpdate, onGiftReceived, showToast } from '$lib/notifications.svelte';
 	import ToastContainer from '$lib/ToastContainer.svelte';
 	import GamePicker from '$lib/games/GamePicker.svelte';
 	import Icon from '$lib/icons/Icon.svelte';
@@ -164,6 +164,10 @@
 					} else if (msg.type === 'presence:update') {
 						// Aggiorna solo lo stato presenze (niente toast: troppo frequente)
 						onPresenceUpdate();
+					} else if (msg.type === 'gift') {
+						onGiftReceived();
+						const from = typeof msg.from === 'string' && msg.from ? msg.from : null;
+						showToast(from ? `${from} ti ha mandato un regalo!` : 'Hai ricevuto un regalo!', 'success');
 					}
 				},
 				() => fetchInviteCount()

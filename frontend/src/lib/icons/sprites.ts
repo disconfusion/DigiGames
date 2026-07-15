@@ -1314,6 +1314,142 @@ const bolt: Sprite = {
 	]]
 };
 
+// ── Accessori avatar (comprabili nello shop, indossati sul volto) ────────────
+const acc_corona: Sprite = {
+	motion: 'bob',
+	palette: { G: C.amber, R: C.danger },
+	frames: [[
+		'................',
+		'................',
+		'...G...GG...G...',
+		'...G...GG...G...',
+		'...GG..GG..GG...',
+		'...GG.GGGG.GG...',
+		'...GGGGGGGGGG...',
+		'...GGGGRRGGGG...',
+		'...GGGGGGGGGG...',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const acc_cilindro: Sprite = {
+	motion: 'bob',
+	palette: { K: '#241a3a', A: C.amber },
+	frames: [[
+		'................',
+		'....KKKKKKKK....',
+		'....KKKKKKKK....',
+		'....KKKKKKKK....',
+		'....KKKKKKKK....',
+		'....KKKKKKKK....',
+		'....AAAAAAAA....',
+		'....KKKKKKKK....',
+		'..KKKKKKKKKKKK..',
+		'.KKKKKKKKKKKKKK.',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const acc_cuffie: Sprite = {
+	motion: 'bob',
+	palette: { K: '#241a3a', C: C.cyan },
+	frames: [[
+		'................',
+		'................',
+		'....KKKKKKKK....',
+		'..KKKK....KKKK..',
+		'..KK........KK..',
+		'..KK........KK..',
+		'..KK........KK..',
+		'.KKK........KKK.',
+		'.KCK........KCK.',
+		'.KCK........KCK.',
+		'.KKK........KKK.',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const acc_occhiali: Sprite = {
+	palette: { F: C.cyan, L: C.inset },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'..FFFFF..FFFFF..',
+		'FFFLLLFFFFLLLFFF',
+		'..FLLLF..FLLLF..',
+		'..FFFFF..FFFFF..',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const acc_shades: Sprite = {
+	palette: { M: C.mag, D: '#0a0a14', G: C.cyan },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'.MMMMMMMMMMMMMM.',
+		'.MGDDDDMMGDDDDM.',
+		'.MDDDDDMMDDDDDM.',
+		'..MDDDM..MDDDM..',
+		'...MMM....MMM...',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const acc_baffi: Sprite = {
+	palette: { B: '#7a4a24', D: '#5a3418' },
+	frames: [[
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'................',
+		'.B....BBBB....B.',
+		'.BB..BBBBBB..BB.',
+		'..BBBBB..BBBBB..',
+		'...DDDD..DDDD...',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
 // ── Poteri shop (radar/sposta/espandi/esca) ─────────────────────────────────
 const radar: Sprite = {
 	motion: 'pulse',
@@ -1802,6 +1938,13 @@ export const SPRITES: Record<string, Sprite> = {
 	shoes,
 	hand,
 	bolt,
+	// accessori avatar (shop)
+	acc_corona,
+	acc_cilindro,
+	acc_cuffie,
+	acc_occhiali,
+	acc_shades,
+	acc_baffi,
 	// poteri shop (alias per id potere → sprite)
 	radar,
 	move,

@@ -27,6 +27,9 @@ public class UsersResource {
     it.digitaliasistemi.minigames.shop.CompanionService companions;
 
     @Inject
+    it.digitaliasistemi.minigames.shop.AccessoryService accessories;
+
+    @Inject
     it.digitaliasistemi.minigames.house.HouseService houses;
 
     @GET
@@ -35,9 +38,11 @@ public class UsersResource {
         return AppUser.<AppUser>listAll().stream()
                 .filter(u -> !u.username.equals(me))
                 .map(u -> new UserView(u.username, u.displayName, u.avatar, presence.isOnline(u.username),
-                        companions.equippedId(u.username), houses.houseOf(u.username)))
+                        companions.equippedId(u.username), houses.houseOf(u.username),
+                        accessories.equipped(u.username)))
                 .toList();
     }
 
-    public record UserView(String username, String displayName, String avatar, boolean online, String companion, String house) {}
+    public record UserView(String username, String displayName, String avatar, boolean online, String companion, String house,
+                           List<it.digitaliasistemi.minigames.shop.AccessoryService.EquippedView> accessories) {}
 }

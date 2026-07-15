@@ -158,6 +158,7 @@
 		load();
 		loadRoadmap();
 		loadAnnouncement();
+		loadDailyCallout();
 		loadPrices();
 		loadGrantables();
 	});
@@ -320,7 +321,27 @@
 	}
 
 	let customWord = $state('');
+	let calloutMessage = $state('');
 	let roadmapContent = $state('');
+
+	async function loadDailyCallout() {
+		try {
+			const s = await api<{ callout: string | null }>('/api/daily');
+			calloutMessage = s.callout ?? '';
+		} catch { /* ignora */ }
+	}
+
+	function saveCallout() {
+		run(
+			'callout',
+			() =>
+				api<{ message: string }>('/api/admin/daily/callout', {
+					method: 'POST',
+					body: JSON.stringify({ message: calloutMessage })
+				}),
+			(r) => showToast(r.message, 'success')
+		);
+	}
 
 	function saveRoadmap() {
 		run(
@@ -455,6 +476,13 @@
 			<button class="danger" disabled={busy['resetword']} onclick={resetDailyWord}>Reset → parola automatica</button>
 		</div>
 		<p class="muted hint">Impostare una parola resetta anche tutte le mosse di oggi. Il reset ripristina la parola automatica calcolata dalla data.</p>
+
+		<h2 class="sub-h"><Icon name="speech" size={18} /> Callout della giornata</h2>
+		<form class="roadmap-form" onsubmit={(e) => { e.preventDefault(); saveCallout(); }}>
+			<textarea placeholder="Messaggio info mostrato in cima alla Parola del Giorno (vuoto = nessun callout)…" bind:value={calloutMessage} rows="3" maxlength="500"></textarea>
+			<button type="submit" disabled={busy['callout']}>Salva callout</button>
+		</form>
+		<p class="muted hint">Banner visibile a tutti in <a href="/daily" target="_blank">/daily</a> per giornate speciali o info utili. Lascia vuoto e salva per rimuoverlo. Si azzera da solo al cambio giorno (mezzanotte, ora di Roma).</p>
 	</section>
 {:else if tab === 'roadmap'}
 	<section class="panel">
@@ -621,6 +649,11 @@
 	h2 {
 		font-size: 1.05rem;
 		margin: 0 0 0.75rem;
+	}
+	.sub-h {
+		margin-top: 1.25rem;
+		padding-top: 1rem;
+		border-top: 1px solid var(--line);
 	}
 	.panel-head {
 		display: flex;
