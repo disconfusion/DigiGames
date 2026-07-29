@@ -28,7 +28,8 @@
 		minesweeper: 'Campo Minato',
 		tris: 'Tris',
 		dama: 'Dama',
-		chess: 'Scacchi'
+		chess: 'Scacchi',
+		pong: 'Pong'
 	};
 
 	const face = (avatar: string | null) => renderAvatar(parseAvatar(avatar));

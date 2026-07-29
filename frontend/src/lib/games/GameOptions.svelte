@@ -7,6 +7,7 @@
 	let quizSource = $state<'local' | 'opentdb' | 'mixed'>('local');
 	let chessMinutes = $state(0);
 	let trisVanish = $state(false);
+	let pongPoints = $state(7);
 	let hmPreset = $state<'classic' | 'custom'>('classic');
 	let hmOptions = $state<HangmanOptions>({ ...CLASSIC_OPTIONS, accessories: [] });
 
@@ -36,13 +37,15 @@
 			options = { minutesPerPlayer: chessMinutes };
 		} else if (game === 'tris') {
 			options = { vanish: trisVanish };
+		} else if (game === 'pong') {
+			options = { pointsToWin: pongPoints };
 		} else {
 			options = undefined;
 		}
 	});
 
 	const hasOptions = $derived(
-		game === 'hangman' || game === 'quiz' || game === 'chess' || game === 'tris'
+		game === 'hangman' || game === 'quiz' || game === 'chess' || game === 'tris' || game === 'pong'
 	);
 </script>
 
@@ -63,6 +66,15 @@
 					<option value="mixed">Mista (locale + OpenTDB)</option>
 				</select>
 				<span class="hint">OpenTDB è gratuito ma in inglese; su errore di rete si usa la banca locale.</span>
+			</div>
+		{:else if game === 'pong'}
+			<div class="opt">
+				<label for="pongPoints">Punti per vincere</label>
+				<input id="pongPoints" type="number" min="1" max="21" bind:value={pongPoints} />
+				<span class="hint">
+					Il primo che li raggiunge vince (1–21, default 7). Il colore del monitor si sceglie
+					in partita, ognuno il suo.
+				</span>
 			</div>
 		{:else if game === 'tris'}
 			<div class="opt">

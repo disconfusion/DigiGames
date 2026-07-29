@@ -76,6 +76,20 @@ public class ShopResource {
         return Response.ok(Map.of("equipped", eq != null ? eq : "")).build();
     }
 
+    /** Imposta il colore di un companion ricolorabile (es. scarabeo). */
+    @POST
+    @Path("/companions/{id}/tint")
+    public Response tintCompanion(@PathParam("id") String id, TintRequest req) {
+        String hex = req != null ? req.hex() : null;
+        if (!companions.setTint(jwt.getSubject(), id, hex)) {
+            return Response.status(400)
+                    .entity(Map.of("message", "Colore non valido o companion non ricolorabile")).build();
+        }
+        return Response.ok(Map.of("tint", companions.tintOf(jwt.getSubject(), id))).build();
+    }
+
+    public record TintRequest(String hex) {}
+
     // ---- Accessori avatar (cosmetici, multi-slot) ----
 
     /** Catalogo accessori + saldo + accessori equipaggiati (id+slot). */

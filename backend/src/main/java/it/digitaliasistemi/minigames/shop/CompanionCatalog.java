@@ -17,8 +17,17 @@ public final class CompanionCatalog {
      * @param name        nome visibile
      * @param description testo descrittivo / lore
      * @param defaultCost costo in Token
+     * @param tintable    true se il colore è scelto dall'utente (vedi {@code CompanionTint})
      */
-    public record CompanionDef(String id, String name, String description, int defaultCost) {}
+    public record CompanionDef(String id, String name, String description, int defaultCost, boolean tintable) {
+        /** Companion a colore fisso (il caso normale). */
+        public CompanionDef(String id, String name, String description, int defaultCost) {
+            this(id, name, description, defaultCost, false);
+        }
+    }
+
+    /** Colore di partenza dei companion ricolorabili (verde sgargiante). */
+    public static final String DEFAULT_TINT = "#3dff9a";
 
     public static final List<CompanionDef> COMPANIONS = List.of(
         new CompanionDef("gondola", "Gondola Maledetta",
@@ -38,7 +47,20 @@ public final class CompanionCatalog {
         new CompanionDef("persona5", "Maschera Ladra",
             "La maschera bianca del ladro gentiluomo: ruba i cuori (e i Token).", 160),
         new CompanionDef("sly", "Maschera del Procione",
-            "La mascherina blu del procione ladro acrobata.", 160)
+            "La mascherina blu del procione ladro acrobata.", 160),
+        new CompanionDef("scarabeo", "Scarabeo Rinoceronte",
+            "Coleottero corazzato col corno. Il colore lo scegli tu: verde sgargiante di serie, "
+            + "ma la corazza prende qualunque tinta.", 140, true),
+        new CompanionDef("panino", "Lo Special",
+            "Il panino alla salsiccia del paninaro Fabio, annegato nel sugo che \"coce da 200 anni\": "
+            + "la ricetta è segreta, la data di scadenza pure — nessuno ha mai avuto il coraggio di "
+            + "spegnere il fuoco. Si narra che l'abbia mangiato Damiano dei Maneskin.", 180),
+        new CompanionDef("castoro", "Castoro di DBeaver",
+            "Il roditore che rosica query. Ti segue con la coda piatta e il pelo da database.", 160),
+        new CompanionDef("lancer", "Lancer",
+            "Fucile d'assalto con baionetta a motosega: rumore di catena incluso.", 200),
+        new CompanionDef("masterchief", "Elmo di Master Chief",
+            "Visiera dorata e corazza verde: lo Spartan 117 in versione portatile.", 240)
     );
 
     public static Optional<CompanionDef> byId(String id) {

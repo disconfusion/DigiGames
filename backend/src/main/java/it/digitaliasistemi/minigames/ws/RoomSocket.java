@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.websockets.next.OnClose;
 import io.quarkus.websockets.next.OnTextMessage;
-import io.quarkus.websockets.next.OpenConnections;
 import io.quarkus.websockets.next.UserData;
 import io.quarkus.websockets.next.WebSocket;
 import io.quarkus.websockets.next.WebSocketConnection;
@@ -30,7 +29,7 @@ public class RoomSocket {
     static final UserData.TypedKey<Boolean> LEFT = UserData.TypedKey.forBoolean("left");
 
     @Inject RoomManager rooms;
-    @Inject OpenConnections connections;
+    @Inject WsRoomChannel channel;
     @Inject ObjectMapper mapper;
     @Inject JWTParser jwtParser;
     @Inject GameEngines engines;
@@ -153,14 +152,10 @@ public class RoomSocket {
                 conn.sendTextAndAwait(toJson(message));
             }
             @Override public void broadcast(Map<String, Object> message) {
-                RoomSocket.this.broadcast(room.code, toJson(message));
+                channel.broadcast(room.code, message);
             }
             @Override public void sendTo(String target, Map<String, Object> message) {
-                String json = toJson(message);
-                connections.stream()
-                        .filter(c -> room.code.equals(c.pathParam("code")))
-                        .filter(c -> target.equals(c.userData().get(USER)))
-                        .forEach(c -> c.sendTextAndAwait(json));
+                channel.sendTo(room.code, target, message);
             }
         };
     }
@@ -174,9 +169,7 @@ public class RoomSocket {
     }
 
     private void broadcast(String code, String json) {
-        connections.stream()
-                .filter(c -> code.equals(c.pathParam("code")))
-                .forEach(c -> c.sendTextAndAwait(json));
+        channel.broadcastJson(code, json);
     }
 
     private String evt(String type, Object... kv) {

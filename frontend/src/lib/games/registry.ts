@@ -7,6 +7,7 @@ import BattleshipBoard from './BattleshipBoard.svelte';
 import TrisBoard from './TrisBoard.svelte';
 import DamaBoard from './DamaBoard.svelte';
 import ChessBoard from './ChessBoard.svelte';
+import PongBoard from './PongBoard.svelte';
 
 /** Mappa slug del gioco -> componente tabellone. Aggiungere un gioco = una riga qui. */
 export const BOARDS: Record<string, Component<any>> = {
@@ -17,5 +18,6 @@ export const BOARDS: Record<string, Component<any>> = {
 	battleship: BattleshipBoard,
 	tris: TrisBoard,
 	dama: DamaBoard,
-	chess: ChessBoard
+	chess: ChessBoard,
+	pong: PongBoard
 };

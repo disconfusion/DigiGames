@@ -64,7 +64,13 @@ public class InviteResource {
             inv.status = "PENDING";
             inv.createdAt = Instant.now();
             inv.persist();
-            notifyBus.push(username, "invite", Map.of("from", myDisplay, "game", req.gameSlug()));
+            // inviteId + roomCode nel push: il toast lato client può accettare/rifiutare
+            // direttamente, senza passare dalla pagina /invites.
+            notifyBus.push(username, "invite", Map.of(
+                    "from", myDisplay,
+                    "game", req.gameSlug(),
+                    "inviteId", inv.id,
+                    "roomCode", room.code));
         }
         return Response.status(Response.Status.CREATED)
                 .entity(Map.of("roomCode", room.code)).build();

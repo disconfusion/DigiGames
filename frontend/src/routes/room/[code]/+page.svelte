@@ -11,7 +11,7 @@
 
 	type Accessory = { id: string; slot: string };
 	type RoomView = { code: string; gameSlug: string; hostEmail: string; players: number; maxPlayers: number };
-	type UserInfo = { displayName: string; avatar: string | null; companion?: string | null; house?: string | null; accessories?: Accessory[] };
+	type UserInfo = { displayName: string; avatar: string | null; companion?: string | null; companionTint?: string | null; house?: string | null; accessories?: Accessory[] };
 
 	const SYSTEM = new Set(['player:joined', 'player:left', 'chat']);
 	const code: string = page.params.code ?? '';
@@ -46,6 +46,7 @@
 		Object.fromEntries(Object.entries(userInfo).map(([u, i]) => [u, i.displayName]))
 	);
 	const companionOf = (u: string) => userInfo[u]?.companion ?? '';
+	const companionTintOf = (u: string) => userInfo[u]?.companionTint ?? '';
 	const houseOf = (u: string) => userInfo[u]?.house ?? '';
 
 	function addPlayer(u: string) {
@@ -138,13 +139,20 @@
 
 	async function loadAvatars() {
 		try {
-			const me = await api<{ username: string; displayName: string; avatar: string | null; companion: string | null; house: string | null; accessories: Accessory[] }>('/api/me');
-			const others = await api<{ username: string; displayName: string; avatar: string | null; companion: string | null; house: string | null; accessories: Accessory[] }[]>(
-				'/api/users'
-			);
+			type ApiUser = { username: string; displayName: string; avatar: string | null; companion: string | null; companionTint: string | null; house: string | null; accessories: Accessory[] };
+			const me = await api<ApiUser>('/api/me');
+			const others = await api<ApiUser[]>('/api/users');
 			const map: Record<string, UserInfo> = {};
-			map[me.username] = { displayName: me.displayName, avatar: me.avatar, companion: me.companion, house: me.house, accessories: me.accessories };
-			for (const u of others) map[u.username] = { displayName: u.displayName, avatar: u.avatar, companion: u.companion, house: u.house, accessories: u.accessories };
+			const toInfo = (u: ApiUser): UserInfo => ({
+				displayName: u.displayName,
+				avatar: u.avatar,
+				companion: u.companion,
+				companionTint: u.companionTint,
+				house: u.house,
+				accessories: u.accessories
+			});
+			map[me.username] = toInfo(me);
+			for (const u of others) map[u.username] = toInfo(u);
 			userInfo = map;
 		} catch {
 			// avatar non disponibili: si userà il volto di default
@@ -204,7 +212,7 @@
 					<div class="seat-house"><Icon name={houseOf(username)} size={22} title="Casata" /></div>
 				{/if}
 				{#if companionOf(username)}
-					<div class="seat-companion"><Icon name={companionOf(username)} size={26} title="Companion" /></div>
+					<div class="seat-companion"><Icon name={companionOf(username)} size={26} title="Companion" tint={companionTintOf(username)} /></div>
 				{/if}
 			</div>
 			<span class="seat-name" class:me={username === meUsername}>{nameOf(username)}</span>

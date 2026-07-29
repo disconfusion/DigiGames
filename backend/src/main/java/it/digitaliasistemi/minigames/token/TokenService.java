@@ -1,15 +1,26 @@
 package it.digitaliasistemi.minigames.token;
 
 import it.digitaliasistemi.minigames.domain.AppUser;
+import it.digitaliasistemi.minigames.ws.NotifyBus;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+
+import java.util.Map;
 
 /**
  * Gestione del saldo Token (valuta interna).
  * Solo saldo corrente su AppUser.tokens: nessuno storico (scelta di design alpha).
+ *
+ * <p>Ogni variazione del saldo viene notificata al proprietario sul canale {@code /ws/notify}
+ * ({@code {"type":"tokens","balance":N}}): il badge in header resta reattivo senza aspettare
+ * il polling da 30s. Questo è il punto di passaggio unico per accrediti/addebiti — chi tocca
+ * {@code AppUser.tokens} direttamente bypassa la notifica.
  */
 @ApplicationScoped
 public class TokenService {
+
+    @Inject NotifyBus notifyBus;
 
     /** Saldo corrente dell'utente (0 se non trovato). */
     public int balance(String username) {
@@ -22,7 +33,9 @@ public class TokenService {
     public void award(String username, int amount) {
         if (amount <= 0) return;
         AppUser u = AppUser.findByUsername(username);
-        if (u != null) u.tokens += amount; // entità gestita: flush automatico a fine transazione
+        if (u == null) return;
+        u.tokens += amount; // entità gestita: flush automatico a fine transazione
+        notifyBalance(username, u.tokens);
     }
 
     /**
@@ -35,6 +48,12 @@ public class TokenService {
         AppUser u = AppUser.findByUsername(username);
         if (u == null || u.tokens < amount) return false;
         u.tokens -= amount;
+        notifyBalance(username, u.tokens);
         return true;
+    }
+
+    /** Notifica il nuovo saldo al proprietario (best-effort: se non è connesso non fa nulla). */
+    private void notifyBalance(String username, int balance) {
+        notifyBus.push(username, "tokens", Map.of("balance", balance));
     }
 }

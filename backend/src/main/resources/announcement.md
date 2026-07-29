@@ -12,6 +12,14 @@ Restate sintonizzati: la **2.0** è vicina.
 
 ## Novità e fix di questa versione
 
+**Nuovo gioco: Pong 1v1** — il primo gioco in tempo reale della piattaforma. Il server simula la partita a 60 tick al secondo ed è l'unica autorità: dal browser parte solo la posizione della racchetta (mouse, dito o tasti W/S e frecce). In partita trovi un HUD con FPS del browser, tick del server, velocità della palla e colpi dello scambio, più il colore del monitor scelto da te (ognuno vede il suo) e i punti partita configurabili alla creazione della stanza.
+
+**Nuovi companion** — Scarabeo Rinoceronte (con il colore della corazza scelto da te: verde sgargiante di serie, ma prende qualunque tinta), Lo Special (il panino alla salsiccia del paninaro Fabio, col sugo che "coce da 200 anni"), Castoro di DBeaver, Lancer e l'Elmo di Master Chief.
+
+**Token sempre reattivi** — il saldo in alto si aggiorna all'istante quando guadagni o spendi Token: vittorie, acquisti nello shop e regali arrivano in tempo reale invece di aspettare il prossimo controllo.
+
+**Inviti gestibili dalla notifica** — quando ricevi un invito puoi accettarlo o rifiutarlo direttamente dal messaggio che compare, senza passare dalla pagina Inviti.
+
 **Parola del Giorno** — la sezione "Come si gioca" è stata rivista e ora le regole sono aggiornabili dall'admin
 
 **Impiccato multiplayer** — turni più solidi
@@ -33,4 +41,4 @@ Restate sintonizzati: la **2.0** è vicina.
 Buon divertimento!
 
 ---
-_Aggiornato: 15 luglio 2026 — anteprima 2.0 (UI rinnovata, carte collezionabili, nuovi poteri); regole Parola del Giorno editabili dall'admin._
+_Aggiornato: 29 luglio 2026 — nuovo gioco Pong 1v1 (realtime 60 Hz, HUD e colore monitor), 5 nuovi companion con scarabeo ricolorabile, saldo Token reattivo, inviti accettabili dalla notifica._

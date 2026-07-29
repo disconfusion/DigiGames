@@ -3,7 +3,9 @@ package it.digitaliasistemi.minigames.leaderboard;
 import it.digitaliasistemi.minigames.domain.AppUser;
 import it.digitaliasistemi.minigames.domain.MatchResult;
 import it.digitaliasistemi.minigames.domain.UserHouse;
+import it.digitaliasistemi.minigames.token.TokenService;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import java.time.Instant;
@@ -11,6 +13,8 @@ import java.util.*;
 
 @ApplicationScoped
 public class LeaderboardService {
+
+    @Inject TokenService tokens;
 
     @Transactional
     public void record(String username, String game, String result) {
@@ -24,14 +28,15 @@ public class LeaderboardService {
         r.persist();
 
         // Token guadagnati: vittoria 10 (Impiccato del giorno 50), pareggio 5, sconfitta 0.
-        // user è gestito da Panache nella transazione → l'incremento persiste al flush.
+        // Passa da TokenService (stessa transazione, REQUIRED) così l'accredito notifica
+        // il nuovo saldo sul canale WS e il badge in header si aggiorna subito.
         if (user != null) {
             int reward = switch (result) {
                 case "WIN" -> "daily".equals(game) ? 50 : 10;
                 case "DRAW" -> 5;
                 default -> 0;
             };
-            user.tokens += reward;
+            tokens.award(username, reward);
         }
     }
 

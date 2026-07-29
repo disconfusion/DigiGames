@@ -15,6 +15,7 @@
 	import Icon from '$lib/icons/Icon.svelte';
 	import Avatar from '$lib/Avatar.svelte';
 	import { showToast } from '$lib/notifications.svelte';
+	import { setBalance } from '$lib/wallet.svelte';
 
 	type Profile = { username: string; displayName: string; avatar: string | null; role: string };
 	type AuthResponse = { token: string; username: string; displayName: string; role: string };
@@ -37,11 +38,12 @@
 		tris: 'Tris',
 		dama: 'Dama',
 		chess: 'Scacchi',
+		pong: 'Pong',
 		daily: 'Parola del Giorno'
 	};
 	const gameLabel = (g: string) => GAME_LABELS[g] ?? g;
 
-	type Companion = { id: string; name: string; description: string; cost: number; owned: boolean; equipped: boolean };
+	type Companion = { id: string; name: string; description: string; cost: number; owned: boolean; equipped: boolean; tintable?: boolean; tint?: string };
 	type Accessory = { id: string; name: string; description: string; slot: string; cost: number; owned: boolean; equipped: boolean };
 
 	let profile = $state<Profile | null>(null);
@@ -51,6 +53,7 @@
 	let companions = $state<Companion[]>([]);
 	const ownedCompanions = $derived(companions.filter((c) => c.owned));
 	const equippedCompanion = $derived(companions.find((c) => c.equipped)?.id ?? '');
+	const equippedTint = $derived(companions.find((c) => c.equipped)?.tint ?? '');
 
 	let accessories = $state<Accessory[]>([]);
 	const ownedAccessories = $derived(accessories.filter((a) => a.owned));
@@ -167,6 +170,7 @@
 			});
 			showToast(r.message, 'success');
 			if (giftOptions) giftOptions.balance = r.balance;
+			setBalance(r.balance); // badge in header allineato all'istante
 			loadGiftOptions(giftTo); // aggiorna i flag "già posseduto"
 		} catch (e) {
 			showToast((e as Error).message, 'error');
@@ -277,7 +281,7 @@
 					<div class="orbit" style:--orbit-dur={orbit.dur} style:animation-direction={orbit.dir}>
 						<div class="orbit-pos" style:--orbit-radius={orbit.radius}>
 							<div class="orbit-bob" style:--bob-dur={orbit.bob}>
-								<Icon name={equippedCompanion} size={28} title="Companion" />
+								<Icon name={equippedCompanion} size={28} title="Companion" tint={equippedTint} />
 							</div>
 						</div>
 					</div>
@@ -341,14 +345,14 @@
 	</section>
 
 	<section class="panel">
-		<h2><Icon name={equippedCompanion || 'leone'} size={18} title="Companion" /> Companion</h2>
+		<h2><Icon name={equippedCompanion || 'leone'} size={18} title="Companion" tint={equippedTint} /> Companion</h2>
 		{#if ownedCompanions.length === 0}
 			<p class="hint">Non possiedi companion. Compratene uno nello <a href="/shop">shop</a>!</p>
 		{:else}
 			<div class="companion-grid">
 				{#each ownedCompanions as c (c.id)}
 					<button class="comp" class:on={c.equipped} onclick={() => equipCompanion(c)} title={c.name}>
-						<Icon name={c.id} size={40} title={c.name} />
+						<Icon name={c.id} size={40} title={c.name} tint={c.tint ?? ''} />
 						<span class="comp-name">{c.name}</span>
 						{#if c.equipped}<span class="comp-tag">ON</span>{/if}
 					</button>

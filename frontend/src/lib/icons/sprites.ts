@@ -6,6 +6,8 @@ export interface Sprite {
 	grid?: number;
 	fps?: number;
 	motion?: string;
+	/** Chiavi della palette ricolorabili dall'utente (vedi prop `tint` di <Icon>). */
+	tintKeys?: string[];
 }
 
 /* =============================================================================
@@ -1873,6 +1875,219 @@ const tassorosso: Sprite = {
 	]]
 };
 
+// ── Pong ───────────────────────────────────────────────────────────────────
+const pong: Sprite = {
+	motion: 'pulse',
+	fps: 5,
+	palette: { P: C.cyan, N: C.muted, B: C.text },
+	frames: [
+		[
+			'................',
+			'................',
+			'................',
+			'..PP...N....PP..',
+			'..PP...N....PP..',
+			'..PP........PP..',
+			'..PP...N....PP..',
+			'..PP...N.BB.PP..',
+			'..PP...N.BB.PP..',
+			'..PP........PP..',
+			'..PP...N....PP..',
+			'..PP...N....PP..',
+			'................',
+			'................',
+			'................',
+			'................'
+		],
+		[
+			'................',
+			'................',
+			'................',
+			'..PP...N....PP..',
+			'..PP...N....PP..',
+			'..PP........PP..',
+			'..PP...N....PP..',
+			'..PP.BBN....PP..',
+			'..PP.BBN....PP..',
+			'..PP........PP..',
+			'..PP...N....PP..',
+			'..PP...N....PP..',
+			'................',
+			'................',
+			'................',
+			'................'
+		]
+	]
+};
+
+// ── Companion: scarabeo rinoceronte (colore scelto dall'utente) ────────────
+// Vista dall'alto: corno, testa con occhi, elitre divise dalla linea centrale, sei zampe che
+// si muovono fra i due fotogrammi. B = corazza ricolorabile, K = dettagli scuri (visibili su
+// qualunque tinta), Z = zampe (stessa tinta della corazza, tenute separate per leggibilità).
+const scarabeo: Sprite = {
+	motion: 'bob',
+	fps: 3,
+	palette: { B: '#3dff9a', K: '#10121a', Z: '#3dff9a' },
+	tintKeys: ['B', 'Z'],
+	frames: [
+		[
+			'................',
+			'.......BB.......',
+			'.......BB.......',
+			'.....BBBBBB.....',
+			'.....BKBBKB.....',
+			'....BBBBBBBB....',
+			'Z...BBBBBBBB...Z',
+			'.Z.BBBBBBBBBB.Z.',
+			'...BBBBKKBBBB...',
+			'Z..BBBBKKBBBB..Z',
+			'.Z.BBBBKKBBBB.Z.',
+			'...BBBBKKBBBB...',
+			'Z...BBBKKBBB...Z',
+			'.Z...BBBBBB...Z.',
+			'......BBBB......',
+			'................'
+		],
+		[
+			'................',
+			'.......BB.......',
+			'.......BB.......',
+			'.....BBBBBB.....',
+			'.....BKBBKB.....',
+			'....BBBBBBBB....',
+			'.Z..BBBBBBBB..Z.',
+			'Z..BBBBBBBBBB..Z',
+			'...BBBBKKBBBB...',
+			'.Z.BBBBKKBBBB.Z.',
+			'Z..BBBBKKBBBB..Z',
+			'...BBBBKKBBBB...',
+			'.Z..BBBKKBBB..Z.',
+			'Z....BBBBBB....Z',
+			'......BBBB......',
+			'................'
+		]
+	]
+};
+
+// ── Companion: "Lo Special", il panino del paninaro Fabio ─────────────────
+// R = sugo che coce da 200 anni: esce dai lati, schizza sopra e gocciola sotto (2 fotogrammi).
+const panino: Sprite = {
+	motion: 'float',
+	fps: 3,
+	palette: { C: '#a9702f', B: '#e0aa63', R: '#d6382f', S: '#8b3a2a', G: C.green },
+	frames: [
+		[
+			'................',
+			'.....R....R.....',
+			'.....CCCCCC.....',
+			'...CCBBBBBBCC...',
+			'..CBBBBBBBBBBC..',
+			'..CBRRRRRRRRBC..',
+			'.RSSSSSSSSSSSSR.',
+			'RSSSSGSSSSGSSSSR',
+			'.RRSSSSSSSSSSRR.',
+			'..CBRRRRRRRRBC..',
+			'..CBBBBBBBBBBC..',
+			'...CCBBBBBBCC...',
+			'.....CCCCCC.....',
+			'.....R..R.R.....',
+			'......R....R....',
+			'................'
+		],
+		[
+			'................',
+			'.....R....R.....',
+			'.....CCCCCC.....',
+			'...CCBBBBBBCC...',
+			'..CBBBBBBBBBBC..',
+			'..CBRRRRRRRRBC..',
+			'.RSSSSSSSSSSSSR.',
+			'RSSSSGSSSSGSSSSR',
+			'.RRSSSSSSSSSSRR.',
+			'..CBRRRRRRRRBC..',
+			'..CBBBBBBBBBBC..',
+			'...CCBBBBBBCC...',
+			'.....CCCCCC.....',
+			'.....R....R.....',
+			'......R..R......',
+			'.......R........'
+		]
+	]
+};
+
+// ── Companion: il castoro di DBeaver ──────────────────────────────────────
+const castoro: Sprite = {
+	motion: 'bob',
+	palette: { B: '#8a5a2b', T: '#5b3a1c', K: '#0a0512', W: C.text, N: '#3a2410' },
+	// Coda piatta a destra (T) per non confonderlo con un orso, incisivi bianchi al centro.
+	frames: [[
+		'................',
+		'..BB......BB....',
+		'.BBBBBBBBBBBB...',
+		'.BBKBBBBBBKBB...',
+		'.BBBBBBBBBBBB...',
+		'..BBBBNNBBBB....',
+		'...BBWWWWBB.....',
+		'....BWWWWB......',
+		'...BBBBBBBB.....',
+		'..BBBBBBBBBTTTT.',
+		'..BBBBBBBBBTTTT.',
+		'..BBBBBBBBBTTTT.',
+		'...BBBBBBBB.TTT.',
+		'....BB..BB......',
+		'................',
+		'................'
+	]]
+};
+
+// ── Companion: Lancer (Gears of War) ─────────────────────────────────────
+const lancer: Sprite = {
+	motion: 'shake',
+	palette: { G: '#6b7280', M: '#9aa3ad', R: C.danger, K: '#0a0512' },
+	frames: [[
+		'................',
+		'................',
+		'..RRRRRR........',
+		'..MMMMMMMM......',
+		'..MMMMMMMM......',
+		'.GGGGGGGGGGGGGG.',
+		'.GGGGGGGGGGGGGG.',
+		'.GGKGGGGGGGKGGG.',
+		'....GGGG..GG....',
+		'....GGGG........',
+		'....GGGG........',
+		'.....GG.........',
+		'................',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+// ── Companion: elmo di Master Chief ──────────────────────────────────────
+const masterchief: Sprite = {
+	motion: 'bob',
+	palette: { G: '#3f6b3a', V: C.amber, K: '#0a0512' },
+	frames: [[
+		'................',
+		'.....GGGGGG.....',
+		'...GGGGGGGGGG...',
+		'..GGGGGGGGGGGG..',
+		'..GGVVVVVVVVGG..',
+		'..GVVVVVVVVVVG..',
+		'..GVVVVVVVVVVG..',
+		'..GGVVVVVVVVGG..',
+		'..GGGGGGGGGGGG..',
+		'..GGGGGGGGGGGG..',
+		'...GGGGGGGGGG...',
+		'....GGGGGGGG....',
+		'.....GGGGGG.....',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
 export const SPRITES: Record<string, Sprite> = {
 	// giochi (le chiavi coincidono con gli slug del catalogo)
 	connect4,
@@ -1883,6 +2098,7 @@ export const SPRITES: Record<string, Sprite> = {
 	tris,
 	dama,
 	chess,
+	pong,
 	// esiti
 	win,
 	lose,
@@ -1967,6 +2183,11 @@ export const SPRITES: Record<string, Sprite> = {
 	batman,
 	persona5,
 	sly,
+	scarabeo,
+	panino,
+	castoro,
+	lancer,
+	masterchief,
 	// casate (le chiavi coincidono con gli id di HouseCatalog backend)
 	grifondoro,
 	serpeverde,

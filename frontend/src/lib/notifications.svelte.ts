@@ -1,5 +1,12 @@
 export type ToastKind = 'info' | 'success' | 'invite' | 'error';
-export type Toast = { id: number; message: string; kind: ToastKind };
+/** Azione cliccabile dentro un toast (es. accetta/rifiuta un invito senza aprire /inviti). */
+export type ToastAction = {
+	label: string;
+	/** primary = pulsante pieno d'accento, ghost = contorno neutro. */
+	style?: 'primary' | 'ghost';
+	run: () => void | Promise<void>;
+};
+export type Toast = { id: number; message: string; kind: ToastKind; actions?: ToastAction[] };
 
 // Stato condiviso per notifiche real-time (badge nav + trigger refresh pagine + coda toast).
 export const notifications = $state({
@@ -14,9 +21,14 @@ export const notifications = $state({
 let toastSeq = 0;
 
 /** Accoda un toast; auto-dismiss dopo `duration` ms (0 = persistente). Ritorna l'id. */
-export function showToast(message: string, kind: ToastKind = 'info', duration = 5000): number {
+export function showToast(
+	message: string,
+	kind: ToastKind = 'info',
+	duration = 5000,
+	actions?: ToastAction[]
+): number {
 	const id = ++toastSeq;
-	notifications.toasts.push({ id, message, kind });
+	notifications.toasts.push({ id, message, kind, actions });
 	// Limita a 4 toast simultanei (rimuove i più vecchi)
 	if (notifications.toasts.length > 4) notifications.toasts.shift();
 	if (duration > 0) setTimeout(() => dismissToast(id), duration);
@@ -35,6 +47,11 @@ export function onInviteReceived() {
 
 export function setInviteCount(n: number) {
 	notifications.inviteCount = n;
+}
+
+/** Invito accettato/rifiutato (anche dal toast): fa ricaricare la lista in /invites. */
+export function onInviteResolved() {
+	notifications.lastInvite = Date.now();
 }
 
 export function onDailyUpdate() {

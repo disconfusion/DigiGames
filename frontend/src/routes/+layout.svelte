@@ -8,7 +8,8 @@
 	import { api } from '$lib/api';
 	import { GAME_CATALOG } from '$lib/games/catalog';
 	import { connectNotify, type NotifyConnection } from '$lib/ws';
-	import { notifications, onInviteReceived, setInviteCount, onDailyUpdate, onPresenceUpdate, onGiftReceived, showToast } from '$lib/notifications.svelte';
+	import { notifications, onInviteReceived, onInviteResolved, setInviteCount, onDailyUpdate, onPresenceUpdate, onGiftReceived, showToast } from '$lib/notifications.svelte';
+	import { wallet, setBalance, refreshBalance } from '$lib/wallet.svelte';
 	import ToastContainer from '$lib/ToastContainer.svelte';
 	import GamePicker from '$lib/games/GamePicker.svelte';
 	import Icon from '$lib/icons/Icon.svelte';
@@ -31,7 +32,6 @@
 	// Pagina corrente → evidenziazione del link attivo nella tab-strip
 	const path = $derived(page.url.pathname);
 	const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
-	let tokens = $state(0);
 
 	// Modale segnalazione bug
 	let showBug = $state(false);
@@ -116,32 +116,53 @@
 		} catch { /* silenzioso */ }
 	}
 
-	async function fetchTokens() {
-		try {
-			const r = await api<{ balance: number }>('/api/tokens');
-			tokens = r.balance;
-		} catch { /* silenzioso */ }
-	}
-
 	let companion = $state('');
+	let companionTint = $state('');
 	let house = $state('');
 	async function fetchCompanion() {
 		try {
-			const r = await api<{ companion: string | null; house: string | null }>('/api/me');
+			const r = await api<{ companion: string | null; companionTint: string | null; house: string | null }>(
+				'/api/me'
+			);
 			companion = r.companion ?? '';
+			companionTint = r.companionTint ?? '';
 			house = r.house ?? '';
 		} catch { /* silenzioso */ }
 	}
 
+	/** Accetta l'invito direttamente dal toast ed entra nella stanza. */
+	async function acceptInvite(inviteId: number, roomCode: string) {
+		try {
+			const r = await api<{ roomCode: string }>(`/api/invites/${inviteId}/accept`, { method: 'POST' });
+			setInviteCount(Math.max(0, notifications.inviteCount - 1));
+			onInviteResolved();
+			goto(`/room/${r.roomCode ?? roomCode}`);
+		} catch (e) {
+			showToast((e as Error).message, 'error');
+		}
+	}
+
+	/** Rifiuta l'invito dal toast (nessun cambio di pagina). */
+	async function declineInvite(inviteId: number) {
+		try {
+			await api(`/api/invites/${inviteId}/decline`, { method: 'POST' });
+			setInviteCount(Math.max(0, notifications.inviteCount - 1));
+			onInviteResolved();
+		} catch (e) {
+			showToast((e as Error).message, 'error');
+		}
+	}
+
 	$effect(() => {
 		if (auth.session) {
-			// Heartbeat presenza + refresh saldo Token / companion ogni 30s
+			// Heartbeat presenza + refresh saldo Token / companion ogni 30s.
+			// Il saldo arriva anche in push sul WS ("tokens"): il polling è solo la rete di sicurezza.
 			ping();
-			fetchTokens();
+			refreshBalance();
 			fetchCompanion();
 			pingTimer = setInterval(() => {
 				ping();
-				fetchTokens();
+				refreshBalance();
 				fetchCompanion();
 			}, 30_000);
 			// Fetch count iniziale + canale WS notifiche
@@ -152,12 +173,27 @@
 					if (msg.type === 'invite') {
 						onInviteReceived();
 						const from = typeof msg.from === 'string' ? msg.from : null;
+						const inviteId = typeof msg.inviteId === 'number' ? msg.inviteId : null;
+						const roomCode = typeof msg.roomCode === 'string' ? msg.roomCode : '';
+						const text = from
+							? `${from} ti ha invitato a ${gameLabel(msg.game)}`
+							: 'Hai ricevuto un nuovo invito';
+						// Con inviteId il toast è persistente e decidibile sul posto; senza (vecchi
+						// client/server) resta il toast informativo con auto-dismiss.
 						showToast(
-							from
-								? `${from} ti ha invitato a ${gameLabel(msg.game)}`
-								: 'Hai ricevuto un nuovo invito',
-							'invite'
+							text,
+							'invite',
+							inviteId ? 0 : 5000,
+							inviteId
+								? [
+										{ label: 'Accetta', style: 'primary', run: () => acceptInvite(inviteId, roomCode) },
+										{ label: 'Rifiuta', style: 'ghost', run: () => declineInvite(inviteId) }
+									]
+								: undefined
 						);
+					} else if (msg.type === 'tokens') {
+						// Saldo aggiornato dal server (vittoria, acquisto, regalo): badge reattivo
+						if (typeof msg.balance === 'number') setBalance(msg.balance);
 					} else if (msg.type === 'daily:update') {
 						onDailyUpdate();
 						showToast('La parola del giorno è stata aggiornata', 'info');
@@ -178,7 +214,7 @@
 			notifyWs?.close();
 			notifyWs = undefined;
 			setInviteCount(0);
-			tokens = 0;
+			setBalance(0);
 			companion = '';
 			house = '';
 		}
@@ -205,10 +241,10 @@
 		<a class="brand" href="/"><Icon name="gamepad" size={18} title="DigiGames" /> DigiGames</a>
 		{#if auth.session}
 			<div class="actions">
-				<a class="token-badge" href="/shop" title="Vai allo shop"><Icon name="coin" size={16} title="Token" /> {tokens}</a>
+				<a class="token-badge" href="/shop" title="Vai allo shop"><Icon name="coin" size={16} title="Token" /> {wallet.balance}</a>
 				<a class="who" href="/profile" class:active={isActive('/profile')} title="Area personale">
 					{#if house}<Icon name={house} size={16} title="Casata" />{/if}
-					{#if companion}<Icon name={companion} size={16} title="Companion" />{/if}
+					{#if companion}<Icon name={companion} size={16} title="Companion" tint={companionTint} />{/if}
 					<span class="who-name">{auth.session.displayName}</span>
 				</a>
 				<button class="icon-btn suggest" onclick={openSuggest} title="Suggerisci feature/gioco" aria-label="Suggerisci feature o gioco"><Icon name="pencil" size={16} /></button>

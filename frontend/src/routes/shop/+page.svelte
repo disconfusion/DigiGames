@@ -5,6 +5,7 @@
 	import { api } from '$lib/api';
 	import { gameLabel } from '$lib/games/catalog';
 	import { showToast } from '$lib/notifications.svelte';
+	import { wallet, setBalance } from '$lib/wallet.svelte';
 	import Icon from '$lib/icons/Icon.svelte';
 
 	type Power = {
@@ -26,7 +27,20 @@
 		cost: number;
 		owned: boolean;
 		equipped: boolean;
+		/** true se il colore è scelto dall'utente (es. scarabeo rinoceronte) */
+		tintable?: boolean;
+		tint?: string;
 	};
+
+	/** Tinte pronte per i companion ricolorabili: neon sgargianti + il verde di serie. */
+	const TINTS = [
+		{ label: 'Verde sgargiante', hex: '#3dff9a' },
+		{ label: 'Cyan', hex: '#2ff3ff' },
+		{ label: 'Magenta', hex: '#ff2e88' },
+		{ label: 'Ambra', hex: '#ffcf3f' },
+		{ label: 'Viola', hex: '#b06bff' },
+		{ label: 'Rosso', hex: '#ff5277' }
+	];
 
 	type Accessory = {
 		id: string;
@@ -40,7 +54,9 @@
 
 	const SLOT_LABEL: Record<string, string> = { testa: 'Testa', occhi: 'Occhi', bocca: 'Bocca' };
 
-	let balance = $state(0);
+	// Saldo dallo store condiviso: acquisti qui e accrediti dal server (WS) aggiornano
+	// contemporaneamente questa pagina e il badge in header.
+	const balance = $derived(wallet.balance);
 	let powers = $state<Power[]>([]);
 	let companions = $state<Companion[]>([]);
 	let accessories = $state<Accessory[]>([]);
@@ -61,13 +77,13 @@
 	async function load() {
 		try {
 			const r = await api<{ balance: number; powers: Power[] }>('/api/shop/powers');
-			balance = r.balance;
+			setBalance(r.balance);
 			powers = r.powers;
 			const c = await api<{ balance: number; companions: Companion[] }>('/api/shop/companions');
-			balance = c.balance;
+			setBalance(c.balance);
 			companions = c.companions;
 			const a = await api<{ balance: number; accessories: Accessory[] }>('/api/shop/accessories');
-			balance = a.balance;
+			setBalance(a.balance);
 			accessories = a.accessories;
 		} catch (e) {
 			error = (e as Error).message;
@@ -91,7 +107,7 @@
 			const r = await api<{ message: string; balance: number }>(`/api/shop/powers/${p.id}/buy`, {
 				method: 'POST'
 			});
-			balance = r.balance;
+			setBalance(r.balance);
 			powers = powers.map((x) => (x.id === p.id ? { ...x, owned: x.owned + 1 } : x));
 			showToast(r.message, 'success');
 		} catch (e) {
@@ -108,13 +124,30 @@
 			const r = await api<{ message: string; balance: number }>(`/api/shop/companions/${c.id}/buy`, {
 				method: 'POST'
 			});
-			balance = r.balance;
+			setBalance(r.balance);
 			// se è il primo companion il backend lo equipaggia da solo
 			const hadEquipped = companions.some((x) => x.equipped);
 			companions = companions.map((x) =>
 				x.id === c.id ? { ...x, owned: true, equipped: !hadEquipped } : x
 			);
 			showToast(r.message, 'success');
+		} catch (e) {
+			showToast((e as Error).message, 'error');
+		} finally {
+			busy = { ...busy, [c.id]: false };
+		}
+	}
+
+	/** Cambia il colore di un companion ricolorabile (il server valida formato e possesso). */
+	async function setTint(c: Companion, hex: string) {
+		if (busy[c.id] || !c.tintable || !c.owned) return;
+		busy = { ...busy, [c.id]: true };
+		try {
+			const r = await api<{ tint: string }>(`/api/shop/companions/${c.id}/tint`, {
+				method: 'POST',
+				body: JSON.stringify({ hex })
+			});
+			companions = companions.map((x) => (x.id === c.id ? { ...x, tint: r.tint } : x));
 		} catch (e) {
 			showToast((e as Error).message, 'error');
 		} finally {
@@ -145,7 +178,7 @@
 			const r = await api<{ message: string; balance: number }>(`/api/shop/accessories/${a.id}/buy`, {
 				method: 'POST'
 			});
-			balance = r.balance;
+			setBalance(r.balance);
 			// il backend auto-equipaggia se lo slot è libero
 			const slotTaken = accessories.some((x) => x.slot === a.slot && x.equipped);
 			accessories = accessories.map((x) =>
@@ -220,9 +253,34 @@
 				{#each companions as c (c.id)}
 					{@const affordable = balance >= c.cost}
 					<article class="power companion" class:owned={c.owned}>
-						<div class="emoji"><Icon name={c.id} size={40} title={c.name} /></div>
+						<div class="emoji"><Icon name={c.id} size={40} title={c.name} tint={c.tint ?? ''} /></div>
 						<h3>{c.name}</h3>
 						<p class="desc">{c.description}</p>
+						{#if c.tintable && c.owned}
+							<div class="tints" role="group" aria-label="Colore di {c.name}">
+								{#each TINTS as t (t.hex)}
+									<button
+										class="tint"
+										class:on={(c.tint ?? '').toLowerCase() === t.hex}
+										style:background={t.hex}
+										title={t.label}
+										aria-label="Colore {t.label}"
+										disabled={busy[c.id]}
+										onclick={() => setTint(c, t.hex)}
+									></button>
+								{/each}
+								<label class="tint-custom" title="Colore personalizzato">
+									<input
+										type="color"
+										value={c.tint ?? '#3dff9a'}
+										aria-label="Colore personalizzato per {c.name}"
+										onchange={(e) => setTint(c, (e.currentTarget as HTMLInputElement).value)}
+									/>
+								</label>
+							</div>
+						{:else if c.tintable}
+							<p class="tint-hint">Colore personalizzabile dopo l'acquisto</p>
+						{/if}
 						<div class="foot">
 							{#if c.owned}
 								<span class="have">Posseduto</span>
@@ -443,6 +501,43 @@
 	.companions > .sub {
 		margin: 0 0 0.75rem;
 	}
+	/* Scelta colore dei companion ricolorabili */
+	.tints {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		flex-wrap: wrap;
+	}
+	.tint {
+		width: 20px;
+		height: 20px;
+		border-radius: 5px;
+		border: 2px solid transparent;
+		cursor: pointer;
+		padding: 0;
+	}
+	.tint.on {
+		border-color: var(--text);
+		box-shadow: 0 0 8px currentColor;
+	}
+	.tint:disabled {
+		cursor: progress;
+	}
+	.tint-custom input {
+		width: 24px;
+		height: 20px;
+		padding: 0;
+		border: 1px solid var(--line);
+		border-radius: 5px;
+		background: none;
+		cursor: pointer;
+	}
+	.tint-hint {
+		margin: 0;
+		font-size: 0.72rem;
+		color: var(--muted);
+	}
+
 	.slot-tag {
 		margin: 0;
 		align-self: flex-start;

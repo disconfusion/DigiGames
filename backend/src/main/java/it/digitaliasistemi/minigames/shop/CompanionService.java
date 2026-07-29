@@ -1,5 +1,6 @@
 package it.digitaliasistemi.minigames.shop;
 
+import it.digitaliasistemi.minigames.domain.CompanionTint;
 import it.digitaliasistemi.minigames.domain.OwnedCompanion;
 import it.digitaliasistemi.minigames.token.TokenService;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -18,10 +19,55 @@ public class CompanionService {
 
     @Inject TokenService tokens;
 
+    /** Colore valido per un companion? Solo #rrggbb, così finisce sicuro nell'SVG delle icone. */
+    private static final java.util.regex.Pattern HEX = java.util.regex.Pattern.compile("^#[0-9a-fA-F]{6}$");
+
     /** id del companion equipaggiato dall'utente, o null. */
     public String equippedId(String username) {
         OwnedCompanion eq = OwnedCompanion.findEquipped(username);
         return eq != null ? eq.companionId : null;
+    }
+
+    /**
+     * Colore del companion equipaggiato, o null se non è ricolorabile / nessuno equipaggiato.
+     * Serve a header, stanze e classifica per disegnare lo stemma nella tinta scelta.
+     */
+    public String equippedTint(String username) {
+        String id = equippedId(username);
+        if (id == null) return null;
+        return CompanionCatalog.byId(id).filter(CompanionCatalog.CompanionDef::tintable).isPresent()
+                ? tintOf(username, id)
+                : null;
+    }
+
+    /** Colore scelto per quel companion, o il default del catalogo. */
+    public String tintOf(String username, String companionId) {
+        CompanionTint t = CompanionTint.find(username, companionId);
+        return t != null ? t.hex : CompanionCatalog.DEFAULT_TINT;
+    }
+
+    /**
+     * Imposta il colore di un companion ricolorabile posseduto dall'utente.
+     * Ritorna false se non posseduto, non ricolorabile o colore non valido.
+     */
+    @Transactional
+    public boolean setTint(String username, String companionId, String hex) {
+        if (hex == null || !HEX.matcher(hex).matches()) return false;
+        if (CompanionCatalog.byId(companionId).filter(CompanionCatalog.CompanionDef::tintable).isEmpty()) {
+            return false;
+        }
+        if (OwnedCompanion.find(username, companionId) == null) return false;
+        CompanionTint t = CompanionTint.find(username, companionId);
+        if (t == null) {
+            t = new CompanionTint();
+            t.username = username;
+            t.companionId = companionId;
+            t.hex = hex.toLowerCase();
+            t.persist();
+        } else {
+            t.hex = hex.toLowerCase(); // entità gestita: flush a fine transazione
+        }
+        return true;
     }
 
     /** Catalogo completo con flag owned/equipped per l'utente. */
@@ -40,6 +86,8 @@ public class CompanionService {
             m.put("cost", d.defaultCost());
             m.put("owned", owned);
             m.put("equipped", owned && Boolean.TRUE.equals(ownedEquip.get(d.id())));
+            m.put("tintable", d.tintable());
+            if (d.tintable()) m.put("tint", tintOf(username, d.id()));
             out.add(m);
         }
         return out;
