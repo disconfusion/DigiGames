@@ -2041,27 +2041,564 @@ const castoro: Sprite = {
 };
 
 // ── Companion: Lancer (Gears of War) ─────────────────────────────────────
+// La motosega è il tratto riconoscibile: catena chiara con denti a zig-zag ambrati sopra la
+// canna, in due fotogrammi (la catena scorre). Prima era una barra rossa piatta, illeggibile.
 const lancer: Sprite = {
 	motion: 'shake',
-	palette: { G: '#6b7280', M: '#9aa3ad', R: C.danger, K: '#0a0512' },
+	fps: 8,
+	palette: { G: '#6b7280', M: '#c3ccd6', D: '#ffcf3f', R: C.danger, K: '#141821' },
+	frames: [
+		[
+			'................',
+			'..D.D.D.D.D.D...',
+			'..MMMMMMMMMMM...',
+			'..MKMKMKMKMKM...',
+			'..MMMMMMMMMMM...',
+			'..RRRRRRRRRRR...',
+			'GGGGGGGGGGGGGGG.',
+			'GGKGGGGGGGKGGGG.',
+			'GGGGGGGGGGG.....',
+			'...GGGG..GG.....',
+			'...GGGG.........',
+			'...GGGG.........',
+			'....GG..........',
+			'................',
+			'................',
+			'................'
+		],
+		[
+			'................',
+			'...D.D.D.D.D.D..',
+			'..MMMMMMMMMMM...',
+			'..KMKMKMKMKMK...',
+			'..MMMMMMMMMMM...',
+			'..RRRRRRRRRRR...',
+			'GGGGGGGGGGGGGGG.',
+			'GGKGGGGGGGKGGGG.',
+			'GGGGGGGGGGG.....',
+			'...GGGG..GG.....',
+			'...GGGG.........',
+			'...GGGG.........',
+			'....GG..........',
+			'................',
+			'................',
+			'................'
+		]
+	]
+};
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Companion: insetti (colore scelto dall'utente), animali e oggetti d'ufficio.
+   Nei tintabili la chiave del corpo sta in `tintKeys`; i dettagli scuri restano
+   fissi così ogni tinta resta leggibile.
+───────────────────────────────────────────────────────────────────────────── */
+
+// ── Ape ───────────────────────────────────────────────────────────────────
+const ape: Sprite = {
+	motion: 'float',
+	fps: 6,
+	palette: { Y: '#ffcf3f', K: '#1a1206', W: '#dff6ff' },
+	tintKeys: ['Y'],
+	frames: [
+		[
+			'................',
+			'...K.......K....',
+			'....K.....K.....',
+			'.....KKKKKK.....',
+			'.....KYYYYK.....',
+			'....WWYYYYWW....',
+			'...WWWYYYYWWW...',
+			'....WWYYYYWW....',
+			'.....YYYYYY.....',
+			'.....KKKKKK.....',
+			'.....YYYYYY.....',
+			'.....KKKKKK.....',
+			'......YYYY......',
+			'......KKKK......',
+			'.......KK.......',
+			'................'
+		],
+		[
+			'................',
+			'...K.......K....',
+			'....K.....K.....',
+			'.....KKKKKK.....',
+			'.....KYYYYK.....',
+			'...WWWYYYYWWW...',
+			'....WWYYYYWW....',
+			'...WWWYYYYWWW...',
+			'.....YYYYYY.....',
+			'.....KKKKKK.....',
+			'.....YYYYYY.....',
+			'.....KKKKKK.....',
+			'......YYYY......',
+			'......KKKK......',
+			'.......KK.......',
+			'................'
+		]
+	]
+};
+
+// ── Vespa (più affusolata dell'ape, vita sottile) ─────────────────────────
+const vespa: Sprite = {
+	motion: 'float',
+	fps: 6,
+	palette: { Y: '#ffe14a', K: '#151007', W: '#dff6ff' },
+	tintKeys: ['Y'],
+	frames: [
+		[
+			'................',
+			'....K.....K.....',
+			'.....K...K......',
+			'.....KKKKK......',
+			'.....KYYYK......',
+			'....WWYYYWW.....',
+			'...WWWYYYWWW....',
+			'.....KYYYK......',
+			'......KYK.......',
+			'.....YYYYY......',
+			'.....KKKKK......',
+			'.....YYYYY......',
+			'......KKK.......',
+			'.......YY.......',
+			'.......K........',
+			'................'
+		],
+		[
+			'................',
+			'....K.....K.....',
+			'.....K...K......',
+			'.....KKKKK......',
+			'.....KYYYK......',
+			'...WWWYYYWWW....',
+			'....WWYYYWW.....',
+			'.....KYYYK......',
+			'......KYK.......',
+			'.....YYYYY......',
+			'.....KKKKK......',
+			'.....YYYYY......',
+			'......KKK.......',
+			'.......YY.......',
+			'.......K........',
+			'................'
+		]
+	]
+};
+
+// ── Calabrone (grosso, torace largo) ─────────────────────────────────────
+const calabrone: Sprite = {
+	motion: 'float',
+	fps: 6,
+	palette: { Y: '#e8862b', K: '#120d05', W: '#e8f9ff' },
+	tintKeys: ['Y'],
+	frames: [
+		[
+			'................',
+			'..K..........K..',
+			'...K........K...',
+			'.WW..KKKKKK..WW.',
+			'..WW.KYYYYK.WW..',
+			'...WWKYYYYKWW...',
+			'....KYYYYYYK....',
+			'....KYYKKYYK....',
+			'....KYYYYYYK....',
+			'.....KKKKKK.....',
+			'.....YYYYYY.....',
+			'.....KKKKKK.....',
+			'......YYYY......',
+			'......KKKK......',
+			'.......KK.......',
+			'................'
+		],
+		[
+			'................',
+			'..K..........K..',
+			'...K........K...',
+			'..WW.KKKKKK.WW..',
+			'...WWKYYYYKWW...',
+			'.WW..KYYYYK..WW.',
+			'....KYYYYYYK....',
+			'....KYYKKYYK....',
+			'....KYYYYYYK....',
+			'.....KKKKKK.....',
+			'.....YYYYYY.....',
+			'.....KKKKKK.....',
+			'......YYYY......',
+			'......KKKK......',
+			'.......KK.......',
+			'................'
+		]
+	]
+};
+
+// ── Farfalla (ali tintabili, sbattono) ───────────────────────────────────
+const farfalla: Sprite = {
+	motion: 'float',
+	fps: 5,
+	palette: { W: '#ff2e88', K: '#1a0d1f', S: '#ffe14a' },
+	tintKeys: ['W'],
+	frames: [
+		[
+			'................',
+			'.....K....K.....',
+			'......K..K......',
+			'.......KK.......',
+			'WWW....KK....WWW',
+			'WWWWW..KK..WWWWW',
+			'WWWWWWWKKWWWWWWW',
+			'WWWSWWWKKWWWSWWW',
+			'WWWWWWWKKWWWWWWW',
+			'.WWWWWWKKWWWWWW.',
+			'..WWWWWKKWWWWW..',
+			'...WWWWKKWWWW...',
+			'....WWWKKWWW....',
+			'.....WWKKWW.....',
+			'......WKKW......',
+			'................'
+		],
+		[
+			'................',
+			'.....K....K.....',
+			'......K..K......',
+			'.......KK.......',
+			'.......KK.......',
+			'..WWW..KK..WWW..',
+			'.WWWWWWKKWWWWWW.',
+			'.WWSWWWKKWWWSWW.',
+			'.WWWWWWKKWWWWWW.',
+			'..WWWWWKKWWWWW..',
+			'...WWWWKKWWWW...',
+			'....WWWKKWWW....',
+			'.....WWKKWW.....',
+			'......WKKW......',
+			'.......KK.......',
+			'................'
+		]
+	]
+};
+
+// ── Macchinetta Frog dell'ufficio ────────────────────────────────────────
+// Caffè infinito e, nella tanica dell'acqua mai lavata, qualcosa che si muove.
+const frog: Sprite = {
+	motion: 'bob',
+	fps: 3,
+	palette: { M: '#7c8896', D: '#2ff3ff', K: '#141821', C: '#a9702f', T: '#1f3b3a', A: '#3dff9a', S: '#e8f9ff' },
+	frames: [
+		[
+			'................',
+			'..MMMMMMMM.TTT..',
+			'..MDDDDDDM.TAT..',
+			'..MMMMMMMM.TAT..',
+			'..MMKKKKMM.TAT..',
+			'..MM.SS.MM.AAA..',
+			'..MM.SS.MM.WAW..',
+			'..MMCCCCMM.AAA..',
+			'..MMMMMMMM.TTT..',
+			'..MMMMMMMM......',
+			'..MMKKKKMM......',
+			'..MMMMMMMM......',
+			'..MMMMMMMM......',
+			'..MM....MM......',
+			'................',
+			'................'
+		],
+		[
+			'................',
+			'..MMMMMMMM.TTT..',
+			'..MDDDDDDM.TTT..',
+			'..MMMMMMMM.TAT..',
+			'..MMKKKKMM.TAT..',
+			'..MM.SS.MM.AAA..',
+			'..MM.SS.MM.AWA..',
+			'..MMCCCCMM.WAW..',
+			'..MMMMMMMM.AAA..',
+			'..MMMMMMMM......',
+			'..MMKKKKMM......',
+			'..MMMMMMMM......',
+			'..MMMMMMMM......',
+			'..MM....MM......',
+			'................',
+			'................'
+		]
+	]
+};
+
+// ── Procione ─────────────────────────────────────────────────────────────
+const procione: Sprite = {
+	motion: 'bob',
+	palette: { G: '#9aa3ad', K: '#141821', W: '#e8f9ff', T: '#6b7280' },
 	frames: [[
 		'................',
+		'..GG......GG....',
+		'.GGGGGGGGGGG....',
+		'.GKKKGGGKKKG....',
+		'.GKWKGGGKWKG....',
+		'.GGGGKKKGGGG....',
+		'..GGGGGGGGG.....',
+		'...GGGGGGG......',
+		'..GGGGGGGGG.....',
+		'..GGGGGGGGGTTT..',
+		'..GGGGGGGGGKKK..',
+		'..GGGGGGGGGTTT..',
+		'...GGGGGGG.KKK..',
+		'...GG...GG......',
 		'................',
-		'..RRRRRR........',
-		'..MMMMMMMM......',
-		'..MMMMMMMM......',
-		'.GGGGGGGGGGGGGG.',
-		'.GGGGGGGGGGGGGG.',
-		'.GGKGGGGGGGKGGG.',
-		'....GGGG..GG....',
-		'....GGGG........',
-		'....GGGG........',
-		'.....GG.........',
+		'................'
+	]]
+};
+
+// ── Gatto ────────────────────────────────────────────────────────────────
+const gatto: Sprite = {
+	motion: 'bob',
+	palette: { C: '#8a93a8', K: '#141821', N: '#ff9ec4', T: '#6b7280' },
+	frames: [[
 		'................',
+		'..CC......CC....',
+		'..CCC....CCC....',
+		'..CCCCCCCCCC....',
+		'..CKCCCCCCKC....',
+		'..CCCCNNCCCC....',
+		'...CCCCCCCC.....',
+		'....CCCCCC......',
+		'...CCCCCCCC..T..',
+		'..CCCCCCCCC.TT..',
+		'..CCCCCCCCCTT...',
+		'..CCCCCCCCCT....',
+		'..CCCCCCCCC.....',
+		'..CC...CC.......',
+		'................',
+		'................'
+	]]
+};
+
+// ── Cani: chihuahua, akita (la razza di Hachiko), pastore tedesco, dalmata ─
+const chihuahua: Sprite = {
+	motion: 'bob',
+	palette: { B: '#d8a86a', K: '#141821', N: '#3a2a1a' },
+	frames: [[
+		'................',
+		'.BB..........BB.',
+		'.BBB........BBB.',
+		'.BBBB......BBBB.',
+		'.BBBBBBBBBBBBBB.',
+		'..BBKBBBBBBKBB..',
+		'..BBBBBNNBBBBB..',
+		'...BBBBNNBBBB...',
+		'.....BBBBBB.....',
+		'....BBBBBBBB....',
+		'....BBBBBBBB....',
+		'.....BBBBBB..B..',
+		'.....BB..BB.BB..',
 		'................',
 		'................',
 		'................'
 	]]
+};
+
+const akita: Sprite = {
+	motion: 'bob',
+	palette: { B: '#e0a55c', W: '#f7f3e8', K: '#141821', N: '#2a1c10' },
+	frames: [[
+		'................',
+		'..BB.......BB...',
+		'..BBB.....BBB...',
+		'..BBBBBBBBBBB...',
+		'..BBKBBBBBKBB...',
+		'..BBWWWNNWWBB...',
+		'...BWWWNNWWB....',
+		'....BWWWWWB.....',
+		'....BBBBBB..BB..',
+		'...BBBBBBBB.BBB.',
+		'...WBBBBBBBBBB..',
+		'...WWBBBBBB.BB..',
+		'....WW..WW......',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const pastore: Sprite = {
+	motion: 'bob',
+	palette: { K: '#2b2b2f', B: '#b5793a', W: '#e8f9ff', N: '#141821' },
+	frames: [[
+		'................',
+		'..KK.......KK...',
+		'..KKK.....KKK...',
+		'..KKKKKKKKKKK...',
+		'..KKWKKKKKWKK...',
+		'..KKKKKNNKKKK...',
+		'...KKBBNNBBK....',
+		'....KBBBBBK.....',
+		'....BBBBBB..KK..',
+		'...BBBBBBBB.KKK.',
+		'...KBBBBBBBBKK..',
+		'...KKBBBBBB.KK..',
+		'....BB..BB......',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const dalmata: Sprite = {
+	motion: 'bob',
+	palette: { W: '#f2f6ff', K: '#141821', N: '#3a3a44' },
+	frames: [[
+		'................',
+		'..KK.......KK...',
+		'..WKW.....WKW...',
+		'..WWWWWWWWWWW...',
+		'..WKWWKWWWKWW...',
+		'..WWWWWNNWWWW...',
+		'...WWKWNNWWKW...',
+		'....WWWWWWW.....',
+		'....WWKWWW..WW..',
+		'...WWWWWWKW.WKW.',
+		'...WKWWWWWWWWW..',
+		'...WWWKWWW..WW..',
+		'....WW..WW......',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+// ── Capybara (di profilo, il roditore più tranquillo del mondo) ───────────
+const capybara: Sprite = {
+	motion: 'bob',
+	palette: { B: '#a5763f', K: '#141821', N: '#4a2f16' },
+	frames: [[
+		'................',
+		'................',
+		'.........BB.....',
+		'.......BBBBBB...',
+		'......BBBKBBBB..',
+		'.....BBBBBBBNN..',
+		'..BBBBBBBBBBBB..',
+		'.BBBBBBBBBBBBB..',
+		'BBBBBBBBBBBBBB..',
+		'BBBBBBBBBBBBB...',
+		'BBBBBBBBBBBB....',
+		'.BB.BB..BB.B....',
+		'.BB.BB..BB.B....',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+// ── Ratto (carino, coda lunga) ───────────────────────────────────────────
+const ratto: Sprite = {
+	motion: 'bob',
+	palette: { G: '#a8a2b8', K: '#141821', N: '#ff9ec4', T: '#c9a0b4' },
+	frames: [[
+		'................',
+		'................',
+		'..GGG.....GGG...',
+		'.GGGGG...GGGGG..',
+		'.GGGGGGGGGGGGG..',
+		'..GGKGGGGGKGG...',
+		'...GGGGGGGGGN...',
+		'...GGGGGGGGNN...',
+		'..GGGGGGGGGG....',
+		'.GGGGGGGGGG.....',
+		'.GGGGGGGGG..TT..',
+		'.GGGGGGGGG.TT...',
+		'..GG...GG..T....',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+// ── Pipistrello e la sua forma vampiro (sbloccabile dal profilo) ─────────
+const pipistrello: Sprite = {
+	motion: 'float',
+	fps: 5,
+	palette: { B: '#6b5aa8', K: '#141821', W: '#e8f9ff' },
+	frames: [
+		[
+			'................',
+			'..BB........BB..',
+			'.BBBB......BBBB.',
+			'BBBBBB....BBBBBB',
+			'BBBBBBB..BBBBBBB',
+			'BBBBBBBBBBBBBBBB',
+			'.BBBBBBBBBBBBBB.',
+			'...BB.BBBB.BB...',
+			'......BKKB......',
+			'......BBBB......',
+			'.......WW.......',
+			'................',
+			'................',
+			'................',
+			'................',
+			'................'
+		],
+		[
+			'................',
+			'................',
+			'..BB........BB..',
+			'.BBBB......BBBB.',
+			'BBBBBB....BBBBBB',
+			'.BBBBBBBBBBBBBB.',
+			'..BBBBBBBBBBBB..',
+			'....BBBBBBBB....',
+			'......BKKB......',
+			'......BBBB......',
+			'.......WW.......',
+			'................',
+			'................',
+			'................',
+			'................',
+			'................'
+		]
+	]
+};
+
+const pipistrello_vampiro: Sprite = {
+	motion: 'float',
+	fps: 5,
+	palette: { B: '#2a1230', K: '#141821', R: C.danger, W: '#e8f9ff', C: '#7a0f2a' },
+	frames: [
+		[
+			'................',
+			'..BB........BB..',
+			'.BBBB......BBBB.',
+			'BBBBBB....BBBBBB',
+			'BBBBBBB..BBBBBBB',
+			'BBBBBBBBBBBBBBBB',
+			'.BBBBBBBBBBBBBB.',
+			'...BB.BBBB.BB...',
+			'.....CBRRBC.....',
+			'.....CBBBBC.....',
+			'......WWWW......',
+			'.......WW.......',
+			'................',
+			'................',
+			'................',
+			'................'
+		],
+		[
+			'................',
+			'................',
+			'..BB........BB..',
+			'.BBBB......BBBB.',
+			'BBBBBB....BBBBBB',
+			'.BBBBBBBBBBBBBB.',
+			'..BBBBBBBBBBBB..',
+			'....BBBBBBBB....',
+			'.....CBRRBC.....',
+			'.....CBBBBC.....',
+			'......WWWW......',
+			'.......WW.......',
+			'................',
+			'................',
+			'................',
+			'................'
+		]
+	]
 };
 
 // ── Companion: elmo di Master Chief ──────────────────────────────────────
@@ -2188,6 +2725,22 @@ export const SPRITES: Record<string, Sprite> = {
 	castoro,
 	lancer,
 	masterchief,
+	ape,
+	vespa,
+	calabrone,
+	farfalla,
+	frog,
+	procione,
+	gatto,
+	chihuahua,
+	akita,
+	pastore,
+	dalmata,
+	capybara,
+	ratto,
+	pipistrello,
+	// forma alternativa: id sprite = "<companion>_<forma>" (vedi CompanionForm lato backend)
+	pipistrello_vampiro,
 	// casate (le chiavi coincidono con gli id di HouseCatalog backend)
 	grifondoro,
 	serpeverde,

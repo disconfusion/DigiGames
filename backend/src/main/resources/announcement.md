@@ -16,6 +16,8 @@ Restate sintonizzati: la **2.0** è vicina.
 
 **Nuovi companion** — Scarabeo Rinoceronte (con il colore della corazza scelto da te: verde sgargiante di serie, ma prende qualunque tinta), Lo Special (il panino alla salsiccia del paninaro Fabio, col sugo che "coce da 200 anni"), Castoro di DBeaver, Lancer e l'Elmo di Master Chief.
 
+**Altri quattordici companion** — insetti ricolorabili (Ape Operaia, Vespa, Calabrone, Farfalla), la Macchinetta Frog dell'ufficio con la sua tanica mai lavata, Procione, Gatto, quattro cani (Chihuahua, Akita, Pastore Tedesco, Dalmata), Capybara, Ratto e il Pipistrello, che dalla tua Area personale puoi trasformare in vampiro con tanto di nuvola di fumo: la forma scelta resta anche nell'header e nelle stanze. La motosega del Lancer ora si vede come si deve.
+
 **Token sempre reattivi** — il saldo in alto si aggiorna all'istante quando guadagni o spendi Token: vittorie, acquisti nello shop e regali arrivano in tempo reale invece di aspettare il prossimo controllo.
 
 **Inviti gestibili dalla notifica** — quando ricevi un invito puoi accettarlo o rifiutarlo direttamente dal messaggio che compare, senza passare dalla pagina Inviti.
@@ -41,4 +43,4 @@ Restate sintonizzati: la **2.0** è vicina.
 Buon divertimento!
 
 ---
-_Aggiornato: 29 luglio 2026 — nuovo gioco Pong 1v1 (realtime 60 Hz, HUD e colore monitor), 5 nuovi companion con scarabeo ricolorabile, saldo Token reattivo, inviti accettabili dalla notifica._
+_Aggiornato: 29 luglio 2026 — nuovo gioco Pong 1v1 (realtime 60 Hz, HUD e colore monitor), 19 nuovi companion (insetti ricolorabili, animali, Macchinetta Frog, pipistrello trasformabile in vampiro), saldo Token reattivo, inviti accettabili dalla notifica._

@@ -1,5 +1,6 @@
 package it.digitaliasistemi.minigames.shop;
 
+import it.digitaliasistemi.minigames.domain.CompanionForm;
 import it.digitaliasistemi.minigames.domain.CompanionTint;
 import it.digitaliasistemi.minigames.domain.OwnedCompanion;
 import it.digitaliasistemi.minigames.token.TokenService;
@@ -26,6 +27,46 @@ public class CompanionService {
     public String equippedId(String username) {
         OwnedCompanion eq = OwnedCompanion.findEquipped(username);
         return eq != null ? eq.companionId : null;
+    }
+
+    /**
+     * Id della <b>sprite</b> del companion equipaggiato: l'id nudo, oppure {@code <id>_<forma>}
+     * se l'utente lo ha trasformato (es. {@code pipistrello_vampiro}). È quello che le UI
+     * disegnano, così header, stanze e classifica mostrano la forma corrente senza saperne nulla.
+     */
+    public String equippedSpriteId(String username) {
+        String id = equippedId(username);
+        if (id == null) return null;
+        String form = formOf(username, id);
+        return CompanionCatalog.BASE_FORM.equals(form) ? id : id + "_" + form;
+    }
+
+    /** Forma corrente del companion ("base" se mai trasformato o senza forme alternative). */
+    public String formOf(String username, String companionId) {
+        CompanionForm f = CompanionForm.find(username, companionId);
+        return f != null ? f.form : CompanionCatalog.BASE_FORM;
+    }
+
+    /**
+     * Cambia la forma di un companion posseduto (es. pipistrello → vampiro).
+     * Ritorna false se non posseduto o se la forma non esiste in catalogo.
+     */
+    @Transactional
+    public boolean setForm(String username, String companionId, String form) {
+        var def = CompanionCatalog.byId(companionId);
+        if (def.isEmpty() || form == null || !def.get().hasForm(form)) return false;
+        if (OwnedCompanion.find(username, companionId) == null) return false;
+        CompanionForm f = CompanionForm.find(username, companionId);
+        if (f == null) {
+            f = new CompanionForm();
+            f.username = username;
+            f.companionId = companionId;
+            f.form = form;
+            f.persist();
+        } else {
+            f.form = form; // entità gestita: flush a fine transazione
+        }
+        return true;
     }
 
     /**
@@ -88,6 +129,8 @@ public class CompanionService {
             m.put("equipped", owned && Boolean.TRUE.equals(ownedEquip.get(d.id())));
             m.put("tintable", d.tintable());
             if (d.tintable()) m.put("tint", tintOf(username, d.id()));
+            m.put("forms", d.forms());
+            if (!d.forms().isEmpty()) m.put("form", formOf(username, d.id()));
             out.add(m);
         }
         return out;

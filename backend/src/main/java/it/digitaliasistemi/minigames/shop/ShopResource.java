@@ -90,6 +90,20 @@ public class ShopResource {
 
     public record TintRequest(String hex) {}
 
+    /** Cambia la forma di un companion che ne prevede più di una (pipistrello → vampiro). */
+    @POST
+    @Path("/companions/{id}/form")
+    public Response formCompanion(@PathParam("id") String id, FormRequest req) {
+        String form = req != null ? req.form() : null;
+        if (!companions.setForm(jwt.getSubject(), id, form)) {
+            return Response.status(400)
+                    .entity(Map.of("message", "Forma non valida o companion non posseduto")).build();
+        }
+        return Response.ok(Map.of("form", companions.formOf(jwt.getSubject(), id))).build();
+    }
+
+    public record FormRequest(String form) {}
+
     // ---- Accessori avatar (cosmetici, multi-slot) ----
 
     /** Catalogo accessori + saldo + accessori equipaggiati (id+slot). */

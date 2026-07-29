@@ -38,7 +38,7 @@ public class UsersResource {
         return AppUser.<AppUser>listAll().stream()
                 .filter(u -> !u.username.equals(me))
                 .map(u -> new UserView(u.username, u.displayName, u.avatar, presence.isOnline(u.username),
-                        companions.equippedId(u.username), companions.equippedTint(u.username),
+                        companions.equippedSpriteId(u.username), companions.equippedTint(u.username),
                         houses.houseOf(u.username), accessories.equipped(u.username)))
                 .toList();
     }

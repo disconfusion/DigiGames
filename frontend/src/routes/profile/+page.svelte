@@ -43,7 +43,19 @@
 	};
 	const gameLabel = (g: string) => GAME_LABELS[g] ?? g;
 
-	type Companion = { id: string; name: string; description: string; cost: number; owned: boolean; equipped: boolean; tintable?: boolean; tint?: string };
+	type Companion = {
+		id: string;
+		name: string;
+		description: string;
+		cost: number;
+		owned: boolean;
+		equipped: boolean;
+		tintable?: boolean;
+		tint?: string;
+		/** Forme alternative oltre a "base" (es. il pipistrello → vampiro) */
+		forms?: string[];
+		form?: string;
+	};
 	type Accessory = { id: string; name: string; description: string; slot: string; cost: number; owned: boolean; equipped: boolean };
 
 	let profile = $state<Profile | null>(null);
@@ -52,8 +64,48 @@
 
 	let companions = $state<Companion[]>([]);
 	const ownedCompanions = $derived(companions.filter((c) => c.owned));
-	const equippedCompanion = $derived(companions.find((c) => c.equipped)?.id ?? '');
-	const equippedTint = $derived(companions.find((c) => c.equipped)?.tint ?? '');
+	/** Sprite da disegnare: id nudo, o "<id>_<forma>" se trasformato (come fa il backend). */
+	const spriteOf = (c: Companion) =>
+		!c.form || c.form === 'base' ? c.id : `${c.id}_${c.form}`;
+	const equipped = $derived(companions.find((c) => c.equipped));
+	const equippedCompanion = $derived(equipped ? spriteOf(equipped) : '');
+	const equippedTint = $derived(equipped?.tint ?? '');
+	/** Companion posseduti con almeno una forma alternativa: hanno il tasto trasformazione. */
+	const shapeShifters = $derived(companions.filter((c) => c.owned && (c.forms?.length ?? 0) > 0));
+
+	// Trasformazione in corso per companion (mostra la nuvola di fumo)
+	let morphing = $state<Record<string, boolean>>({});
+	const reduceMotion = () =>
+		typeof window !== 'undefined' &&
+		(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
+
+	/**
+	 * Passa alla forma alternativa (o torna alla base). Lo swap della sprite avviene a metà
+	 * animazione, così il companion "esce dal fumo" già trasformato.
+	 */
+	async function toggleForm(c: Companion) {
+		if (morphing[c.id]) return;
+		const next = (c.form ?? 'base') === 'base' ? (c.forms?.[0] ?? 'base') : 'base';
+		const still = reduceMotion();
+		morphing = { ...morphing, [c.id]: true };
+		try {
+			const r = await api<{ form: string }>(`/api/shop/companions/${c.id}/form`, {
+				method: 'POST',
+				body: JSON.stringify({ form: next })
+			});
+			const apply = () => {
+				companions = companions.map((x) => (x.id === c.id ? { ...x, form: r.form } : x));
+			};
+			if (still) apply();
+			else setTimeout(apply, 320);
+		} catch (e) {
+			showToast((e as Error).message, 'error');
+		} finally {
+			const end = () => (morphing = { ...morphing, [c.id]: false });
+			if (still) end();
+			else setTimeout(end, 900);
+		}
+	}
 
 	let accessories = $state<Accessory[]>([]);
 	const ownedAccessories = $derived(accessories.filter((a) => a.owned));
@@ -352,13 +404,39 @@
 			<div class="companion-grid">
 				{#each ownedCompanions as c (c.id)}
 					<button class="comp" class:on={c.equipped} onclick={() => equipCompanion(c)} title={c.name}>
-						<Icon name={c.id} size={40} title={c.name} tint={c.tint ?? ''} />
+						<Icon name={spriteOf(c)} size={40} title={c.name} tint={c.tint ?? ''} />
 						<span class="comp-name">{c.name}</span>
 						{#if c.equipped}<span class="comp-tag">ON</span>{/if}
 					</button>
 				{/each}
 			</div>
 			<p class="hint">Clicca per equipaggiare/togliere. Appare nell'header, attorno all'avatar e nelle stanze.</p>
+			{#if shapeShifters.length}
+				<div class="morph-row">
+					{#each shapeShifters as c (c.id)}
+						{@const transformed = (c.form ?? 'base') !== 'base'}
+						<button
+							class="morph"
+							class:on={transformed}
+							disabled={morphing[c.id]}
+							onclick={() => toggleForm(c)}
+						>
+							<span class="morph-icon">
+								<Icon name={spriteOf(c)} size={26} title={c.name} tint={c.tint ?? ''} />
+								{#if morphing[c.id]}
+									<span class="smoke" aria-hidden="true">
+										{#each [0, 1, 2, 3, 4, 5, 6] as p (p)}<span class="puff p{p}"></span>{/each}
+									</span>
+								{/if}
+							</span>
+							{transformed ? `Torna ${c.name.toLowerCase()}` : `Trasforma in ${c.forms?.[0]}`}
+						</button>
+					{/each}
+				</div>
+				<p class="hint">
+					La forma resta anche fuori da qui: header, stanze e classifica mostrano quella scelta.
+				</p>
+			{/if}
 		{/if}
 	</section>
 
@@ -796,6 +874,96 @@
 		font-size: 0.55rem;
 		font-weight: 700;
 		color: var(--cyan);
+	}
+
+	/* Trasformazione companion (pipistrello → vampiro) con nuvola di fumo */
+	.morph-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-top: 0.6rem;
+	}
+	.morph {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		padding: 0.35rem 0.7rem;
+		background: #0f172a;
+		border: 2px solid #334155;
+		border-radius: 999px;
+		color: var(--muted);
+		font-family: var(--font-ui, sans-serif);
+		font-size: 0.72rem;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		cursor: pointer;
+	}
+	.morph:hover:not(:disabled) {
+		color: var(--text);
+		border-color: var(--accent);
+	}
+	.morph.on {
+		border-color: var(--danger);
+		color: var(--text);
+		box-shadow: 0 0 12px color-mix(in srgb, var(--danger) 40%, transparent);
+	}
+	.morph:disabled {
+		cursor: progress;
+	}
+	.morph-icon {
+		position: relative;
+		display: inline-flex;
+		width: 26px;
+		height: 26px;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.smoke {
+		position: absolute;
+		inset: -6px;
+		pointer-events: none;
+	}
+	.puff {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		width: 11px;
+		height: 11px;
+		border-radius: 3px;
+		background: #e2e8f0;
+		box-shadow: 0 0 6px rgba(226, 232, 240, 0.55);
+		opacity: 0;
+		animation: puff 0.9s ease-out forwards;
+	}
+	/* direzioni diverse per ogni sbuffo (pixel look: quadratini, non cerchi) */
+	.puff.p0 { --dx: -18px; --dy: -13px; animation-delay: 0s; }
+	.puff.p1 { --dx: 16px;  --dy: -15px; animation-delay: 0.05s; }
+	.puff.p2 { --dx: -16px; --dy: 10px;  animation-delay: 0.1s; }
+	.puff.p3 { --dx: 18px;  --dy: 8px;   animation-delay: 0.15s; }
+	.puff.p4 { --dx: 0px;   --dy: -20px; animation-delay: 0.2s; }
+	.puff.p5 { --dx: -8px;  --dy: 16px;  animation-delay: 0.25s; }
+	.puff.p6 { --dx: 9px;   --dy: 17px;  animation-delay: 0.3s; }
+
+	@keyframes puff {
+		0% {
+			opacity: 1;
+			transform: translate(-50%, -50%) scale(0.35);
+		}
+		55% {
+			opacity: 0.7;
+		}
+		100% {
+			opacity: 0;
+			transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(2.2);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.puff {
+			animation: none;
+			opacity: 0;
+		}
 	}
 
 	/* Scelta casata */

@@ -36,7 +36,7 @@ public class ProfileResource {
         AppUser u = AppUser.findByUsername(jwt.getSubject());
         if (u == null) return notFound();
         return Response.ok(new ProfileView(u.username, u.displayName, u.avatar, u.role,
-            companions.equippedId(u.username), companions.equippedTint(u.username),
+            companions.equippedSpriteId(u.username), companions.equippedTint(u.username),
             houses.houseOf(u.username),
             accessories.equipped(u.username))).build();
     }
