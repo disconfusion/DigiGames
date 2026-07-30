@@ -81,10 +81,14 @@ public class CompanionService {
                 : null;
     }
 
-    /** Colore scelto per quel companion, o il default del catalogo. */
+    /**
+     * Colore scelto per quel companion, o null se non ne ha ancora scelto uno.
+     * Null = si usa la palette nativa della sprite (l'ape resta gialla, la farfalla rosa, lo
+     * scarabeo verde): un default unico li ricolorerebbe tutti dello stesso colore.
+     */
     public String tintOf(String username, String companionId) {
         CompanionTint t = CompanionTint.find(username, companionId);
-        return t != null ? t.hex : CompanionCatalog.DEFAULT_TINT;
+        return t != null ? t.hex : null;
     }
 
     /**

@@ -113,20 +113,55 @@
 		accessories.filter((a) => a.equipped).map((a) => ({ id: a.id, slot: a.slot }))
 	);
 
-	// #4 — varietà nell'orbita dei companion: ogni companion ha velocità, verso, raggio e pulse
-	// diversi, scelti in modo deterministico dal suo id (stesso companion = stessa orbita).
-	const ORBIT_VARIANTS = [
-		{ dur: '7s', dir: 'normal', radius: '-58px', bob: '2.6s' },
-		{ dur: '5s', dir: 'reverse', radius: '-64px', bob: '1.9s' },
-		{ dur: '9s', dir: 'normal', radius: '-52px', bob: '3.2s' },
-		{ dur: '6s', dir: 'reverse', radius: '-60px', bob: '2.2s' }
+	// #4 — varietà nell'orbita dei companion: velocità, verso, raggio, pulse e **traiettoria**.
+	// I companion "generici" prendono una variante circolare scelta in modo deterministico dall'id
+	// (stesso companion = stessa orbita); quelli che volano hanno un percorso proprio.
+	type Orbit = {
+		dur: string;
+		dir: string;
+		radius: string;
+		bob: string;
+		path: 'circle' | 'zigzag' | 'ellipse' | 'swoop';
+	};
+
+	const ORBIT_VARIANTS: Orbit[] = [
+		{ dur: '7s', dir: 'normal', radius: '-58px', bob: '2.6s', path: 'circle' },
+		{ dur: '5s', dir: 'reverse', radius: '-64px', bob: '1.9s', path: 'circle' },
+		{ dur: '9s', dir: 'normal', radius: '-52px', bob: '3.2s', path: 'circle' },
+		{ dur: '6s', dir: 'reverse', radius: '-60px', bob: '2.2s', path: 'circle' }
 	];
+
+	/** Traiettorie speciali: zig-zag da insetto, ellisse planata, picchiata avanti e indietro. */
+	const ORBIT_PATHS: Record<string, Orbit> = {
+		zigzag: { dur: '4.2s', dir: 'normal', radius: '-60px', bob: '0.3s', path: 'zigzag' },
+		ellipse: { dur: '7.5s', dir: 'normal', radius: '-66px', bob: '2.4s', path: 'ellipse' },
+		swoop: { dur: '6s', dir: 'reverse', radius: '-62px', bob: '1.6s', path: 'swoop' }
+	};
+
+	/** Chi vola si muove come vola: api e vespe a scatti, farfalla in planata, pipistrello a picchiate. */
+	const ORBIT_BY_COMPANION: Record<string, keyof typeof ORBIT_PATHS> = {
+		ape: 'zigzag',
+		vespa: 'zigzag',
+		calabrone: 'zigzag',
+		scarabeo: 'zigzag',
+		farfalla: 'ellipse',
+		pipistrello: 'swoop',
+		batman: 'swoop',
+		gondola: 'ellipse',
+		frog: 'swoop'
+	};
+
 	function orbitHash(id: string): number {
 		let h = 0;
 		for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
 		return Math.abs(h);
 	}
-	const orbit = $derived(ORBIT_VARIANTS[orbitHash(equippedCompanion) % ORBIT_VARIANTS.length]);
+
+	const orbit = $derived.by<Orbit>(() => {
+		const id = equipped?.id ?? '';
+		const named = ORBIT_BY_COMPANION[id];
+		return named ? ORBIT_PATHS[named] : ORBIT_VARIANTS[orbitHash(id) % ORBIT_VARIANTS.length];
+	});
 
 	type House = { id: string; name: string };
 	let houseList = $state<House[]>([]);
@@ -330,10 +365,24 @@
 			<div class="avatar-stage">
 				<Avatar avatar={serializeAvatar(spec)} accessories={equippedAccessories} fontSize={18} />
 				{#if equippedCompanion}
-					<div class="orbit" style:--orbit-dur={orbit.dur} style:animation-direction={orbit.dir}>
-						<div class="orbit-pos" style:--orbit-radius={orbit.radius}>
-							<div class="orbit-bob" style:--bob-dur={orbit.bob}>
-								<Icon name={equippedCompanion} size={28} title="Companion" tint={equippedTint} />
+					<div class="orbit-shape" class:ellipse={orbit.path === 'ellipse'}>
+						<div class="orbit" style:--orbit-dur={orbit.dur} style:animation-direction={orbit.dir}>
+							<div
+								class="orbit-pos"
+								class:swoop={orbit.path === 'swoop'}
+								style:--orbit-radius={orbit.radius}
+							>
+								<!-- annulla la rotazione dell'orbita: senza questo lo schiacciamento
+								     dell'ellisse arriverebbe all'icona come deformazione (shear) -->
+								<div class="orbit-fix" style:--orbit-dur={orbit.dur}>
+									<div
+										class="orbit-bob"
+										class:zigzag={orbit.path === 'zigzag'}
+										style:--bob-dur={orbit.bob}
+									>
+										<Icon name={equippedCompanion} size={28} title="Companion" tint={equippedTint} />
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -804,10 +853,32 @@
 		position: relative;
 		display: inline-flex;
 	}
-	.orbit {
+	/* Contenitore della traiettoria: schiaccia l'orbita quando il percorso è ellittico */
+	.orbit-shape {
 		position: absolute;
 		left: 50%;
 		top: 50%;
+		width: 0;
+		height: 0;
+		pointer-events: none;
+	}
+	.orbit-shape.ellipse {
+		transform: scaleY(0.6);
+	}
+	/* L'icona non deve risultare schiacciata: si annulla prima la rotazione (.orbit-fix, stessa
+	   durata in verso opposto) e poi la scala del contenitore. Il pulse qui non serve: nella
+	   farfalla il movimento è già dato dalle ali. */
+	.orbit-shape.ellipse .orbit-fix {
+		animation: orbit var(--orbit-dur, 7s) linear infinite reverse;
+	}
+	.orbit-shape.ellipse .orbit-bob {
+		animation: none;
+		transform: scaleY(1.667);
+	}
+	.orbit {
+		position: absolute;
+		left: 0;
+		top: 0;
 		width: 0;
 		height: 0;
 		pointer-events: none;
@@ -819,13 +890,41 @@
 		/* il raggio varia per companion */
 		transform: translate(-50%, -50%) translateY(var(--orbit-radius, -58px));
 	}
+	/* Picchiata: il raggio si accorcia e si allunga lungo il giro (pipistrello, gondola) */
+	.orbit-pos.swoop {
+		animation: orbit-swoop 3s ease-in-out infinite;
+	}
 	/* Pulse proprio del companion, con ritmo variabile per companion */
 	.orbit-bob {
 		animation: companion-bob var(--bob-dur, 2.6s) ease-in-out infinite;
 	}
+	/* Volo a scatti da insetto: sali-scendi rapido perpendicolare all'orbita */
+	.orbit-bob.zigzag {
+		animation: orbit-zigzag var(--bob-dur, 0.3s) steps(2, end) infinite;
+	}
 	@keyframes orbit {
 		to {
 			transform: rotate(360deg);
+		}
+	}
+	@keyframes orbit-zigzag {
+		0% {
+			transform: translateY(-5px);
+		}
+		50% {
+			transform: translateY(5px);
+		}
+		100% {
+			transform: translateY(-5px);
+		}
+	}
+	@keyframes orbit-swoop {
+		0%,
+		100% {
+			transform: translate(-50%, -50%) translateY(var(--orbit-radius, -58px));
+		}
+		50% {
+			transform: translate(-50%, -50%) translateY(calc(var(--orbit-radius, -58px) * 0.45));
 		}
 	}
 	@keyframes companion-bob {
@@ -1032,7 +1131,10 @@
 
 	@media (prefers-reduced-motion: reduce) {
 		.orbit,
-		.orbit-bob {
+		.orbit-bob,
+		.orbit-bob.zigzag,
+		.orbit-pos.swoop,
+		.orbit-shape.ellipse .orbit-fix {
 			animation: none;
 		}
 	}

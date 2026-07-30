@@ -18,6 +18,8 @@ Restate sintonizzati: la **2.0** è vicina.
 
 **Altri quattordici companion** — insetti ricolorabili (Ape Operaia, Vespa, Calabrone, Farfalla), la Macchinetta Frog dell'ufficio con la sua tanica mai lavata, Procione, Gatto, quattro cani (Chihuahua, Akita, Pastore Tedesco, Dalmata), Capybara, Ratto e il Pipistrello, che dalla tua Area personale puoi trasformare in vampiro con tanto di nuvola di fumo: la forma scelta resta anche nell'header e nelle stanze. La motosega del Lancer ora si vede come si deve.
 
+**Ogni companion si muove a modo suo** — nell'Area personale la traiettoria attorno all'avatar dipende da chi ti accompagna: api, vespe, calabroni e scarabei volano a scatti in zig-zag, la farfalla planata su un'orbita ellittica, il pipistrello e la gondola a picchiate avanti e indietro, gli altri sul giro classico. Gatto, Ratto e Procione sono stati ridisegnati con il doppio del dettaglio (occhi, baffi, code animate). Chi sceglie un colore per un companion ricolorabile lo vede applicato; senza scelta resta il colore naturale (l'ape è gialla, la farfalla rosa, lo scarabeo verde).
+
 **Token sempre reattivi** — il saldo in alto si aggiorna all'istante quando guadagni o spendi Token: vittorie, acquisti nello shop e regali arrivano in tempo reale invece di aspettare il prossimo controllo.
 
 **Inviti gestibili dalla notifica** — quando ricevi un invito puoi accettarlo o rifiutarlo direttamente dal messaggio che compare, senza passare dalla pagina Inviti.

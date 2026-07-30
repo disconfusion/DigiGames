@@ -38,9 +38,6 @@ public final class CompanionCatalog {
         }
     }
 
-    /** Colore di partenza dei companion ricolorabili (verde sgargiante). */
-    public static final String DEFAULT_TINT = "#3dff9a";
-
     /** Forma predefinita di ogni companion: la sprite è l'id nudo. */
     public static final String BASE_FORM = "base";
 

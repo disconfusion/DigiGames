@@ -2323,52 +2323,131 @@ const frog: Sprite = {
 	]
 };
 
-// ── Procione ─────────────────────────────────────────────────────────────
+// ── Procione (24x24: banda nera continua sugli occhi fra due fasce chiare, muso, coda ad anelli) ─
 const procione: Sprite = {
 	motion: 'bob',
-	palette: { G: '#9aa3ad', K: '#141821', W: '#e8f9ff', T: '#6b7280' },
-	frames: [[
-		'................',
-		'..GG......GG....',
-		'.GGGGGGGGGGG....',
-		'.GKKKGGGKKKG....',
-		'.GKWKGGGKWKG....',
-		'.GGGGKKKGGGG....',
-		'..GGGGGGGGG.....',
-		'...GGGGGGG......',
-		'..GGGGGGGGG.....',
-		'..GGGGGGGGGTTT..',
-		'..GGGGGGGGGKKK..',
-		'..GGGGGGGGGTTT..',
-		'...GGGGGGG.KKK..',
-		'...GG...GG......',
-		'................',
-		'................'
-	]]
+	grid: 24,
+	fps: 3,
+	palette: { G: '#9aa3ad', S: '#6b7280', K: '#141821', W: '#e8f9ff', T: '#7f8794' },
+	frames: [
+		[
+			'........................',
+			'.....GGG........GGG.....',
+			'....GSSSG......GSSSG....',
+			'....GGGGGGGGGGGGGGGG....',
+			'...GGGGGGGGGGGGGGGGGG...',
+			'...GWWWWWWWWWWWWWWWWG...',
+			'...KKKKKKKKKKKKKKKKKK...',
+			'...KKWKKKKKKKKKKKKWKK...',
+			'...KKKKKKKKKKKKKKKKKK...',
+			'...GWWWWWWWWWWWWWWWWG...',
+			'....GGGGWWWWWWWWGGGG....',
+			'.....GGGGWWWWWWGGGG.....',
+			'......GGGGGKKGGGGG......',
+			'.......GGGGKKGGGG.......',
+			'........GGGGGGGG........',
+			'......GGGGGGGGGGGG......',
+			'.....GGGGGGGGGGGGGG.....',
+			'....GGGGGGGGGGGGGGGG....',
+			'....GGGSGGGGGGGGGGGGTTTT',
+			'....GGGGGGGGGGGGGGGGKKKK',
+			'....GGGGGGGGGGGGGGGGTTTT',
+			'.....GGGGGGGGGGGGGGKKKK.',
+			'.....KKKGG...GGKKK......',
+			'........................'
+		],
+		[
+			'........................',
+			'.....GGG........GGG.....',
+			'....GSSSG......GSSSG....',
+			'....GGGGGGGGGGGGGGGG....',
+			'...GGGGGGGGGGGGGGGGGG...',
+			'...GWWWWWWWWWWWWWWWWG...',
+			'...KKKKKKKKKKKKKKKKKK...',
+			'...KKWKKKKKKKKKKKKWKK...',
+			'...KKKKKKKKKKKKKKKKKK...',
+			'...GWWWWWWWWWWWWWWWWG...',
+			'....GGGGWWWWWWWWGGGG....',
+			'.....GGGGWWWWWWGGGG.....',
+			'......GGGGGKKGGGGG......',
+			'.......GGGGKKGGGG.......',
+			'........GGGGGGGG........',
+			'......GGGGGGGGGGGG..TTTT',
+			'.....GGGGGGGGGGGGGGKKKK.',
+			'....GGGGGGGGGGGGGGGGTTTT',
+			'....GGGSGGGGGGGGGGGKKKK.',
+			'....GGGGGGGGGGGGGGGG....',
+			'....GGGGGGGGGGGGGGGG....',
+			'.....GGGGGGGGGGGGGG.....',
+			'.....KKKGG...GGKKK......',
+			'........................'
+		]
+	]
 };
 
-// ── Gatto ────────────────────────────────────────────────────────────────
+// ── Gatto (24x24: orecchie con interno rosa, occhi verdi con pupilla, baffi, coda arricciata) ─
 const gatto: Sprite = {
 	motion: 'bob',
-	palette: { C: '#8a93a8', K: '#141821', N: '#ff9ec4', T: '#6b7280' },
-	frames: [[
-		'................',
-		'..CC......CC....',
-		'..CCC....CCC....',
-		'..CCCCCCCCCC....',
-		'..CKCCCCCCKC....',
-		'..CCCCNNCCCC....',
-		'...CCCCCCCC.....',
-		'....CCCCCC......',
-		'...CCCCCCCC..T..',
-		'..CCCCCCCCC.TT..',
-		'..CCCCCCCCCTT...',
-		'..CCCCCCCCCT....',
-		'..CCCCCCCCC.....',
-		'..CC...CC.......',
-		'................',
-		'................'
-	]]
+	grid: 24,
+	fps: 3,
+	palette: {
+		C: '#8a93a8', S: '#5f6878', L: '#b6bfd0', K: '#141821',
+		E: C.green, P: '#141821', N: '#ff9ec4', M: '#3b2430', W: '#e8f9ff', T: '#6b7280'
+	},
+	frames: [
+		[
+			'........................',
+			'......CC........CC......',
+			'.....CCCC......CCCC.....',
+			'.....CNNC......CNNC.....',
+			'.....CCCCC....CCCCC.....',
+			'.....CCCCCCCCCCCCCC.....',
+			'.....CSCCCCCCCCCCSC.....',
+			'.....CCEEPCCCCPEECC.....',
+			'.....CCEEECCCCEEECC.....',
+			'.....CCCCCCCCCCCCCC.....',
+			'...WWCCCCCCNNCCCCCCWW...',
+			'....WCCCCCCMMCCCCCCW....',
+			'.....CCCCCCCCCCCCCC.....',
+			'......CCCCCCCCCCCC......',
+			'......CCCCCCCCCCCC......',
+			'.....CCCCCCCCCCCCCC.....',
+			'.....CCCSCCCCCCSCCC..TT.',
+			'.....CCCCCCCCCCCCCC.TT..',
+			'.....CCCCCCCCCCCCCCTT...',
+			'.....CCCCCCCCCCCCCC.....',
+			'.....CCLCCCCCCCCLCC.....',
+			'.....CCCCC....CCCCC.....',
+			'......LLL......LLL......',
+			'........................'
+		],
+		[
+			'........................',
+			'......CC........CC......',
+			'.....CCCC......CCCC.....',
+			'.....CNNC......CNNC.....',
+			'.....CCCCC....CCCCC.....',
+			'.....CCCCCCCCCCCCCC.....',
+			'.....CSCCCCCCCCCCSC.....',
+			'.....CCEEPCCCCPEECC.....',
+			'.....CCEEECCCCEEECC.....',
+			'.....CCCCCCCCCCCCCC.....',
+			'...WWCCCCCCNNCCCCCCWW...',
+			'....WCCCCCCMMCCCCCCW....',
+			'.....CCCCCCCCCCCCCC.....',
+			'......CCCCCCCCCCCC......',
+			'......CCCCCCCCCCCC......',
+			'.....CCCCCCCCCCCCCC.TT..',
+			'.....CCCSCCCCCCSCCCTT...',
+			'.....CCCCCCCCCCCCCCT....',
+			'.....CCCCCCCCCCCCCC.....',
+			'.....CCCCCCCCCCCCCC.....',
+			'.....CCLCCCCCCCCLCC.....',
+			'.....CCCCC....CCCCC.....',
+			'......LLL......LLL......',
+			'........................'
+		]
+	]
 };
 
 // ── Cani: chihuahua, akita (la razza di Hachiko), pastore tedesco, dalmata ─
@@ -2488,28 +2567,66 @@ const capybara: Sprite = {
 	]]
 };
 
-// ── Ratto (carino, coda lunga) ───────────────────────────────────────────
+// ── Ratto (24x24: orecchie tonde con interno rosa, occhi col riflesso, baffi, coda lunga) ─
 const ratto: Sprite = {
 	motion: 'bob',
-	palette: { G: '#a8a2b8', K: '#141821', N: '#ff9ec4', T: '#c9a0b4' },
-	frames: [[
-		'................',
-		'................',
-		'..GGG.....GGG...',
-		'.GGGGG...GGGGG..',
-		'.GGGGGGGGGGGGG..',
-		'..GGKGGGGGKGG...',
-		'...GGGGGGGGGN...',
-		'...GGGGGGGGNN...',
-		'..GGGGGGGGGG....',
-		'.GGGGGGGGGG.....',
-		'.GGGGGGGGG..TT..',
-		'.GGGGGGGGG.TT...',
-		'..GG...GG..T....',
-		'................',
-		'................',
-		'................'
-	]]
+	grid: 24,
+	fps: 3,
+	palette: { G: '#a8a2b8', S: '#7b7590', K: '#141821', N: '#ff9ec4', W: '#ffffff', T: '#e0a6bd' },
+	frames: [
+		[
+			'........................',
+			'........................',
+			'........GGG.....GGG.....',
+			'.......GNNNG...GNNNG....',
+			'.......GNNNG...GNNNG....',
+			'.......GGGGGGGGGGGGG....',
+			'......GGGGGGGGGGGGGGG...',
+			'......GGKWGGGGGWKGGGG...',
+			'......GGGGGGGGGGGGGGGG..',
+			'.....WGGGGGGGNNGGGGGGW..',
+			'......GGGGGGKKGGGGGGG...',
+			'.......GGGGGGGGGGGGG....',
+			'......GGGGGGGGGGGGG.....',
+			'.....GGGGGGGGGGGGGG.....',
+			'....GGGGSGGGGGGGGGG.....',
+			'...GGGGGGGGGGGGGGGG.....',
+			'..GGGGGGGGGGGGGGGG......',
+			'.TGGGGGGGGGGGGGGG.......',
+			'TT.GGGGGGGGGGGGG........',
+			'T...NGGGG..GGGGN........',
+			'TT......................',
+			'.TT.....................',
+			'..TT....................',
+			'........................'
+		],
+		[
+			'........................',
+			'........................',
+			'........GGG.....GGG.....',
+			'.......GNNNG...GNNNG....',
+			'.......GNNNG...GNNNG....',
+			'.......GGGGGGGGGGGGG....',
+			'......GGGGGGGGGGGGGGG...',
+			'......GGKWGGGGGWKGGGG...',
+			'......GGGGGGGGGGGGGGGG..',
+			'.....WGGGGGGGNNGGGGGGW..',
+			'......GGGGGGKKGGGGGGG...',
+			'.......GGGGGGGGGGGGG....',
+			'......GGGGGGGGGGGGG.....',
+			'.....GGGGGGGGGGGGGG.....',
+			'....GGGGSGGGGGGGGGG.....',
+			'...GGGGGGGGGGGGGGGG.....',
+			'..GGGGGGGGGGGGGGGG......',
+			'.TGGGGGGGGGGGGGGG.......',
+			'TT.GGGGGGGGGGGGG........',
+			'T...NGGGG..GGGGN........',
+			'.T......................',
+			'.TT.....................',
+			'...TT...................',
+			'.....T..................'
+		]
+	]
 };
 
 // ── Pipistrello e la sua forma vampiro (sbloccabile dal profilo) ─────────
