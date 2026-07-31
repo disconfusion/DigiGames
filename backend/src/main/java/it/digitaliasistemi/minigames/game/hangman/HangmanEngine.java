@@ -3,8 +3,12 @@ package it.digitaliasistemi.minigames.game.hangman;
 import com.fasterxml.jackson.databind.JsonNode;
 import it.digitaliasistemi.minigames.game.GameContext;
 import it.digitaliasistemi.minigames.game.GameEngine;
+import it.digitaliasistemi.minigames.game.RoomChannel;
 import it.digitaliasistemi.minigames.leaderboard.LeaderboardService;
 import it.digitaliasistemi.minigames.rooms.Room;
+import it.digitaliasistemi.minigames.rooms.RoomManager;
+import it.digitaliasistemi.minigames.words.WordDifficulty;
+import it.digitaliasistemi.minigames.words.WordService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -18,6 +22,11 @@ public class HangmanEngine implements GameEngine {
 
     @Inject
     LeaderboardService leaderboard;
+
+    @Inject WordService words;
+    /** Per trasmettere quando la parola arriva fuori dal ciclo del messaggio (download in corso). */
+    @Inject RoomChannel channel;
+    @Inject RoomManager rooms;
 
     @Override public String slug() { return "hangman"; }
     @Override public int maxPlayers() { return 8; }
@@ -56,10 +65,33 @@ public class HangmanEngine implements GameEngine {
                 HangmanConfig cfg = HangmanConfig.fromJson(room.options);
                 // Evita di riproporre la stessa parola due volte di fila nella stessa stanza.
                 String prev = room.game instanceof HangmanState old ? old.word() : null;
-                HangmanState hs = new HangmanState(HangmanWords.randomExcluding(prev), new ArrayList<>(room.players), cfg);
-                room.game = hs;
+                WordDifficulty diff = WordDifficulty.fromKey(cfg.difficulty());
+
+                if (!cfg.dictionary()) {
+                    startWith(ctx, room, words.pickLocal(diff, prev), cfg);
+                    return;
+                }
+                // Parole dal dizionario online: se c'è già una parola in scorta si parte subito,
+                // altrimenti si mostra il caricamento e si scarica senza bloccare il socket.
+                var ready = words.takeReady(cfg.lang(), diff, prev);
+                if (ready.isPresent()) {
+                    startWith(ctx, room, ready.get(), cfg);
+                    return;
+                }
                 room.status = Room.Status.PLAYING;
-                ctx.broadcast(state(hs, ctx.senderEmail(), null));
+                room.game = null; // niente stato finché la parola non è pronta
+                ctx.broadcast(loading(cfg));
+                String code = room.code;
+                words.pickAsync(cfg.lang(), diff, prev, pick -> {
+                    Room r = rooms.get(code);
+                    if (r == null) return; // stanza chiusa nell'attesa
+                    HangmanState hs = new HangmanState(pick.word(), new ArrayList<>(r.players), cfg);
+                    r.game = hs;
+                    r.status = Room.Status.PLAYING;
+                    channel.broadcast(code, state(hs, null, null, pick));
+                    // Riempi la scorta mentre si gioca: i round successivi partiranno subito.
+                    words.refill(cfg.lang(), pick.difficulty());
+                });
             }
             case "guess" -> {
                 if (!(room.game instanceof HangmanState hs)) {
@@ -101,6 +133,27 @@ public class HangmanEngine implements GameEngine {
         }
     }
 
+    /** Avvia la partita con una parola già disponibile. */
+    private void startWith(GameContext ctx, Room room, WordService.Pick pick, HangmanConfig cfg) {
+        HangmanState hs = new HangmanState(pick.word(), new ArrayList<>(room.players), cfg);
+        room.game = hs;
+        room.status = Room.Status.PLAYING;
+        ctx.broadcast(state(hs, ctx.senderEmail(), null, pick));
+        // Tiene la scorta piena per i round successivi (solo con parole dal dizionario).
+        if (cfg.dictionary()) words.refill(cfg.lang(), pick.difficulty());
+    }
+
+    /** Stato transitorio: la parola sta arrivando dal dizionario online. */
+    private Map<String, Object> loading(HangmanConfig cfg) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("type", "game:loading");
+        m.put("game", "hangman");
+        m.put("lang", cfg.lang());
+        m.put("difficulty", cfg.difficulty());
+        m.put("message", "Sto pescando una parola dal dizionario\u2026");
+        return m;
+    }
+
     /** Se la partita è finita: broadcast game:over, chiude la stanza e registra i risultati. */
     private void finishIfOver(GameContext ctx, Room room, HangmanState hs) {
         if (hs.status() == HangmanState.Status.PLAYING) return;
@@ -112,6 +165,15 @@ public class HangmanEngine implements GameEngine {
             String r = won && !hs.isEliminated(p) ? "WIN" : "LOSE";
             leaderboard.record(p, "hangman", r);
         }
+    }
+
+    private Map<String, Object> state(HangmanState hs, String by, String letter, WordService.Pick pick) {
+        Map<String, Object> m = state(hs, by, letter);
+        if (pick != null) {
+            m.put("dictionary", pick.fromApi());
+            m.put("lang", pick.lang());
+        }
+        return m;
     }
 
     private Map<String, Object> state(HangmanState hs, String by, String letter) {
@@ -133,6 +195,10 @@ public class HangmanEngine implements GameEngine {
         m.put("winner", hs.winner());
         m.put("status", hs.status().name());
         m.put("currentTurn", hs.currentTurn());
+        // Difficoltà della parola in gioco: dedotta dalla lunghezza, mostrata nel badge
+        WordDifficulty diff = WordDifficulty.ofLength(hs.word().length());
+        m.put("difficulty", diff.key());
+        m.put("difficultyLabel", diff.label());
         if (by != null) m.put("lastBy", by);
         if (letter != null) m.put("lastLetter", letter);
         return m;

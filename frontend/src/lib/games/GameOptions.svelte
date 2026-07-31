@@ -9,6 +9,19 @@
 	let trisVanish = $state(false);
 	let pongPoints = $state(7);
 	let hmPreset = $state<'classic' | 'custom'>('classic');
+	// Sorgente delle parole: dizionario online (con difficoltà e lingua) o parole locali
+	let hmSource = $state<'locale' | 'dizionario'>('locale');
+	let hmLang = $state('it');
+	let hmDifficulty = $state<'random' | 'facile' | 'media' | 'difficile'>('random');
+	const LANGS = [
+		{ code: 'it', label: 'Italiano' },
+		{ code: 'en', label: 'Inglese' },
+		{ code: 'es', label: 'Spagnolo' },
+		{ code: 'fr', label: 'Francese' },
+		{ code: 'de', label: 'Tedesco' },
+		{ code: 'pt-br', label: 'Portoghese (BR)' },
+		{ code: 'ro', label: 'Romeno' }
+	];
 	let hmOptions = $state<HangmanOptions>({ ...CLASSIC_OPTIONS, accessories: [] });
 
 	function applyClassic() {
@@ -29,7 +42,10 @@
 			options = {
 				maxVowels: hmOptions.maxVowels,
 				lettersPerPlayer: hmOptions.lettersPerPlayer,
-				accessories: [...hmOptions.accessories]
+				accessories: [...hmOptions.accessories],
+				wordSource: hmSource,
+				lang: hmLang,
+				difficulty: hmDifficulty
 			};
 		} else if (game === 'quiz') {
 			options = { source: quizSource };
@@ -88,6 +104,35 @@
 				</span>
 			</div>
 		{:else if game === 'hangman'}
+			<div class="opt">
+				<label for="hmSource">Parole</label>
+				<select id="hmSource" bind:value={hmSource}>
+					<option value="locale">Elenco locale (sempre disponibile)</option>
+					<option value="dizionario">Dizionario online (parole nuove ogni volta)</option>
+				</select>
+				<span class="hint">
+					Col dizionario la prima parola richiede qualche secondo; le successive vengono
+					preparate in background mentre giocate. Se non risponde si usa l'elenco locale.
+				</span>
+			</div>
+			{#if hmSource === 'dizionario'}
+				<div class="opt">
+					<label for="hmLang">Lingua</label>
+					<select id="hmLang" bind:value={hmLang}>
+						{#each LANGS as l (l.code)}<option value={l.code}>{l.label}</option>{/each}
+					</select>
+				</div>
+			{/if}
+			<div class="opt">
+				<label for="hmDifficulty">Difficoltà</label>
+				<select id="hmDifficulty" bind:value={hmDifficulty}>
+					<option value="random">Casuale</option>
+					<option value="facile">Facile (4-6 lettere)</option>
+					<option value="media">Media (7-9 lettere)</option>
+					<option value="difficile">Difficile (10+ lettere)</option>
+				</select>
+				<span class="hint">La difficoltà è la lunghezza della parola: più lettere, più tentativi.</span>
+			</div>
 			<div class="preset-row">
 				<button class="preset" class:active={hmPreset === 'classic'} onclick={applyClassic}>Classica</button>
 				<button class="preset" class:active={hmPreset === 'custom'} onclick={() => (hmPreset = 'custom')}>

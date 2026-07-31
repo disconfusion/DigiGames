@@ -13,8 +13,17 @@ import java.util.List;
  * @param lettersPerPlayer tentativi-lettera totali per ogni giocatore; 0 = illimitati.
  * @param accessories      accessori dell'impiccato (es. "hat", "pipe", "shoes"): ognuno aggiunge
  *                         +1 errore consentito e viene disegnato in figura.
+ * @param dictionary       true = parole dal dizionario online, false = parole locali del progetto.
+ * @param lang             lingua del dizionario ("it", "en", "es", ...); ignorata con parole locali.
+ * @param difficulty       difficoltà richiesta ("facile"/"media"/"difficile"), null = a caso.
  */
-public record HangmanConfig(int maxVowels, int lettersPerPlayer, List<String> accessories) {
+public record HangmanConfig(int maxVowels, int lettersPerPlayer, List<String> accessories,
+                            boolean dictionary, String lang, String difficulty) {
+
+    /** Config senza opzioni dizionario (compatibile con i test e le chiamate esistenti). */
+    public HangmanConfig(int maxVowels, int lettersPerPlayer, List<String> accessories) {
+        this(maxVowels, lettersPerPlayer, accessories, false, "it", null);
+    }
 
     /** Parti del corpo base (testa, corpo, 2 braccia, 2 gambe). */
     public static final int BASE_PARTS = 6;
@@ -55,6 +64,12 @@ public record HangmanConfig(int maxVowels, int lettersPerPlayer, List<String> ac
         }
         // Mantieni l'ordine canonico di disegno
         acc.sort((a, b) -> Integer.compare(KNOWN_ACCESSORIES.indexOf(a), KNOWN_ACCESSORIES.indexOf(b)));
-        return new HangmanConfig(maxVowels, lettersPerPlayer, acc);
+
+        // Sorgente parole: "dizionario" (online) oppure "locale" (default, come prima)
+        boolean dictionary = "dizionario".equals(o.path("wordSource").asText("locale"));
+        String lang = o.path("lang").asText("it");
+        String difficulty = o.path("difficulty").asText("");
+        return new HangmanConfig(maxVowels, lettersPerPlayer, acc, dictionary, lang,
+                difficulty.isBlank() || "random".equals(difficulty) ? null : difficulty);
     }
 }

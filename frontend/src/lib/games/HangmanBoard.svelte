@@ -19,11 +19,18 @@
 
 	let state = $state<HangmanGameState | null>(null);
 	let over = $state<{ status: string; word: string } | null>(null);
+	/** Parola in arrivo dal dizionario online: il server manda "game:loading" e poi lo stato. */
+	let fetchingWord = $state(false);
 
 	$effect(() => {
 		const e = event;
 		if (!e) return;
-		if (e.type === 'game:state') {
+		if (e.type === 'game:loading') {
+			fetchingWord = true;
+			over = null;
+			state = null;
+		} else if (e.type === 'game:state') {
+			fetchingWord = false;
 			state = e as unknown as HangmanGameState;
 			if ((e as { status?: string }).status === 'PLAYING') over = null;
 		} else if (e.type === 'game:over') {
@@ -32,6 +39,14 @@
 	});
 
 	const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
+	/** Tooltip della sorgente aperto al tocco (su desktop basta l'hover). */
+	let helpOpen = $state(false);
+
+	/** Spiegazione dell'iconcina info accanto al badge della sorgente delle parole. */
+	const WORD_SOURCE_HELP =
+		'"Dizionario" = la parola è pescata da un dizionario online nella lingua scelta, ' +
+		'quindi è sempre nuova e non la conosce nessuno; "elenco locale" = viene dalle parole ' +
+		'del sito (usate anche quando il dizionario non risponde). La difficoltà è la lunghezza della parola.';
 	const VOWELS = new Set(['a', 'e', 'i', 'o', 'u']);
 
 	const playing  = $derived(state?.status === 'PLAYING');
@@ -92,7 +107,15 @@
 </script>
 
 <div class="hangman">
-	{#if !state}
+	{#if fetchingWord}
+		<div class="fetching" role="status" aria-live="polite">
+			<pre class="gallows">{gallows(0, [], false)}</pre>
+			<p class="fetch-msg">
+				<Icon name="hourglass" size={16} /> Sto pescando una parola dal dizionario<span class="dots"><i>.</i><i>.</i><i>.</i></span>
+			</p>
+			<p class="muted small">Se non risponde entro qualche secondo si usa una parola dell'elenco locale.</p>
+		</div>
+	{:else if !state}
 		<p class="muted">Nessuna partita in corso.</p>
 		<button class="start" onclick={startGame}>Inizia partita</button>
 	{:else}
@@ -108,6 +131,42 @@
 			Errori: {state.wrongCount}/{state.maxWrong}
 			{#if state.wrong.length}— <span class="wrong">{state.wrong.join(' ').toUpperCase()}</span>{/if}
 		</p>
+
+		<!-- Difficoltà della parola in gioco (e provenienza, se dal dizionario) -->
+		{#if state.difficulty}
+			<p class="diff-row">
+				<span
+					class="diff-badge"
+					class:facile={state.difficulty === 'facile'}
+					class:media={state.difficulty === 'media'}
+					class:difficile={state.difficulty === 'difficile'}
+				>
+					<Icon
+						name={state.difficulty === 'facile' ? 'check' : state.difficulty === 'media' ? 'bolt' : 'fire'}
+						size={14}
+					/>
+					{state.difficultyLabel ?? state.difficulty}
+				</span>
+				{#if state.dictionary === true}
+					<span class="src-badge"><Icon name="book" size={14} /> Dizionario{state.lang ? ` (${state.lang})` : ''}</span>
+				{:else if state.dictionary === false}
+					<span class="src-badge"><Icon name="letters" size={14} /> Elenco locale</span>
+				{/if}
+				{#if state.dictionary !== undefined}
+					<button
+						type="button"
+						class="info-hint"
+						class:open={helpOpen}
+						aria-label="Da dove arriva la parola"
+						aria-expanded={helpOpen}
+						onclick={() => (helpOpen = !helpOpen)}
+					>
+						<Icon name="info" size={14} />
+						<span class="tip">{WORD_SOURCE_HELP}</span>
+					</button>
+				{/if}
+			</p>
+		{/if}
 
 		<!-- Limiti regole personalizzate -->
 		{#if vowelLimit > 0 || letterLimit > 0}
@@ -185,6 +244,119 @@
 	}
 
 	/* === Patibolo ASCII — verde neon con glow === */
+	/* Difficoltà della parola + provenienza */
+	.diff-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		justify-content: center;
+		margin: 0.1rem 0 0.3rem;
+	}
+	.diff-badge,
+	.src-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.15rem 0.5rem;
+		border-radius: 999px;
+		border: 1px solid var(--line);
+		font-family: var(--font-ui, sans-serif);
+		font-size: 0.68rem;
+		letter-spacing: 0.07em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+	.diff-badge { font-weight: 700; }
+	.diff-badge.facile {
+		color: var(--green);
+		border-color: var(--green);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--green) 30%, transparent);
+	}
+	.diff-badge.media {
+		color: var(--amber);
+		border-color: var(--amber);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--amber) 30%, transparent);
+	}
+	.diff-badge.difficile {
+		color: var(--danger);
+		border-color: var(--danger);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--danger) 35%, transparent);
+	}
+
+	/* Iconcina info + tooltip sulla provenienza della parola */
+	.info-hint {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		padding: 0;
+		border: none;
+		background: none;
+		color: inherit;
+		cursor: help;
+	}
+	.info-hint .tip {
+		position: absolute;
+		left: 50%;
+		bottom: calc(100% + 0.45rem);
+		transform: translateX(-50%);
+		z-index: 20;
+		width: max-content;
+		max-width: min(78vw, 300px);
+		padding: 0.5rem 0.65rem;
+		border: 1px solid var(--cyan);
+		border-radius: 8px;
+		background: var(--inset);
+		color: var(--text);
+		font-family: var(--font-term, monospace);
+		font-size: 0.85rem;
+		line-height: 1.35;
+		text-transform: none;
+		letter-spacing: normal;
+		box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+		opacity: 0;
+		visibility: hidden;
+		transition: opacity 0.12s;
+	}
+	.info-hint:hover .tip,
+	.info-hint:focus-visible .tip,
+	.info-hint.open .tip {
+		opacity: 1;
+		visibility: visible;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.info-hint .tip { transition: none; }
+	}
+
+	/* Attesa della parola dal dizionario */
+	.fetching {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.35rem;
+	}
+	.fetch-msg {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin: 0;
+		font-family: var(--font-term, monospace);
+		color: var(--cyan);
+	}
+	.small { font-size: 0.85rem; }
+	.dots i {
+		font-style: normal;
+		animation: hm-blink 1.2s infinite;
+	}
+	.dots i:nth-child(2) { animation-delay: 0.2s; }
+	.dots i:nth-child(3) { animation-delay: 0.4s; }
+	@keyframes hm-blink {
+		0%, 100% { opacity: 0.2; }
+		50% { opacity: 1; }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.dots i { animation: none; opacity: 1; }
+	}
+
 	.gallows {
 		font-family: var(--font-term), ui-monospace, monospace;
 		font-size: 1.1rem;

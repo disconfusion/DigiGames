@@ -16,6 +16,12 @@ export type HangmanGameState = {
 	players?: string[];
 	lastBy?: string;
 	lastLetter?: string;
+	/** Difficoltà della parola in gioco (dedotta dalla lunghezza lato server). */
+	difficulty?: 'facile' | 'media' | 'difficile';
+	difficultyLabel?: string;
+	/** true se la parola arriva dal dizionario online; presente solo nello stato di avvio. */
+	dictionary?: boolean;
+	lang?: string;
 };
 
 export type HangmanOptions = {

@@ -20,6 +20,8 @@ Restate sintonizzati: la **2.0** è vicina.
 
 **Ogni companion si muove a modo suo** — nell'Area personale la traiettoria attorno all'avatar dipende da chi ti accompagna: api, vespe, calabroni e scarabei volano a scatti in zig-zag, la farfalla planata su un'orbita ellittica, il pipistrello e la gondola a picchiate avanti e indietro, gli altri sul giro classico. Gatto, Ratto e Procione sono stati ridisegnati con il doppio del dettaglio (occhi, baffi, code animate). Chi sceglie un colore per un companion ricolorabile lo vede applicato; senza scelta resta il colore naturale (l'ape è gialla, la farfalla rosa, lo scarabeo verde).
 
+**Parole vere per l'Impiccato** — la Parola del Giorno non arriva più dall'elenco fisso del sito: viene pescata ogni giorno da un dizionario italiano online, con una difficoltà estratta a caso per la giornata e mostrata in un badge colorato (verde facile, ambra media, rosso difficile). Accanto al badge c'è un'iconcina che spiega da dove arriva la parola. Nell'Impiccato personalizzato puoi scegliere se usare le parole del sito o il dizionario, in che lingua (italiano, inglese, spagnolo, francese, tedesco, portoghese, romeno) e con quale difficoltà: la prima parola richiede qualche secondo di attesa (con schermata di caricamento) e le successive vengono preparate in background mentre giocate, così partono subito. Se il dizionario non risponde si continua con le parole del sito, senza bloccare la partita.
+
 **Token sempre reattivi** — il saldo in alto si aggiorna all'istante quando guadagni o spendi Token: vittorie, acquisti nello shop e regali arrivano in tempo reale invece di aspettare il prossimo controllo.
 
 **Inviti gestibili dalla notifica** — quando ricevi un invito puoi accettarlo o rifiutarlo direttamente dal messaggio che compare, senza passare dalla pagina Inviti.
@@ -45,4 +47,4 @@ Restate sintonizzati: la **2.0** è vicina.
 Buon divertimento!
 
 ---
-_Aggiornato: 29 luglio 2026 — nuovo gioco Pong 1v1 (realtime 60 Hz, HUD e colore monitor), 19 nuovi companion (insetti ricolorabili, animali, Macchinetta Frog, pipistrello trasformabile in vampiro), saldo Token reattivo, inviti accettabili dalla notifica._
+_Aggiornato: 31 luglio 2026 — nuovo gioco Pong 1v1 (realtime 60 Hz, HUD e colore monitor), 19 nuovi companion (insetti ricolorabili, animali, Macchinetta Frog, pipistrello trasformabile in vampiro), parole dell'Impiccato dal dizionario online con difficoltà e lingua a scelta, saldo Token reattivo, inviti accettabili dalla notifica._

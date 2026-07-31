@@ -43,4 +43,24 @@ public final class HangmanWords {
         int idx = (int) Math.abs(date.toEpochDay() % WORDS.size());
         return WORDS.get(idx);
     }
+
+    /**
+     * Parola locale di lunghezza compresa fra {@code min} e {@code max} (estremi inclusi),
+     * diversa da {@code exclude}. Usata come ripiego quando il dizionario online non risponde:
+     * la difficoltà richiesta viene rispettata anche offline. Se nessuna parola locale rientra
+     * nella fascia, ne torna una qualsiasi.
+     */
+    public static String randomInRange(int min, int max, String exclude) {
+        List<String> pool = WORDS.stream()
+                .filter(w -> w.length() >= min && w.length() <= max)
+                .filter(w -> !w.equals(exclude))
+                .toList();
+        if (pool.isEmpty()) return randomExcluding(exclude);
+        return pool.get(RNG.nextInt(pool.size()));
+    }
+
+    /** Tutte le parole locali (sola lettura): usata dai test e per le statistiche del dizionario. */
+    public static List<String> all() {
+        return WORDS;
+    }
 }

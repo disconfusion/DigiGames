@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { auth } from '$lib/auth.svelte';
 	import { api } from '$lib/api';
@@ -19,6 +19,10 @@
 		word: string | null;
 		custom: boolean; // parola scelta manualmente dall'admin
 		callout: string | null; // messaggio dell'admin per la giornata
+		difficulty: 'facile' | 'media' | 'difficile' | null; // difficoltà estratta per la giornata
+		difficultyLabel: string | null;
+		dictionary: boolean; // parola dal dizionario online (false = parole locali di riserva)
+		loading: boolean; // la parola del giorno è ancora in download
 		// stato per-utente
 		letterUsed: boolean;
 		wordAttemptUsed: boolean;
@@ -29,6 +33,12 @@
 	};
 
 	const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
+
+	/** Spiegazione mostrata dall'iconcina info accanto al badge della sorgente. */
+	const WORD_SOURCE_HELP =
+		'"Dal dizionario" = la parola di oggi arriva da un dizionario italiano online, ' +
+		'quindi non è scelta da noi e cambia ogni giorno. La difficoltà è la lunghezza della parola. ' +
+		'Se il dizionario non risponde si usa una "parola di riserva" dall\'elenco del sito.';
 
 	const FRAMES = [
 		' +---+\n |   |\n     |\n     |\n     |\n     |\n=======',
@@ -47,6 +57,8 @@
 	let busy = $state(false);
 	let wordInput = $state('');
 	let wordError = $state('');
+	/** Tooltip della sorgente aperto al tocco (su desktop basta l'hover). */
+	let helpOpen = $state(false);
 
 	const used = $derived(
 		new Set([...(state?.wrongLetters ?? []), ...(state?.revealedLetters ?? [])])
@@ -62,9 +74,17 @@
 		!!state?.myLetter && (state?.revealedLetters?.includes(state.myLetter) ?? false)
 	);
 
+	// La parola del giorno viene pescata dal dizionario online: la prima richiesta della giornata
+	// può metterci fino a ~20 s (due tentativi), quindi il backend risponde "loading" e qui si
+	// ripolla finché non è pronta.
+	const fetchingWord = $derived(state?.loading ?? false);
+	let pollTimer: ReturnType<typeof setTimeout> | undefined;
+
 	async function load() {
 		try {
 			state = await api<DailyState>('/api/daily');
+			clearTimeout(pollTimer);
+			if (state.loading) pollTimer = setTimeout(load, 1500);
 		} catch (e) {
 			loadError = (e as Error).message;
 		}
@@ -79,6 +99,8 @@
 		await load();
 		loading = false;
 	});
+
+	onDestroy(() => clearTimeout(pollTimer));
 
 	// Aggiorna quando un altro utente fa una mossa (evento WS broadcast)
 	let lastSeen = 0;
@@ -133,8 +155,38 @@
 		<div class="callout" role="status"><Icon name="speech" size={18} /> <span>{state.callout}</span></div>
 	{/if}
 
-	{#if state?.custom}
-		<p class="custom-word"><Icon name="tools" size={16} /> Parola scelta dall'admin</p>
+	{#if state?.difficulty}
+		<div class="meta-row">
+			<span
+				class="diff-badge"
+				class:facile={state.difficulty === 'facile'}
+				class:media={state.difficulty === 'media'}
+				class:difficile={state.difficulty === 'difficile'}
+				title="Difficoltà della parola di oggi"
+			>
+				<Icon name={state.difficulty === 'facile' ? 'check' : state.difficulty === 'media' ? 'bolt' : 'fire'} size={14} />
+				{state.difficultyLabel ?? state.difficulty}
+			</span>
+			{#if state.custom}
+				<span class="src-badge"><Icon name="tools" size={14} /> Scelta dall'admin</span>
+			{:else if state.dictionary}
+				<span class="src-badge"><Icon name="book" size={14} /> Dal dizionario</span>
+			{:else}
+				<span class="src-badge"><Icon name="warning" size={14} /> Parola di riserva</span>
+			{/if}
+			<!-- Spiegazione di "dal dizionario" / "parola di riserva" -->
+			<button
+				type="button"
+				class="info-hint"
+				class:open={helpOpen}
+				aria-label="Da dove arriva la parola"
+				aria-expanded={helpOpen}
+				onclick={() => (helpOpen = !helpOpen)}
+			>
+				<Icon name="info" size={14} />
+				<span class="tip">{WORD_SOURCE_HELP}</span>
+			</button>
+		</div>
 	{/if}
 
 	{#if rules.trim()}
@@ -148,6 +200,14 @@
 		<p class="muted">Caricamento…</p>
 	{:else if loadError}
 		<p class="err">⚠ {loadError}</p>
+	{:else if fetchingWord}
+		<div class="word-loading" role="status" aria-live="polite">
+			<pre class="gallows">{FRAMES[0]}</pre>
+			<p class="loading-msg">
+				<Icon name="hourglass" size={16} /> Sto pescando la parola di oggi dal dizionario<span class="dots"><i>.</i><i>.</i><i>.</i></span>
+			</p>
+			<p class="muted small">Se il dizionario non risponde si usa una parola di riserva.</p>
+		</div>
 	{:else if state}
 		<pre class="gallows">{frame}</pre>
 
@@ -265,20 +325,132 @@
 		text-align: center;
 	}
 	.sub { color: var(--muted); margin: 0; text-align: center; }
-	.custom-word {
+	/* Badge difficoltà + provenienza della parola del giorno */
+	.meta-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.4rem;
+		margin: 0.2rem 0 0.4rem;
+	}
+	.diff-badge,
+	.src-badge {
 		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.18rem 0.55rem;
+		border-radius: 999px;
+		border: 1px solid var(--line);
+		font-family: var(--font-ui, sans-serif);
+		font-size: 0.7rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+	.diff-badge {
+		font-weight: 700;
+	}
+	.diff-badge.facile {
+		color: var(--green);
+		border-color: var(--green);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--green) 30%, transparent);
+	}
+	.diff-badge.media {
+		color: var(--amber);
+		border-color: var(--amber);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--amber) 30%, transparent);
+	}
+	.diff-badge.difficile {
+		color: var(--danger);
+		border-color: var(--danger);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--danger) 35%, transparent);
+	}
+
+	/* Iconcina info + tooltip sulla provenienza della parola */
+	.info-hint {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		padding: 0;
+		border: none;
+		background: none;
+		color: inherit;
+		cursor: help;
+	}
+	.info-hint .tip {
+		position: absolute;
+		left: 50%;
+		bottom: calc(100% + 0.45rem);
+		transform: translateX(-50%);
+		z-index: 20;
+		width: max-content;
+		max-width: min(78vw, 300px);
+		padding: 0.5rem 0.65rem;
+		border: 1px solid var(--cyan);
+		border-radius: 8px;
+		background: var(--inset);
+		color: var(--text);
+		font-family: var(--font-term, monospace);
+		font-size: 0.85rem;
+		line-height: 1.35;
+		text-transform: none;
+		letter-spacing: normal;
+		box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+		opacity: 0;
+		visibility: hidden;
+		transition: opacity 0.12s;
+	}
+	.info-hint:hover .tip,
+	.info-hint:focus-visible .tip,
+	.info-hint.open .tip {
+		opacity: 1;
+		visibility: visible;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.info-hint .tip {
+			transition: none;
+		}
+	}
+
+	/* Attesa della parola dal dizionario */
+	.word-loading {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.loading-msg {
+		display: flex;
 		align-items: center;
 		gap: 0.4rem;
 		margin: 0;
-		padding: 0.3rem 0.8rem;
-		border-radius: 20px;
-		border: 1px solid var(--amber);
-		background: color-mix(in srgb, var(--amber) 12%, var(--inset));
-		color: var(--amber);
-		font-family: var(--font-ui);
-		font-size: 0.8rem;
-		letter-spacing: 0.03em;
+		font-family: var(--font-term, monospace);
+		color: var(--cyan);
 	}
+	.small {
+		font-size: 0.85rem;
+	}
+	.dots i {
+		font-style: normal;
+		animation: blink 1.2s infinite;
+	}
+	.dots i:nth-child(2) {
+		animation-delay: 0.2s;
+	}
+	.dots i:nth-child(3) {
+		animation-delay: 0.4s;
+	}
+	@keyframes blink {
+		0%, 100% { opacity: 0.2; }
+		50% { opacity: 1; }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.dots i {
+			animation: none;
+			opacity: 1;
+		}
+	}
+
 	.callout {
 		width: 100%;
 		display: flex;

@@ -2742,6 +2742,30 @@ const masterchief: Sprite = {
 	]]
 };
 
+// ── Info (tooltip di spiegazione) ─────────────────────────────────────────
+const info: Sprite = {
+	motion: 'pulse',
+	palette: { C: C.cyan, K: '#0a0512' },
+	frames: [[
+		'................',
+		'.....CCCCCC.....',
+		'...CCCCCCCCCC...',
+		'..CCCCCCCCCCCC..',
+		'..CCCCCKKCCCCC..',
+		'.CCCCCCKKCCCCCC.',
+		'.CCCCCCCCCCCCCC.',
+		'.CCCCCCKKCCCCCC.',
+		'.CCCCCCKKCCCCCC.',
+		'.CCCCCCKKCCCCCC.',
+		'..CCCCCKKCCCCC..',
+		'..CCCCCKKCCCCC..',
+		'...CCCCCCCCCC...',
+		'.....CCCCCC.....',
+		'................',
+		'................'
+	]]
+};
+
 export const SPRITES: Record<string, Sprite> = {
 	// giochi (le chiavi coincidono con gli slug del catalogo)
 	connect4,
@@ -2782,6 +2806,7 @@ export const SPRITES: Record<string, Sprite> = {
 	sync,
 	clock,
 	speech,
+	info,
 	check,
 	cross,
 	warning,
