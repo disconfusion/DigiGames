@@ -12,6 +12,8 @@ Restate sintonizzati: la **2.0** è vicina.
 
 ## Novità e fix di questa versione
 
+**Nuovo gioco: Battle City** — i carrarmatini pixelati del NES, in due modalità che si scelgono creando la stanza. **Co-op**: fino a due colleghi insieme difendono l'aquila e abbattono venti tank nemici a ondate (quattro in campo alla volta, quattro tipi diversi: normale, veloce, cannone rapido e corazzato che regge quattro colpi), con tutti e sei i bonus dell'originale — stella (cannone potenziato, dal terzo livello sfonda l'acciaio), granata (spazza i nemici in campo), casco (scudo), pala (base murata in acciaio), tank (vita extra) e orologio (nemici congelati). **Duello 1v1**: niente nemici, solo voi due sulla mappa a muri distruttibili, primo a tre colpi. I mattoni si rompono a mezzo tile come nell'originale, l'acqua ferma i tank ma non i proiettili, i cespugli nascondono chi ci passa sotto e sul ghiaccio si slitta. Sei mappe disegnate a mano, poi livelli generati sempre più difficili: completando un livello si passa al successivo. Si gioca con frecce o WASD e spazio per sparare; su telefono ci sono croce direzionale e pulsante di fuoco.
+
 **Nuovo gioco: Pong 1v1** — il primo gioco in tempo reale della piattaforma. Il server simula la partita a 60 tick al secondo ed è l'unica autorità: dal browser parte solo la posizione della racchetta (mouse, dito o tasti W/S e frecce). In partita trovi un HUD con FPS del browser, tick del server, velocità della palla e colpi dello scambio, più il colore del monitor scelto da te (ognuno vede il suo) e i punti partita configurabili alla creazione della stanza.
 
 **Nuovi companion** — Scarabeo Rinoceronte (con il colore della corazza scelto da te: verde sgargiante di serie, ma prende qualunque tinta), Lo Special (il panino alla salsiccia del paninaro Fabio, col sugo che "coce da 200 anni"), Castoro di DBeaver, Lancer e l'Elmo di Master Chief.
@@ -47,4 +49,4 @@ Restate sintonizzati: la **2.0** è vicina.
 Buon divertimento!
 
 ---
-_Aggiornato: 31 luglio 2026 — nuovo gioco Pong 1v1 (realtime 60 Hz, HUD e colore monitor), 19 nuovi companion (insetti ricolorabili, animali, Macchinetta Frog, pipistrello trasformabile in vampiro), parole dell'Impiccato dal dizionario online con difficoltà e lingua a scelta, saldo Token reattivo, inviti accettabili dalla notifica._
+_Aggiornato: 31 luglio 2026 — nuovi giochi Battle City (co-op e duello, sei mappe più livelli generati) e Pong 1v1 (realtime 60 Hz, HUD e colore monitor), 19 nuovi companion (insetti ricolorabili, animali, Macchinetta Frog, pipistrello trasformabile in vampiro), parole dell'Impiccato dal dizionario online con difficoltà e lingua a scelta, saldo Token reattivo, inviti accettabili dalla notifica._

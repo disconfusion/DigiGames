@@ -29,7 +29,8 @@
 		tris: 'Tris',
 		dama: 'Dama',
 		chess: 'Scacchi',
-		pong: 'Pong'
+		pong: 'Pong',
+		battlecity: 'Battle City'
 	};
 
 	const face = (avatar: string | null) => renderAvatar(parseAvatar(avatar));

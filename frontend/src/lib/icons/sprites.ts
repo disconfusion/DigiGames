@@ -2766,6 +2766,51 @@ const info: Sprite = {
 	]]
 };
 
+// ── Battle City (icona del gioco: tank visto dall'alto, cingoli animati) ──
+const battlecity: Sprite = {
+	motion: 'shake',
+	fps: 6,
+	palette: { Y: C.amber, K: '#141821', G: '#8a6a12' },
+	frames: [
+		[
+			'................',
+			'.......YY.......',
+			'.......YY.......',
+			'..YY..YYYY..YY..',
+			'..GG.YYYYYY.GG..',
+			'..YYYYYYYYYYYY..',
+			'..YYYYYKKYYYYY..',
+			'..YYYYYKKYYYYY..',
+			'..YYYYYYYYYYYY..',
+			'..GG.YYYYYY.GG..',
+			'..YY..YYYY..YY..',
+			'..YY........YY..',
+			'................',
+			'................',
+			'................',
+			'................'
+		],
+		[
+			'................',
+			'.......YY.......',
+			'.......YY.......',
+			'..GG..YYYY..GG..',
+			'..YY.YYYYYY.YY..',
+			'..YYYYYYYYYYYY..',
+			'..YYYYYKKYYYYY..',
+			'..YYYYYKKYYYYY..',
+			'..YYYYYYYYYYYY..',
+			'..YY.YYYYYY.YY..',
+			'..GG..YYYY..GG..',
+			'..GG........GG..',
+			'................',
+			'................',
+			'................',
+			'................'
+		]
+	]
+};
+
 export const SPRITES: Record<string, Sprite> = {
 	// giochi (le chiavi coincidono con gli slug del catalogo)
 	connect4,
@@ -2777,6 +2822,7 @@ export const SPRITES: Record<string, Sprite> = {
 	dama,
 	chess,
 	pong,
+	battlecity,
 	// esiti
 	win,
 	lose,

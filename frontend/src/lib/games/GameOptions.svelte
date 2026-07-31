@@ -8,6 +8,9 @@
 	let chessMinutes = $state(0);
 	let trisVanish = $state(false);
 	let pongPoints = $state(7);
+	// Battle City: co-op contro l'IA o duello 1v1, e livello di partenza
+	let bcMode = $state<'coop' | 'duello'>('coop');
+	let bcLevel = $state(1);
 	let hmPreset = $state<'classic' | 'custom'>('classic');
 	// Sorgente delle parole: dizionario online (con difficoltà e lingua) o parole locali
 	let hmSource = $state<'locale' | 'dizionario'>('locale');
@@ -55,13 +58,20 @@
 			options = { vanish: trisVanish };
 		} else if (game === 'pong') {
 			options = { pointsToWin: pongPoints };
+		} else if (game === 'battlecity') {
+			options = { mode: bcMode, level: bcLevel };
 		} else {
 			options = undefined;
 		}
 	});
 
 	const hasOptions = $derived(
-		game === 'hangman' || game === 'quiz' || game === 'chess' || game === 'tris' || game === 'pong'
+		game === 'hangman' ||
+			game === 'quiz' ||
+			game === 'chess' ||
+			game === 'tris' ||
+			game === 'pong' ||
+			game === 'battlecity'
 	);
 </script>
 
@@ -92,6 +102,28 @@
 					in partita, ognuno il suo.
 				</span>
 			</div>
+		{:else if game === 'battlecity'}
+			<div class="opt">
+				<label for="bcMode">Modalità</label>
+				<select id="bcMode" bind:value={bcMode}>
+					<option value="coop">Co-op: difendete l'aquila dai tank nemici</option>
+					<option value="duello">Duello 1v1: primo a 3 colpi</option>
+				</select>
+				<span class="hint">
+					In co-op si abbattono 20 tank IA per livello e si raccolgono i bonus; nel duello
+					niente nemici, solo voi due sulla mappa a muri distruttibili.
+				</span>
+			</div>
+			{#if bcMode === 'coop'}
+				<div class="opt">
+					<label for="bcLevel">Livello di partenza</label>
+					<input id="bcLevel" type="number" min="1" max="99" bind:value={bcLevel} />
+					<span class="hint">
+						I primi 6 sono disegnati a mano, dal 7° in poi sono generati e sempre più difficili.
+						Completando un livello si passa al successivo.
+					</span>
+				</div>
+			{/if}
 		{:else if game === 'tris'}
 			<div class="opt">
 				<label class="switch">
