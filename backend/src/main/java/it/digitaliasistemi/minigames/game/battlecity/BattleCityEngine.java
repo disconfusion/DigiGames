@@ -50,8 +50,11 @@ public class BattleCityEngine implements GameEngine {
     @Inject LeaderboardService leaderboard;
     @Inject RoomChannel channel;
     @Inject RoomManager rooms;
+    @Inject BattleCityMapStore maps;
 
     private final Map<String, Loop> loops = new ConcurrentHashMap<>();
+    /** Mappe in costruzione, per stanza: il Construction Mode vive prima della partita. */
+    private final Map<String, BattleCityBuild> builds = new ConcurrentHashMap<>();
     private ScheduledExecutorService scheduler;
 
     private static final class Loop {
@@ -112,11 +115,69 @@ public class BattleCityEngine implements GameEngine {
                     return;
                 }
                 int level = nextLevel(room, payload);
-                BattleCityState st = new BattleCityState(mode, level, new ArrayList<>(room.players));
+                String[] custom = customMapFor(room, payload);
+                if (custom != null && !BattleCityBuild.isPlayable(custom)) {
+                    ctx.replyToSender(error("Mappa non giocabile: dai punti di comparsa non si raggiunge la base"));
+                    return;
+                }
+                BattleCityState st = new BattleCityState(mode, level, new ArrayList<>(room.players),
+                        new java.util.Random(), custom);
                 room.game = st;
                 room.status = Room.Status.PLAYING;
                 startLoop(room, st);
                 channel.broadcast(room.code, fullSnapshot(st, TICK_HZ));
+            }
+            // ── Construction Mode: la mappa la disegnano i giocatori ────────────────
+            case "build:open" -> {
+                BattleCityBuild build = builds.computeIfAbsent(room.code,
+                        k -> new BattleCityBuild(new ArrayList<>(room.players)));
+                channel.broadcast(room.code, buildSnapshot(build));
+            }
+            case "build:paint" -> {
+                BattleCityBuild build = builds.get(room.code);
+                if (build == null) return;
+                int r = payload.path("row").asInt(-1);
+                int c = payload.path("col").asInt(-1);
+                String tile = payload.path("tile").asText(".");
+                if (build.paint(ctx.senderEmail(), r, c, tile.isEmpty() ? '.' : tile.charAt(0))) {
+                    channel.broadcast(room.code, buildSnapshot(build));
+                }
+            }
+            case "build:tool" -> {
+                BattleCityBuild build = builds.get(room.code);
+                if (build == null) return;
+                boolean changed = switch (payload.path("tool").asText("")) {
+                    case "random" -> build.fillRandom(ctx.senderEmail(), new java.util.Random());
+                    case "clear" -> build.clearZone(ctx.senderEmail());
+                    case "mirror" -> build.mirror(ctx.senderEmail());
+                    default -> false;
+                };
+                if (changed) channel.broadcast(room.code, buildSnapshot(build));
+            }
+            case "build:ready" -> {
+                BattleCityBuild build = builds.get(room.code);
+                if (build == null) return;
+                build.setReady(ctx.senderEmail(), payload.path("ready").asBoolean(true));
+                channel.broadcast(room.code, buildSnapshot(build));
+            }
+            case "build:save" -> {
+                BattleCityBuild build = builds.get(room.code);
+                if (build == null) {
+                    ctx.replyToSender(error("Nessuna mappa in costruzione"));
+                    return;
+                }
+                String name = payload.path("name").asText("").trim();
+                if (name.isEmpty()) {
+                    ctx.replyToSender(error("Serve un nome per salvare la mappa"));
+                    return;
+                }
+                String[] rows = BattleCityBuild.sanitize(build.rows());
+                if (!BattleCityBuild.isPlayable(rows)) {
+                    ctx.replyToSender(error("Mappa non giocabile: dai punti di comparsa non si raggiunge la base"));
+                    return;
+                }
+                saveMap(ctx.senderEmail(), name, rows, build.players());
+                ctx.replyToSender(info("Mappa \"" + name + "\" salvata nella libreria"));
             }
             case "input" -> {
                 if (!(room.game instanceof BattleCityState st)) return;
@@ -158,6 +219,47 @@ public class BattleCityEngine implements GameEngine {
         return Math.max(1, fromOptions);
     }
 
+    /**
+     * Mappa su cui giocare: quella disegnata in stanza se c'è, altrimenti quella scelta dalla
+     * libreria (opzione {@code mapId}), altrimenti null = si usa il livello standard.
+     */
+    private String[] customMapFor(Room room, JsonNode payload) {
+        BattleCityBuild build = builds.get(room.code);
+        if (build != null) return BattleCityBuild.sanitize(build.rows());
+        long mapId = payload.path("mapId").asLong(
+                room.options != null ? room.options.path("mapId").asLong(0) : 0);
+        if (mapId <= 0) return null;
+        return loadLibraryMap(mapId);
+    }
+
+    /** Legge una mappa della libreria e ne segna la giocata (accesso DB dal thread del socket). */
+    private String[] loadLibraryMap(long mapId) {
+        final String[][] holder = new String[1][];
+        RequestContexts.run(() -> holder[0] = maps.readAndCountPlay(mapId));
+        return holder[0];
+    }
+
+    /** Salva la mappa appena disegnata nella libreria condivisa. */
+    private void saveMap(String username, String name, String[] rows, List<String> builders) {
+        RequestContexts.run(() -> maps.save(username, name, rows, builders));
+    }
+
+    /** Snapshot della mappa in costruzione (griglia, zone, chi ha finito). */
+    private Map<String, Object> buildSnapshot(BattleCityBuild build) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("type", "game:build");
+        m.put("game", slug());
+        m.putAll(build.view());
+        return m;
+    }
+
+    private Map<String, Object> info(String message) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("type", "info");
+        m.put("message", message);
+        return m;
+    }
+
     private void startLoop(Room room, BattleCityState st) {
         stopLoop(room.code);
         Loop loop = new Loop();
@@ -177,6 +279,7 @@ public class BattleCityEngine implements GameEngine {
     }
 
     private void stopLoop(String code) {
+        if (rooms.get(code) == null) builds.remove(code);
         Loop old = loops.remove(code);
         if (old != null) {
             old.stopped = true;
@@ -282,6 +385,7 @@ public class BattleCityEngine implements GameEngine {
         m.put("grid", st.gridRows());
         m.put("mode", st.mode().name());
         m.put("level", st.level());
+        m.put("customMap", st.customMap());
         m.put("status", st.status().name());
         m.put("winner", st.winner());
         m.putAll(dynamic(st, tps));

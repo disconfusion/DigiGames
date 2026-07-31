@@ -203,6 +203,8 @@ public class BattleCityState {
     /** Posizione dell'aquila in celle (angolo alto-sinistra del 2×2). */
     private final int baseCol = CELLS / 2 - 1;
     private final int baseRow = CELLS - 2;
+    /** true se si gioca su una mappa disegnata dai giocatori. */
+    private boolean custom;
 
     public BattleCityState(Mode mode, int level, List<String> players) {
         this(mode, level, players, new Random());
@@ -210,11 +212,20 @@ public class BattleCityState {
 
     /** Costruttore con Random iniettabile: rende i test deterministici. */
     public BattleCityState(Mode mode, int level, List<String> players, Random rnd) {
+        this(mode, level, players, rnd, null);
+    }
+
+    /**
+     * Costruttore completo: con {@code customMap} non nulla si gioca su quella mappa (disegnata
+     * dai giocatori in Construction Mode o ripescata dalla libreria) invece di quella del livello.
+     */
+    public BattleCityState(Mode mode, int level, List<String> players, Random rnd, String[] customMap) {
         this.mode = mode;
         this.level = Math.max(1, level);
         this.rnd = rnd;
         this.players = List.copyOf(players);
-        loadMap(BattleCityMaps.level(this.level));
+        this.custom = customMap != null;
+        loadMap(customMap != null ? customMap : BattleCityMaps.level(this.level));
         if (mode == Mode.COOP) {
             placeBase();
             enemiesLeft = ENEMIES_PER_LEVEL;
@@ -838,6 +849,8 @@ public class BattleCityState {
 
     public Mode mode() { return mode; }
     public int level() { return level; }
+    /** Si sta giocando su una mappa disegnata dai giocatori? */
+    public boolean customMap() { return custom; }
     public synchronized Status status() { return status; }
     public synchronized String winner() { return winner; }
     public synchronized int enemiesRemaining() { return Math.max(0, ENEMIES_PER_LEVEL - enemiesKilled); }

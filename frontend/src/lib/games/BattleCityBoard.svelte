@@ -47,6 +47,61 @@
 	let over = $state<{ status: string; winner: string | null; level: number; stats: Stats } | null>(null);
 	let lastPowerUp = $state('');
 
+	// ── Construction Mode: la mappa la disegnano i giocatori, ognuno la propria metà ──
+	type BuildView = {
+		grid: string[];
+		middle: number;
+		reservedTop: number;
+		reservedBottom: number;
+		zones: Record<string, number>;
+		ready: Record<string, boolean>;
+		everyoneReady: boolean;
+	};
+	let build = $state<BuildView | null>(null);
+	let brush = $state<'.' | 'B' | 'S' | 'W' | 'T' | 'I'>('B');
+	let mapName = $state('');
+	let painting = false;
+
+	const TILE_KINDS: { key: '.' | 'B' | 'S' | 'W' | 'T' | 'I'; label: string; color: string }[] = [
+		{ key: '.', label: 'Vuoto', color: '#0b0b16' },
+		{ key: 'B', label: 'Mattoni', color: '#c56a45' },
+		{ key: 'S', label: 'Acciaio', color: '#b9c2d0' },
+		{ key: 'W', label: 'Acqua', color: '#1b4fd8' },
+		{ key: 'T', label: 'Cespugli', color: '#2fa84f' },
+		{ key: 'I', label: 'Ghiaccio', color: '#cfe8ff' }
+	];
+	const TILE_COLOR: Record<string, string> = Object.fromEntries(
+		TILE_KINDS.map((t) => [t.key, t.color])
+	);
+
+	/** La cella è nella mia metà (e non è riservata)? Solo lì posso dipingere. */
+	function mine(row: number, col: number): boolean {
+		if (!build) return false;
+		if (row < build.reservedTop || row >= build.grid.length - build.reservedBottom) return false;
+		if (col === build.middle) return false;
+		const zone = build.zones[me.username];
+		if (zone === undefined || zone < 0) return true; // da soli si disegna tutto
+		return zone === 0 ? col < build.middle : col > build.middle;
+	}
+
+	function paint(row: number, col: number) {
+		if (!mine(row, col)) return;
+		if (build && build.grid[row][col] === brush) return; // già così: niente traffico inutile
+		send({ type: 'build:paint', row, col, tile: brush });
+	}
+
+	const openBuilder = () => send({ type: 'build:open' });
+	const buildTool = (tool: 'random' | 'clear' | 'mirror') => send({ type: 'build:tool', tool });
+	const toggleReady = () =>
+		send({ type: 'build:ready', ready: !(build?.ready[me.username] ?? false) });
+
+	function saveMap() {
+		const name = mapName.trim();
+		if (!name) return;
+		send({ type: 'build:save', name });
+		mapName = '';
+	}
+
 	// Valori disegnati: fuori da $state, li legge solo il loop di disegno
 	let tanks: TankView[] = [];
 	let bullets: BulletView[] = [];
@@ -105,7 +160,10 @@
 			if (e.status === 'PLAYING') {
 				over = null;
 				started = true;
+				build = null; // la costruzione è finita: si gioca
 			}
+		} else if (e.type === 'game:build') {
+			build = e as unknown as BuildView;
 		} else if (e.type === 'game:tick') {
 			applyDynamic(e as Record<string, unknown>);
 		} else if (e.type === 'game:over') {
@@ -444,16 +502,110 @@
 
 	<div class="stage">
 		<canvas bind:this={canvas} aria-label="Campo di Battle City"></canvas>
-		{#if !started}
+		{#if !started && !build}
 			<div class="pre">
 				<p class="info">
 					Muovi con le frecce o WASD, spara con <strong>spazio</strong>.
 					{#if mode === 'DUEL'}Duello: primo a 3 colpi.{:else}Difendi l'aquila e abbatti i 20 tank.{/if}
 				</p>
-				<button class="btn" onclick={startGame}>Inizia partita</button>
+				<div class="pre-actions">
+					<button class="btn" onclick={startGame}>Inizia partita</button>
+					<button class="btn ghost" onclick={openBuilder}>Disegna la mappa</button>
+				</div>
 			</div>
 		{/if}
 	</div>
+
+	{#if build}
+		<!-- Construction Mode: griglia condivisa, ognuno dipinge la propria metà in tempo reale -->
+		<section class="builder">
+			<div class="builder-head">
+				<strong>Costruzione mappa</strong>
+				<span class="muted">
+					{#if (build.zones[me.username] ?? -1) < 0}
+						Disegni tutto il campo
+					{:else if build.zones[me.username] === 0}
+						La tua metà è quella <b>sinistra</b>
+					{:else}
+						La tua metà è quella <b>destra</b>
+					{/if}
+					· colonna centrale libera, righe di comparsa e base intoccabili
+				</span>
+			</div>
+
+			<div class="palette" role="group" aria-label="Materiali">
+				{#each TILE_KINDS as t (t.key)}
+					<button
+						class="swatch"
+						class:on={brush === t.key}
+						style:background={t.color}
+						title={t.label}
+						aria-label={t.label}
+						onclick={() => (brush = t.key)}
+					></button>
+				{/each}
+				<span class="brush-name">{TILE_KINDS.find((t) => t.key === brush)?.label}</span>
+			</div>
+
+			<div
+				class="grid"
+				role="group"
+				aria-label="Griglia della mappa"
+				style:--cols={build.grid.length}
+				onpointerdown={() => (painting = true)}
+				onpointerup={() => (painting = false)}
+				onpointerleave={() => (painting = false)}
+				onpointercancel={() => (painting = false)}
+			>
+				{#each build.grid as row, r (r)}
+					{#each row.split('') as ch, c (c)}
+						{@const editable = mine(r, c)}
+						<button
+							class="cell"
+							class:editable
+							class:middle={c === build.middle}
+							style:background={TILE_COLOR[ch] ?? '#0b0b16'}
+							aria-label="riga {r + 1} colonna {c + 1}"
+							disabled={!editable}
+							onpointerdown={() => paint(r, c)}
+							onpointerenter={() => painting && paint(r, c)}
+						></button>
+					{/each}
+				{/each}
+			</div>
+
+			<div class="builder-tools">
+				<button class="btn ghost" onclick={() => buildTool('random')}>Bozza casuale</button>
+				<button class="btn ghost" onclick={() => buildTool('mirror')}>Specchia</button>
+				<button class="btn ghost" onclick={() => buildTool('clear')}>Svuota</button>
+				<button class="btn" class:on={build.ready[me.username]} onclick={toggleReady}>
+					{build.ready[me.username] ? 'Pronto ✓' : 'Sono pronto'}
+				</button>
+			</div>
+
+			<div class="builder-status">
+				{#each Object.keys(build.ready) as u (u)}
+					<span class="chip" class:frozen={build.ready[u]}>
+						{u === me.username ? 'Tu' : (names[u] ?? u)}: {build.ready[u] ? 'pronto' : 'sta disegnando'}
+					</span>
+				{/each}
+			</div>
+
+			<div class="builder-save">
+				<input
+					class="name-input"
+					type="text"
+					maxlength="60"
+					placeholder="Nome della mappa (per rigiocarla)"
+					bind:value={mapName}
+				/>
+				<button class="btn ghost" disabled={!mapName.trim()} onclick={saveMap}>Salva</button>
+				<button class="btn" onclick={startGame}>
+					{build.everyoneReady ? 'Giocate su questa mappa' : 'Gioca comunque'}
+				</button>
+			</div>
+		</section>
+	{/if}
 
 	{#if lastPowerUp}
 		<p class="pickup"><Icon name="party" size={14} /> {lastPowerUp}</p>
@@ -609,6 +761,116 @@
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		cursor: pointer;
+	}
+
+	/* Construction Mode */
+	.builder {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 0.6rem;
+		border: 1px solid var(--line);
+		border-radius: 10px;
+		background: var(--inset);
+	}
+	.builder-head {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		align-items: baseline;
+		font-family: var(--font-ui, sans-serif);
+		font-size: 0.85rem;
+	}
+	.muted {
+		color: var(--muted);
+		font-size: 0.78rem;
+	}
+	.palette {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		flex-wrap: wrap;
+	}
+	.swatch {
+		width: 26px;
+		height: 26px;
+		border-radius: 5px;
+		border: 2px solid var(--line);
+		cursor: pointer;
+		padding: 0;
+	}
+	.swatch.on {
+		border-color: var(--text);
+		box-shadow: 0 0 8px currentColor;
+	}
+	.brush-name {
+		font-family: var(--font-term, monospace);
+		font-size: 0.85rem;
+		color: var(--muted);
+	}
+	.grid {
+		display: grid;
+		grid-template-columns: repeat(var(--cols, 13), 1fr);
+		gap: 1px;
+		width: 100%;
+		max-width: 420px;
+		margin: 0 auto;
+		aspect-ratio: 1 / 1;
+		background: var(--line);
+		touch-action: none;
+	}
+	.cell {
+		border: none;
+		padding: 0;
+		cursor: not-allowed;
+		opacity: 0.45;
+	}
+	.cell.editable {
+		cursor: crosshair;
+		opacity: 1;
+	}
+	.cell.middle {
+		box-shadow: inset 0 0 0 1px var(--cyan);
+	}
+	.builder-tools,
+	.builder-status,
+	.builder-save {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		align-items: center;
+	}
+	.name-input {
+		flex: 1 1 12rem;
+		padding: 0.4rem 0.55rem;
+		border-radius: 8px;
+		border: 1px solid var(--line);
+		background: #0f172a;
+		color: var(--text);
+		font-family: var(--font-term, monospace);
+	}
+	.btn.ghost {
+		background: transparent;
+		border-color: var(--line);
+		color: var(--muted);
+	}
+	.btn.ghost:hover:not(:disabled) {
+		color: var(--text);
+		border-color: var(--accent);
+	}
+	.btn.on {
+		background: var(--green);
+		border-color: var(--green);
+	}
+	.btn:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+	.pre-actions {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		justify-content: center;
 	}
 
 	.pickup {
