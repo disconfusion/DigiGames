@@ -324,6 +324,18 @@
 
 <style>
 	.poker {
+		/* Scala del tavolo in un posto solo. Tutto in rem, quindi segue anche lo zoom globale
+		   dell'interfaccia (font-size della radice) senza calcoli aggiuntivi. */
+		--fs-xs: 0.78rem;
+		--fs-sm: 0.88rem;
+		--fs-md: 1rem;
+		--fs-lg: 1.2rem;
+		--fs-xl: 2rem;
+		--card-w: 3.8rem;
+		--card-h: 5.3rem;
+		--card-w-sm: 2.6rem;
+		--card-h-sm: 3.6rem;
+
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -340,19 +352,19 @@
 		align-items: center;
 		gap: 0.7rem;
 		text-align: center;
-		max-width: 34rem;
+		max-width: 42rem;
 	}
 	.lobby h3 {
 		margin: 0;
 		font-family: var(--font-display, sans-serif);
-		font-size: 0.95rem;
+		font-size: var(--fs-lg);
 		letter-spacing: 0.08em;
 		color: var(--cyan);
 		text-shadow: var(--glow-cyan);
 	}
 	.hint {
 		margin: 0;
-		font-size: 0.8rem;
+		font-size: var(--fs-md);
 		line-height: 1.5;
 		color: var(--muted);
 	}
@@ -373,7 +385,7 @@
 		border-radius: 4px;
 		background: var(--panel);
 		font-family: var(--font-term, monospace);
-		font-size: 0.7rem;
+		font-size: var(--fs-sm);
 		letter-spacing: 0.04em;
 		color: var(--muted);
 	}
@@ -406,14 +418,14 @@
 	}
 	.pot-label {
 		font-family: var(--font-term, monospace);
-		font-size: 0.7rem;
+		font-size: var(--fs-sm);
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--muted);
 	}
 	.pot-value {
 		font-family: var(--font-display, sans-serif);
-		font-size: 1.3rem;
+		font-size: var(--fs-xl);
 		color: var(--amber);
 		text-shadow: 0 0 8px rgba(255, 184, 41, 0.45);
 	}
@@ -426,7 +438,7 @@
 	.hand-result {
 		margin: 0;
 		text-align: center;
-		font-size: 0.78rem;
+		font-size: var(--fs-md);
 		color: var(--text);
 	}
 	.showdown-tag {
@@ -435,7 +447,7 @@
 		border-radius: 4px;
 		background: var(--accent);
 		color: #1a1030;
-		font-size: 0.6rem;
+		font-size: var(--fs-xs);
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 	}
@@ -447,8 +459,8 @@
 		align-items: center;
 		justify-content: center;
 		gap: 1px;
-		width: 2.4rem;
-		height: 3.3rem;
+		width: var(--card-w);
+		height: var(--card-h);
 		border: 1px solid var(--line);
 		border-radius: 5px;
 		background: #e9e9f2;
@@ -456,7 +468,7 @@
 	}
 	.card .rank {
 		font-family: var(--font-term, monospace);
-		font-size: 0.95rem;
+		font-size: var(--fs-lg);
 		font-weight: 700;
 		line-height: 1;
 	}
@@ -478,19 +490,19 @@
 		border-color: var(--accent);
 	}
 	.card.small {
-		width: 1.9rem;
-		height: 2.6rem;
+		width: var(--card-w-sm);
+		height: var(--card-h-sm);
 	}
 	.card.small .rank {
-		font-size: 0.78rem;
+		font-size: var(--fs-md);
 	}
 
 	/* Posti */
 	.seats {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
 		gap: 0.5rem;
-		width: min(100%, 42rem);
+		width: min(100%, 68rem);
 	}
 	.seat {
 		display: flex;
@@ -526,17 +538,17 @@
 	}
 	.seat-name {
 		font-family: var(--font-term, monospace);
-		font-size: 0.78rem;
+		font-size: var(--fs-md);
 		font-weight: 600;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-		max-width: 6.5rem;
+		max-width: 9rem;
 	}
 	.badge {
 		padding: 0.05rem 0.3rem;
 		border-radius: 4px;
-		font-size: 0.6rem;
+		font-size: var(--fs-xs);
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
 	}
@@ -562,7 +574,7 @@
 		flex-wrap: wrap;
 		gap: 0.3rem;
 		font-family: var(--font-term, monospace);
-		font-size: 0.7rem;
+		font-size: var(--fs-sm);
 		color: var(--muted);
 	}
 	.bet {
@@ -586,7 +598,7 @@
 		flex-direction: column;
 		gap: 0.5rem;
 		align-items: center;
-		width: min(100%, 32rem);
+		width: min(100%, 40rem);
 		padding: 0.7rem;
 		border: 1px solid var(--amber);
 		border-radius: 10px;
@@ -597,7 +609,7 @@
 		align-items: center;
 		gap: 0.3rem;
 		font-family: var(--font-term, monospace);
-		font-size: 0.78rem;
+		font-size: var(--fs-md);
 		color: var(--amber);
 	}
 	.buttons {
@@ -615,7 +627,7 @@
 		background: var(--inset);
 		color: var(--text);
 		font-family: var(--font-term, monospace);
-		font-size: 0.82rem;
+		font-size: var(--fs-md);
 		cursor: pointer;
 		transition: border-color 0.12s, color 0.12s, box-shadow 0.12s;
 	}
@@ -637,7 +649,7 @@
 	}
 	.cost {
 		color: var(--muted);
-		font-size: 0.72rem;
+		font-size: var(--fs-sm);
 	}
 
 	.raise {
@@ -654,7 +666,7 @@
 	}
 	.raise-row label {
 		font-family: var(--font-term, monospace);
-		font-size: 0.75rem;
+		font-size: var(--fs-sm);
 		color: var(--muted);
 	}
 	.raise-row input[type='range'] {
@@ -685,7 +697,7 @@
 		background: var(--inset);
 		color: var(--muted);
 		font-family: var(--font-term, monospace);
-		font-size: 0.72rem;
+		font-size: var(--fs-sm);
 		cursor: pointer;
 	}
 	.chip-btn:hover {
@@ -700,7 +712,7 @@
 		gap: 0.3rem;
 		margin: 0;
 		font-family: var(--font-term, monospace);
-		font-size: 0.78rem;
+		font-size: var(--fs-md);
 		color: var(--muted);
 	}
 	.error {
@@ -709,7 +721,7 @@
 
 	/* Cronaca */
 	.log-box {
-		width: min(100%, 32rem);
+		width: min(100%, 40rem);
 	}
 	.log-toggle {
 		display: flex;
@@ -723,7 +735,7 @@
 		background: transparent;
 		color: var(--muted);
 		font-family: var(--font-term, monospace);
-		font-size: 0.72rem;
+		font-size: var(--fs-sm);
 		cursor: pointer;
 	}
 	.log {
@@ -734,7 +746,7 @@
 		border-radius: 6px;
 		background: var(--inset);
 		font-family: var(--font-term, monospace);
-		font-size: 0.72rem;
+		font-size: var(--fs-sm);
 		color: var(--muted);
 		display: flex;
 		flex-direction: column;
@@ -756,7 +768,7 @@
 		gap: 0.3rem;
 		margin: 0;
 		font-family: var(--font-term, monospace);
-		font-size: 0.82rem;
+		font-size: var(--fs-md);
 	}
 	.tokens.win {
 		color: var(--green);
@@ -772,7 +784,7 @@
 		flex-direction: column;
 		gap: 0.2rem;
 		font-family: var(--font-term, monospace);
-		font-size: 0.75rem;
+		font-size: var(--fs-sm);
 	}
 	.ranking li {
 		display: flex;
@@ -792,15 +804,14 @@
 	}
 
 	@media (max-width: 420px) {
-		.card {
-			width: 2rem;
-			height: 2.8rem;
-		}
-		.card .rank {
-			font-size: 0.82rem;
+		.poker {
+			--card-w: 2.7rem;
+			--card-h: 3.8rem;
+			--card-w-sm: 2.3rem;
+			--card-h-sm: 3.2rem;
 		}
 		.seats {
-			grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+			grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
 		}
 	}
 

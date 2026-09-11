@@ -14,6 +14,8 @@
 	import GamePicker from '$lib/games/GamePicker.svelte';
 	import Icon from '$lib/icons/Icon.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import ZoomControl from '$lib/components/ZoomControl.svelte';
+	import { initScale } from '$lib/uiScale.svelte';
 
 	// Etichetta gioco da slug (per i toast invito)
 	const gameLabel = (slug: unknown): string =>
@@ -153,6 +155,12 @@
 		}
 	}
 
+	// Zoom dell'interfaccia scelto sul dispositivo: `app.html` lo applica già prima del primo
+	// disegno, qui si allinea lo stato reattivo del controllo in header.
+	$effect(() => {
+		initScale();
+	});
+
 	$effect(() => {
 		if (auth.session) {
 			// Heartbeat presenza + refresh saldo Token / companion ogni 30s.
@@ -241,6 +249,7 @@
 		<a class="brand" href="/"><Icon name="gamepad" size={18} title="DigiGames" /> DigiGames</a>
 		{#if auth.session}
 			<div class="actions">
+				<ZoomControl />
 				<a class="token-badge" href="/shop" title="Vai allo shop"><Icon name="coin" size={16} title="Token" /> {wallet.balance}</a>
 				<a class="who" href="/profile" class:active={isActive('/profile')} title="Area personale">
 					{#if house}<Icon name={house} size={16} title="Casata" />{/if}
@@ -252,7 +261,10 @@
 				<button class="icon-btn" onclick={doLogout} title="Esci">Esci</button>
 			</div>
 		{:else}
-			<a class="login-link" href="/login">Accedi</a>
+			<div class="actions">
+				<ZoomControl />
+				<a class="login-link" href="/login">Accedi</a>
+			</div>
 		{/if}
 	</div>
 	{#if auth.session}
@@ -505,7 +517,7 @@
 		justify-content: center;
 	}
 	main {
-		max-width: 960px;
+		max-width: 60rem;
 		margin: 0 auto;
 		padding: 1.5rem 1rem;
 		width: 100%;
@@ -513,17 +525,17 @@
 	/* Su schermi grandi diamo più respiro orizzontale (evita card strette e troppo alte) */
 	@media (min-width: 1200px) {
 		main {
-			max-width: 1100px;
+			max-width: 68.75rem;
 		}
 	}
 	@media (min-width: 1500px) {
 		main {
-			max-width: 1280px;
+			max-width: 80rem;
 		}
 	}
 	@media (min-width: 1920px) {
 		main {
-			max-width: 1440px;
+			max-width: 90rem;
 		}
 	}
 	.bug {

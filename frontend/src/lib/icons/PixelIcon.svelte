@@ -41,6 +41,7 @@
 	class="pix {motion}"
 	width={size}
 	height={size}
+	style="width: {size / 16}rem; height: {size / 16}rem"
 	viewBox="0 0 {grid} {grid}"
 	shape-rendering="crispEdges"
 	role="img"
