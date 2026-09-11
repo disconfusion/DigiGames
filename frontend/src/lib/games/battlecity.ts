@@ -6,27 +6,28 @@
 export type PixelSprite = { map: string[]; palette: Record<string, string> };
 
 /**
- * Tank visto da sopra, rivolto in alto: cingoli ai lati (B), scafo e torretta (C) al centro,
- * canna sporgente in cima. Le altre tre direzioni sono rotazioni di questa mappa — canna
- * compresa, così resta sempre attaccata alla torretta.
+ * Tank visto da sopra, rivolto in alto, come nell'originale NES: cingoli squadrati ai lati con
+ * le tacche dei rulli (righe alterne B/C), scafo centrale, torretta rilevata e canna di 2 px che
+ * esce dalla torretta. Quattro toni per il rilievo: K contorno, D ombra, B base, C luce.
+ * Le altre tre direzioni sono rotazioni di questa mappa — canna compresa.
  */
 const TANK_UP = [
-	'.......CC.......',
-	'.......CC.......',
-	'BBB....CC....BBB',
-	'BBB...CCCC...BBB',
-	'BBB..CCCCCC..BBB',
-	'BBBB.CCCCCC.BBBB',
-	'BBBB.CCCCCC.BBBB',
-	'BBBB.CCCCCC.BBBB',
-	'BBBB.CCCCCC.BBBB',
-	'BBBB.CCCCCC.BBBB',
-	'BBBB.CCCCCC.BBBB',
-	'BBB..CCCCCC..BBB',
-	'BBB.CCCCCCCC.BBB',
-	'BBB.CCCCCCCC.BBB',
-	'BBB..........BBB',
-	'................'
+	'......KKKK......',
+	'......KCCK......',
+	'......KCCK......',
+	'KKKK..KCCK..KKKK',
+	'KCBK..KCCK..KCBK',
+	'KBBK.KKCCKK.KBBK',
+	'KCBK.KCCCCK.KCBK',
+	'KBBKKKCCCCKKKBBK',
+	'KCBKCCBBBBCCKCBK',
+	'KBBKCBBDDBBCKBBK',
+	'KCBKCBDDDDBCKCBK',
+	'KBBKCBDDDDBCKBBK',
+	'KCBKCBBDDBBCKCBK',
+	'KBBKCCCCCCCCKBBK',
+	'KCBKKKKKKKKKKCBK',
+	'KKKK........KKKK'
 ];
 
 /** Ruota di 90° in senso orario una mappa quadrata di caratteri. */
@@ -52,14 +53,20 @@ export const TANK_SHAPES: Record<string, string[]> = {
 	LEFT: TANK_LEFT
 };
 
-/** Colori dei tank: giocatori come nell'originale (giallo e verde), nemici per tipo. */
-export const TANK_COLORS: Record<string, { B: string; C: string }> = {
-	P1: { B: '#ffcf3f', C: '#ffe89a' },
-	P2: { B: '#3dff9a', C: '#c9ffe4' },
-	BASIC: { B: '#b9c2d0', C: '#eef3f9' },
-	FAST: { B: '#2ff3ff', C: '#d8feff' },
-	POWER: { B: '#ff2e88', C: '#ffc2dc' },
-	ARMOR: { B: '#b06bff', C: '#e6d2ff' }
+/**
+ * Colori dei tank: giocatori come nell'originale (giallo e verde), nemici per tipo.
+ * B = base, C = luce (bordi e torretta), D = ombra (pozzo della torretta e griglia motore).
+ * Il contorno K è unico per tutti, come per le altre icone del sito.
+ */
+export const TANK_OUTLINE = '#141821';
+
+export const TANK_COLORS: Record<string, { B: string; C: string; D: string }> = {
+	P1: { B: '#ffcf3f', C: '#ffe89a', D: '#c2901c' },
+	P2: { B: '#3dff9a', C: '#c9ffe4', D: '#17a862' },
+	BASIC: { B: '#b9c2d0', C: '#eef3f9', D: '#7c8595' },
+	FAST: { B: '#2ff3ff', C: '#d8feff', D: '#0e9fb0' },
+	POWER: { B: '#ff2e88', C: '#ffc2dc', D: '#b0135c' },
+	ARMOR: { B: '#b06bff', C: '#e6d2ff', D: '#6f37b5' }
 };
 
 /** L'aquila della base: 16×16, occupa un tile. */

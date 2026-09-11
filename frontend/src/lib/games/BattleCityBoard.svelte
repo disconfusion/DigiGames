@@ -3,7 +3,14 @@
 	import type { BoardProps } from './board';
 	import GameResultOverlay from './GameResultOverlay.svelte';
 	import Icon from '$lib/icons/Icon.svelte';
-	import { TANK_SHAPES, TANK_COLORS, EAGLE, POWERUP_SPRITES, POWERUP_LABELS } from './battlecity';
+	import {
+		TANK_SHAPES,
+		TANK_COLORS,
+		TANK_OUTLINE,
+		EAGLE,
+		POWERUP_SPRITES,
+		POWERUP_LABELS
+	} from './battlecity';
 
 	let { send, event, me, names = {} }: BoardProps = $props();
 
@@ -191,6 +198,8 @@
 	let held: Dir[] = [];
 	let sentDir: Dir | null = null;
 	let sentMoving = false;
+	/** Ultima direzione comandata: fermandosi il carro resta rivolto lì, non torna su. */
+	let facing: Dir = 'UP';
 
 	/** Invia solo al cambio di stato: il server ricorda direzione e movimento. */
 	function pushInput() {
@@ -199,7 +208,8 @@
 		if (dir === sentDir && moving === sentMoving) return;
 		sentDir = dir;
 		sentMoving = moving;
-		send({ type: 'input', dir: dir ?? (sentDir ?? 'UP'), moving });
+		if (dir) facing = dir;
+		send({ type: 'input', dir: facing, moving });
 	}
 
 	function pressDir(d: Dir) {
@@ -376,8 +386,8 @@
 			// I corazzati sbiadiscono man mano che incassano colpi
 			const palette =
 				!t.player && t.kind === 'ARMOR' && (t.hp ?? 4) < 4
-					? { B: '#7a5aa8', C: col.C }
-					: { B: col.B, C: col.C };
+					? { B: '#7a5aa8', C: col.C, D: '#4b2f77', K: TANK_OUTLINE }
+					: { B: col.B, C: col.C, D: col.D, K: TANK_OUTLINE };
 			drawSprite(ctx, TANK_SHAPES[t.dir] ?? TANK_SHAPES.UP, palette, u(nx), u(ny), u(dims.tank));
 
 			if (t.shield) {
