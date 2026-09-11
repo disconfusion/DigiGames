@@ -10,7 +10,8 @@ export const GAME_CATALOG: { slug: string; label: string }[] = [
 	{ slug: 'dama', label: 'Dama' },
 	{ slug: 'chess', label: 'Scacchi' },
 	{ slug: 'pong', label: 'Pong' },
-	{ slug: 'battlecity', label: 'Battle City' }
+	{ slug: 'battlecity', label: 'Battle City' },
+	{ slug: 'poker', label: 'Poker' }
 ];
 
 export const gameLabel = (slug: string): string =>

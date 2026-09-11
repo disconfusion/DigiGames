@@ -30,7 +30,8 @@
 		dama: 'Dama',
 		chess: 'Scacchi',
 		pong: 'Pong',
-		battlecity: 'Battle City'
+		battlecity: 'Battle City',
+		poker: 'Poker'
 	};
 
 	const face = (avatar: string | null) => renderAvatar(parseAvatar(avatar));

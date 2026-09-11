@@ -40,6 +40,7 @@
 		chess: 'Scacchi',
 		pong: 'Pong',
 		battlecity: 'Battle City',
+		poker: 'Poker',
 		daily: 'Parola del Giorno'
 	};
 	const gameLabel = (g: string) => GAME_LABELS[g] ?? g;

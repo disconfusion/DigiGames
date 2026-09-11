@@ -63,7 +63,7 @@ public class RoomResource {
                     .entity(new ErrorMsg("Gioco sconosciuto: " + req.gameSlug())).build();
         }
         Room r = manager.create(req.gameSlug(), jwt.getName(),
-                Boolean.TRUE.equals(req.isPrivate()), engine.maxPlayers(), req.options());
+                Boolean.TRUE.equals(req.isPrivate()), engine.maxPlayers(req.options()), req.options());
         return Response.status(Response.Status.CREATED).entity(RoomView.of(r)).build();
     }
 

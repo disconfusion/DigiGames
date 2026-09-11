@@ -49,7 +49,7 @@ public class InviteResource {
         AppUser meUser = AppUser.findByUsername(me);
         String myDisplay = meUser != null ? meUser.displayName : me;
 
-        Room room = rooms.create(req.gameSlug(), me, true, engine.maxPlayers(), req.options());
+        Room room = rooms.create(req.gameSlug(), me, true, engine.maxPlayers(req.options()), req.options());
 
         Set<String> targets = new LinkedHashSet<>(req.usernames());
         targets.remove(me);

@@ -11,6 +11,13 @@
 	// Battle City: co-op contro l'IA o duello 1v1, e livello di partenza
 	let bcMode = $state<'coop' | 'duello'>('coop');
 	let bcLevel = $state(1);
+	// Poker: posti umani e posti IA (somma max 6), posta in Token e fiches iniziali
+	const PK_MAX_SEATS = 6;
+	let pkHumans = $state(2);
+	let pkBots = $state(2);
+	let pkBuyin = $state(0);
+	let pkChips = $state(1000);
+	let pkBotLevel = $state<'facile' | 'normale' | 'tosta'>('normale');
 	let hmPreset = $state<'classic' | 'custom'>('classic');
 	// Sorgente delle parole: dizionario online (con difficoltà e lingua) o parole locali
 	let hmSource = $state<'locale' | 'dizionario'>('locale');
@@ -60,6 +67,15 @@
 			options = { pointsToWin: pongPoints };
 		} else if (game === 'battlecity') {
 			options = { mode: bcMode, level: bcLevel };
+		} else if (game === 'poker') {
+			// Il totale non può sforare il tavolo: l'ultimo valore toccato vince, l'altro cede.
+			options = {
+				humanSeats: pkHumans,
+				botSeats: Math.min(pkBots, PK_MAX_SEATS - pkHumans),
+				buyin: pkBuyin,
+				startingChips: pkChips,
+				botLevel: pkBotLevel
+			};
 		} else {
 			options = undefined;
 		}
@@ -71,7 +87,8 @@
 			game === 'chess' ||
 			game === 'tris' ||
 			game === 'pong' ||
-			game === 'battlecity'
+			game === 'battlecity' ||
+			game === 'poker'
 	);
 </script>
 
@@ -124,6 +141,65 @@
 					</span>
 				</div>
 			{/if}
+		{:else if game === 'poker'}
+			<div class="opt">
+				<label for="pkHumans">Giocatori umani</label>
+				<input
+					id="pkHumans"
+					type="number"
+					min="1"
+					max={PK_MAX_SEATS - pkBots}
+					bind:value={pkHumans}
+				/>
+				<span class="hint">
+					Quanti posti restano alle persone, te compreso: è anche il tetto della stanza, oltre
+					quel numero nessuno può entrare.
+				</span>
+			</div>
+			<div class="opt">
+				<label for="pkBots">Avversari IA</label>
+				<input
+					id="pkBots"
+					type="number"
+					min="0"
+					max={PK_MAX_SEATS - pkHumans}
+					bind:value={pkBots}
+				/>
+				<span class="hint">
+					Tavolo da {Math.min(pkHumans + pkBots, PK_MAX_SEATS)} posti in tutto (massimo 6).
+					{#if pkHumans === 1 && pkBots > 0}Giochi da solo contro il computer.{/if}
+					{#if pkBots === 0}Nessuna IA: la partita parte quando siete almeno in due.{/if}
+				</span>
+			</div>
+			{#if pkBots > 0}
+				<div class="opt">
+					<label for="pkBotLevel">Bravura dell'IA</label>
+					<select id="pkBotLevel" bind:value={pkBotLevel}>
+						<option value="facile">Facile: paga troppo e bluffa poco</option>
+						<option value="normale">Normale: gioca le quote del piatto</option>
+						<option value="tosta">Tosta: aggressiva e con più bluff</option>
+					</select>
+				</div>
+			{/if}
+			<div class="opt">
+				<label for="pkChips">Fiches iniziali a testa</label>
+				<input id="pkChips" type="number" min="100" max="1000000" step="100" bind:value={pkChips} />
+				<span class="hint">
+					Moneta del tavolo, non Token: il piccolo buio parte da un centesimo dello stack
+					({Math.max(1, Math.floor(pkChips / 100))}) e i bui raddoppiano ogni 8 mani.
+				</span>
+			</div>
+			<div class="opt">
+				<label for="pkBuyin">Buyin in Token</label>
+				<input id="pkBuyin" type="number" min="0" max="100000" bind:value={pkBuyin} />
+				<span class="hint">
+					0 = partita amichevole, nessun Token in gioco. Sopra 0 ogni umano versa {pkBuyin}
+					Token all'avvio: il montepremi ({pkBuyin} × giocatori umani) va a chi vince il
+					tavolo. L'IA non versa nulla e, se vince lei, il montepremi resta al banco. Se la
+					partita non arriva alla fine (stanza chiusa o riavvio del server) il buyin torna a
+					tutti.
+				</span>
+			</div>
 		{:else if game === 'tris'}
 			<div class="opt">
 				<label class="switch">

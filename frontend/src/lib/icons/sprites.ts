@@ -2811,6 +2811,122 @@ const battlecity: Sprite = {
 	]
 };
 
+// ── Poker: semi delle carte ──────────────────────────────────────────────
+// Renderizzati da <Icon name="suit-spade|suit-heart|suit-diamond|suit-club" />:
+// i rossi prendono il token del pericolo, i neri quello del testo, così le carte
+// restano leggibili con qualunque tema.
+const suitSpade: Sprite = {
+	palette: { S: C.text },
+	frames: [[
+		'................',
+		'.......SS.......',
+		'......SSSS......',
+		'.....SSSSSS.....',
+		'....SSSSSSSS....',
+		'...SSSSSSSSSS...',
+		'..SSSSSSSSSSSS..',
+		'.SSSSSSSSSSSSSS.',
+		'.SSSSSSSSSSSSSS.',
+		'.SSSSSSSSSSSSSS.',
+		'...SSSS..SSSS...',
+		'......SSSS......',
+		'.......SS.......',
+		'......SSSS......',
+		'.....SSSSSS.....',
+		'................'
+	]]
+};
+
+const suitHeart: Sprite = {
+	palette: { S: C.danger },
+	frames: [[
+		'................',
+		'..SSS......SSS..',
+		'.SSSSS....SSSSS.',
+		'SSSSSSS..SSSSSSS',
+		'SSSSSSSSSSSSSSSS',
+		'SSSSSSSSSSSSSSSS',
+		'.SSSSSSSSSSSSSS.',
+		'..SSSSSSSSSSSS..',
+		'...SSSSSSSSSS...',
+		'....SSSSSSSS....',
+		'.....SSSSSS.....',
+		'......SSSS......',
+		'.......SS.......',
+		'................',
+		'................',
+		'................'
+	]]
+};
+
+const suitDiamond: Sprite = {
+	palette: { S: C.danger },
+	frames: [[
+		'................',
+		'.......SS.......',
+		'......SSSS......',
+		'.....SSSSSS.....',
+		'....SSSSSSSS....',
+		'...SSSSSSSSSS...',
+		'..SSSSSSSSSSSS..',
+		'.SSSSSSSSSSSSSS.',
+		'.SSSSSSSSSSSSSS.',
+		'..SSSSSSSSSSSS..',
+		'...SSSSSSSSSS...',
+		'....SSSSSSSS....',
+		'.....SSSSSS.....',
+		'......SSSS......',
+		'.......SS.......',
+		'................'
+	]]
+};
+
+const suitClub: Sprite = {
+	palette: { S: C.text },
+	frames: [[
+		'................',
+		'......SSSS......',
+		'.....SSSSSS.....',
+		'.....SSSSSS.....',
+		'......SSSS......',
+		'..SSSS.SS.SSSS..',
+		'.SSSSSSSSSSSSSS.',
+		'.SSSSSSSSSSSSSS.',
+		'.SSSSSSSSSSSSSS.',
+		'..SSSS.SS.SSSS..',
+		'......SSSS......',
+		'......SSSS......',
+		'.....SSSSSS.....',
+		'....SSSSSSSS....',
+		'................',
+		'................'
+	]]
+};
+
+// ── Poker (icona del gioco): carta con cuore e due fiches ────────────────
+const poker: Sprite = {
+	motion: 'bob',
+	palette: { C: C.cyan, W: '#e9e9f2', R: C.danger, A: C.amber, M: C.mag },
+	frames: [[
+		'................',
+		'..CCCCCCC.......',
+		'..CWWWWWC.......',
+		'..CWRWRWC.......',
+		'..CWRRRWC.......',
+		'..CWWRWWC.......',
+		'..CWWWWWC.......',
+		'..CWWWWWC.......',
+		'..CCCCCCC.......',
+		'................',
+		'.........AAAA...',
+		'........AAAAAA..',
+		'.........AAAA...',
+		'........MMMMMM..',
+		'.........MMMM...',
+		'................'
+	]]
+};
+
 export const SPRITES: Record<string, Sprite> = {
 	// giochi (le chiavi coincidono con gli slug del catalogo)
 	connect4,
@@ -2823,6 +2939,11 @@ export const SPRITES: Record<string, Sprite> = {
 	chess,
 	pong,
 	battlecity,
+	poker,
+	'suit-spade': suitSpade,
+	'suit-heart': suitHeart,
+	'suit-diamond': suitDiamond,
+	'suit-club': suitClub,
 	// esiti
 	win,
 	lose,

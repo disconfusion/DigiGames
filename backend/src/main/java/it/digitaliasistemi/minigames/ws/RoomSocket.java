@@ -62,6 +62,14 @@ public class RoomSocket {
                     conn.closeAndAwait();
                     return;
                 }
+                // Il tetto di posti va fatto rispettare qui: la lobby disabilita il pulsante
+                // "Entra", ma con il codice della stanza si arriverebbe comunque al socket.
+                // Chi è già membro passa sempre (riconnessioni e rientri a partita in corso).
+                if (!room.players.contains(username) && room.isFull()) {
+                    conn.sendTextAndAwait(err("Stanza al completo"));
+                    conn.closeAndAwait();
+                    return;
+                }
                 conn.userData().put(USER, username);
                 room.players.add(username);
                 broadcast(code, evt("player:joined", "username", username, "players", room.players.size()));

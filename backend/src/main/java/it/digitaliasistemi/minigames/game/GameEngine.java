@@ -15,6 +15,15 @@ public interface GameEngine {
     /** Numero massimo di giocatori in stanza per questo gioco. */
     int maxPlayers();
 
+    /**
+     * Tetto di giocatori umani della stanza quando dipende dalla configurazione scelta alla
+     * creazione (es. il poker, dove l'host decide quanti posti sono umani e quanti dell'IA).
+     * Di base è il tetto fisso del gioco: gli altri giochi non devono implementarlo.
+     */
+    default int maxPlayers(JsonNode options) {
+        return maxPlayers();
+    }
+
     /** Gestisce un messaggio di gioco (es. "game:start", "move", "guess", "answer"). */
     void onMessage(GameContext ctx, String type, JsonNode payload);
 
