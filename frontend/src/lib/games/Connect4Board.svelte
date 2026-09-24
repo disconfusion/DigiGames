@@ -268,21 +268,21 @@
 		color: var(--green);
 		border: 1px solid var(--green);
 		text-shadow: 0 0 10px var(--green);
-		box-shadow: 0 0 14px rgba(61, 255, 154, 0.3);
+		box-shadow: 0 0 14px color-mix(in srgb, var(--green) 30%, transparent);
 	}
 	.c4-lose {
 		background: #2b0d15;
 		color: var(--danger);
 		border: 1px solid var(--danger);
 		text-shadow: 0 0 10px var(--danger);
-		box-shadow: 0 0 14px rgba(255, 82, 119, 0.3);
+		box-shadow: 0 0 14px color-mix(in srgb, var(--danger) 30%, transparent);
 	}
 	.c4-draw {
 		background: var(--inset);
 		color: var(--cyan);
 		border: 1px solid var(--cyan);
 		text-shadow: 0 0 10px var(--cyan);
-		box-shadow: 0 0 14px rgba(47, 243, 255, 0.25);
+		box-shadow: 0 0 14px color-mix(in srgb, var(--cyan) 25%, transparent);
 	}
 
 	/* Bottone azione */
@@ -299,11 +299,11 @@
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		cursor: pointer;
-		box-shadow: 0 0 10px rgba(255, 46, 136, 0.35), inset 0 0 8px rgba(255, 46, 136, 0.08);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 35%, transparent), inset 0 0 8px color-mix(in srgb, var(--accent) 8%, transparent);
 		transition: box-shadow 0.2s, background 0.2s;
 	}
 	.c4-btn:hover {
-		background: rgba(255, 46, 136, 0.12);
+		background: color-mix(in srgb, var(--accent) 12%, transparent);
 		box-shadow: var(--glow-mag);
 	}
 
@@ -347,7 +347,7 @@
 		width: 100%;
 		max-width: calc(var(--cols) * 64px + (var(--cols) - 1) * 6px + 20px);
 		box-sizing: border-box;
-		box-shadow: 0 0 26px rgba(47, 243, 255, 0.27);
+		box-shadow: 0 0 26px color-mix(in srgb, var(--cyan) 27%, transparent);
 		/* Clippa la caduta dei gettoni: partono sopra la board ma si vedono solo al suo interno */
 		overflow: hidden;
 	}

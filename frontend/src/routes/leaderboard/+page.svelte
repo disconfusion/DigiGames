@@ -187,14 +187,14 @@
 	.lb-tabs button.active {
 		border-color: var(--amber);
 		color: var(--amber);
-		text-shadow: 0 0 6px rgba(255, 207, 63, 0.5);
+		text-shadow: 0 0 6px color-mix(in srgb, var(--amber) 50%, transparent);
 	}
 	h1 {
 		margin: 0;
 		font-family: var(--font-display);
 		font-size: clamp(1rem, 4vw, 1.5rem);
 		color: var(--amber);
-		text-shadow: 0 0 10px var(--amber), 0 0 24px rgba(255, 207, 63, 0.4);
+		text-shadow: 0 0 10px var(--amber), 0 0 24px color-mix(in srgb, var(--amber) 40%, transparent);
 	}
 	.sub, .muted { color: var(--muted); margin: 0; }
 	.err { color: var(--danger); font-family: var(--font-term); font-size: 1.1rem; }
@@ -224,10 +224,10 @@
 		border-bottom: 1px solid var(--line);
 		vertical-align: middle;
 	}
-	tr.podium td { background: rgba(255, 207, 63, 0.05); }
+	tr.podium td { background: color-mix(in srgb, var(--amber) 5%, transparent); }
 	tr:hover td { background: var(--inset); }
 	/* Cornici podio: oro / argento / bronzo (bordo sinistro luminoso) */
-	tr.gold td:first-child { box-shadow: inset 4px 0 0 #ffcf3f; }
+	tr.gold td:first-child { box-shadow: inset 4px 0 0 var(--amber); }
 	tr.silver td:first-child { box-shadow: inset 4px 0 0 #cdd6e3; }
 	tr.bronze td:first-child { box-shadow: inset 4px 0 0 #d98a4a; }
 
@@ -246,13 +246,13 @@
 		font-family: var(--font-display);
 		font-size: 0.95rem;
 		color: var(--amber);
-		text-shadow: 0 0 8px rgba(255, 207, 63, 0.55);
+		text-shadow: 0 0 8px color-mix(in srgb, var(--amber) 55%, transparent);
 	}
 	.wins {
 		font-family: var(--font-display);
 		font-size: 0.85rem;
 		color: var(--green);
-		text-shadow: 0 0 8px rgba(61, 255, 154, 0.5);
+		text-shadow: 0 0 8px color-mix(in srgb, var(--green) 50%, transparent);
 	}
 	.rate { color: var(--muted); }
 	.game-col { text-align: center; }

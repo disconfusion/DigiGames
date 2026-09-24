@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { api } from '$lib/api';
 	import { setSession, type Session } from '$lib/auth.svelte';
+	import { theme } from '$lib/theme.svelte';
 
 	let mode = $state<'login' | 'register'>('login');
 	let username = $state('');
@@ -38,10 +39,12 @@
 </div>
 
 <div class="login-stage">
-	<div class="brand-logo"><span class="digi">DIGI</span><span class="games">GAMES</span></div>
+	<div class="brand-logo marquee">
+		<span class="digi">DIGI</span><span class="games">{theme.side === 'casino' ? 'CASINÒ' : 'GAMES'}</span>
+	</div>
 	<p class="subtitle">▶ PLAYER LOGIN <span class="caret">_</span></p>
 
-	<div class="card">
+	<div class="card bulbs">
 		<h1>{mode === 'login' ? 'INSERT COIN' : 'NEW PLAYER'}</h1>
 
 		<form onsubmit={submit}>
@@ -101,8 +104,8 @@
 		bottom: -20%;
 		height: 75%;
 		background-image:
-			linear-gradient(to right, rgba(47, 243, 255, 0.5) 1px, transparent 1px),
-			linear-gradient(to bottom, rgba(255, 46, 136, 0.45) 1px, transparent 1px);
+			linear-gradient(to right, color-mix(in srgb, var(--cyan) 50%, transparent) 1px, transparent 1px),
+			linear-gradient(to bottom, color-mix(in srgb, var(--accent) 45%, transparent) 1px, transparent 1px);
 		background-size: 48px 48px;
 		transform: perspective(320px) rotateX(62deg);
 		transform-origin: center bottom;
@@ -213,7 +216,7 @@
 		padding: 0.8rem;
 		border: 2px solid var(--amber);
 		border-radius: 4px;
-		background: linear-gradient(180deg, var(--accent), #c01e63);
+		background: linear-gradient(180deg, var(--accent), var(--accent-deep));
 		color: #fff;
 		font-family: var(--font-ui);
 		font-weight: 700;
@@ -221,12 +224,12 @@
 		letter-spacing: 0.08em;
 		font-size: 1rem;
 		cursor: pointer;
-		box-shadow: 0 0 18px rgba(255, 46, 136, 0.45);
+		box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent);
 		min-height: 44px;
 		transition: box-shadow 0.12s;
 	}
 	button[type='submit']:hover {
-		box-shadow: 0 0 26px rgba(255, 46, 136, 0.7);
+		box-shadow: 0 0 26px color-mix(in srgb, var(--accent) 70%, transparent);
 	}
 	button[type='submit']:disabled {
 		opacity: 0.6;

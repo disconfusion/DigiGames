@@ -12,6 +12,8 @@ Restate sintonizzati: la **2.0** è vicina.
 
 ## Novità e fix di questa versione
 
+**Il Poker ha cambiato indirizzo** — dalla sala giochi il tavolo verde è sparito. Si racconta che abbia trovato casa in un locale più esclusivo, tutto luci e insegne, dove si entra solo conoscendo il trucco giusto. Chi riceve l'invito a un *tavolo segreto*, intanto, la strada la trova da solo. Una cosa è certa: i Token, i companion e gli accessori restano i vostri anche lì.
+
 **Zoom dell'interfaccia** — in alto a destra ci sono due pulsanti `A-` e `A+`: ingrandiscono o rimpiccioliscono **tutto il sito** dall'80% al 160%, non solo il testo — icone, pulsanti, tabelle e tavoli da gioco crescono insieme. La percentuale in mezzo riporta al 100% con un clic. La scelta resta memorizzata su quel browser, quindi il monitor grande dell'ufficio e il portatile possono avere due misure diverse. Chi ha già impostato caratteri grandi nelle preferenze del browser se li tiene: lo zoom moltiplica quella misura invece di sostituirla.
 
 **Poker più leggibile** — il tavolo è stato ridisegnato con caratteri e carte più grandi, i posti stanno su una riga sola fino a sei giocatori e il tappeto non spreca più mezzo schermo.
@@ -59,4 +61,4 @@ Restate sintonizzati: la **2.0** è vicina.
 Buon divertimento!
 
 ---
-_Aggiornato: 11 settembre 2026 — zoom dell'interfaccia dall'80% al 160% con i pulsanti A-/A+ in alto a destra, tavolo da poker più leggibile. nuovo gioco Poker Texas Hold'em (tavoli misti umani/IA, buyin in Token con montepremi e rimborso se la partita non finisce). Battle City: fix del cannone che tornava sempre verso l'alto e carri ridisegnati in stile NES. Nuovi giochi Battle City (co-op, duello e costruzione della mappa a due, sei mappe più livelli generati) e Pong 1v1 (realtime 60 Hz, HUD e colore monitor), 19 nuovi companion (insetti ricolorabili, animali, Macchinetta Frog, pipistrello trasformabile in vampiro), parole dell'Impiccato dal dizionario online con difficoltà e lingua a scelta, saldo Token reattivo, inviti accettabili dalla notifica._
+_Aggiornato: 24 settembre 2026 — il Poker lascia la sala giochi per un tavolo segreto. 11 settembre 2026 — zoom dell'interfaccia dall'80% al 160% con i pulsanti A-/A+ in alto a destra, tavolo da poker più leggibile. nuovo gioco Poker Texas Hold'em (tavoli misti umani/IA, buyin in Token con montepremi e rimborso se la partita non finisce). Battle City: fix del cannone che tornava sempre verso l'alto e carri ridisegnati in stile NES. Nuovi giochi Battle City (co-op, duello e costruzione della mappa a due, sei mappe più livelli generati) e Pong 1v1 (realtime 60 Hz, HUD e colore monitor), 19 nuovi companion (insetti ricolorabili, animali, Macchinetta Frog, pipistrello trasformabile in vampiro), parole dell'Impiccato dal dizionario online con difficoltà e lingua a scelta, saldo Token reattivo, inviti accettabili dalla notifica._

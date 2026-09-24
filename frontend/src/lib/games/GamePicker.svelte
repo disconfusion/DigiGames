@@ -67,7 +67,7 @@
 		border-color: var(--accent);
 		color: var(--text);
 		background: #2a0f33;
-		box-shadow: 0 0 12px rgba(255, 46, 136, 0.45);
+		box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 45%, transparent);
 	}
 	@media (max-width: 760px) {
 		.picker {

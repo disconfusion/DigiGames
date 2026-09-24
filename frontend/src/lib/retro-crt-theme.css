@@ -21,6 +21,7 @@
 	--bg: #0a0512;          /* void viola */
 	--panel: #160a2e;       /* pannello */
 	--accent: #ff2e88;      /* magenta neon (primario) */
+	--accent-deep: #c01e63; /* fondo del gradiente dei bottoni primari */
 	--text: #e8f9ff;        /* testo */
 	--muted: #7b6ba8;       /* secondario */
 
@@ -36,8 +37,8 @@
 	--font-ui: 'Orbitron', sans-serif;            /* etichette / bottoni / nav */
 	--font-term: 'VT323', monospace;              /* testo / form / log */
 
-	--glow-mag: 0 0 10px var(--accent), 0 0 24px rgba(255, 46, 136, 0.4);
-	--glow-cyan: 0 0 10px var(--cyan), 0 0 24px rgba(47, 243, 255, 0.4);
+	--glow-mag: 0 0 10px var(--accent), 0 0 24px color-mix(in srgb, var(--accent) 40%, transparent);
+	--glow-cyan: 0 0 10px var(--cyan), 0 0 24px color-mix(in srgb, var(--cyan) 40%, transparent);
 }
 
 /* ---- 2. Tipografia di base ---------------------------------------------- */
@@ -67,7 +68,7 @@ button, nav a, label, th, .category, .who {
 body {
 	position: relative;
 	background-image:
-		radial-gradient(120% 80% at 50% -10%, rgba(255, 46, 136, 0.18), transparent 60%),
+		radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 60%),
 		linear-gradient(180deg, #160a2e 0%, var(--bg) 55%);
 	background-attachment: fixed;
 }
@@ -105,7 +106,7 @@ body::after {
 header {
 	background: linear-gradient(180deg, #1c0d3a, #120825) !important;
 	border-bottom: 2px solid var(--accent);
-	box-shadow: 0 2px 20px rgba(255, 46, 136, 0.2);
+	box-shadow: 0 2px 20px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 .brand { color: var(--cyan) !important; text-shadow: var(--glow-cyan); font-size: 1rem !important; }
 nav a, .who, .link { text-transform: uppercase; font-size: 0.78rem; }
@@ -125,21 +126,21 @@ button:active { transform: translateY(1px); }
 
 /* classi primarie ricorrenti in tutta l'app */
 .primary, .btn, .btn-primary, .send {
-	background: linear-gradient(180deg, var(--accent), #c01e63) !important;
+	background: linear-gradient(180deg, var(--accent), var(--accent-deep)) !important;
 	color: #fff !important;
 	border: 2px solid var(--amber) !important;
-	box-shadow: 0 0 18px rgba(255, 46, 136, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+	box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
 	text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
 }
 .primary:hover, .btn:hover, .btn-primary:hover, .send:hover {
-	box-shadow: 0 0 26px rgba(255, 46, 136, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+	box-shadow: 0 0 26px color-mix(in srgb, var(--accent) 70%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
 }
 
 /* classi secondarie / ghost */
 .ghost, .ctrl, .orient-btn, .flag-toggle, .btn-start {
 	background: transparent !important;
 	color: var(--cyan) !important;
-	border: 2px solid rgba(47, 243, 255, 0.5) !important;
+	border: 2px solid color-mix(in srgb, var(--cyan) 50%, transparent) !important;
 }
 .ghost:hover, .ctrl:hover {
 	border-color: var(--cyan) !important;
@@ -162,8 +163,8 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* ---- 7. Stati di vittoria / sconfitta / patta (banner condivisi) --------- */
-.win, .banner.won, .turn-badge.my-turn, .ms-banner.won { box-shadow: 0 0 18px rgba(61, 255, 154, 0.35); }
-.lose, .banner.lost, .ms-banner.lost { box-shadow: 0 0 18px rgba(255, 82, 119, 0.35); }
+.win, .banner.won, .turn-badge.my-turn, .ms-banner.won { box-shadow: 0 0 18px color-mix(in srgb, var(--green) 35%, transparent); }
+.lose, .banner.lost, .ms-banner.lost { box-shadow: 0 0 18px color-mix(in srgb, var(--danger) 35%, transparent); }
 
 /* ---- 8. Scrollbar -------------------------------------------------------- */
 ::-webkit-scrollbar-thumb { background: var(--line) !important; }

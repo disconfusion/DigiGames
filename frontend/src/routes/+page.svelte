@@ -3,7 +3,8 @@
 	import { goto } from '$app/navigation';
 	import { auth } from '$lib/auth.svelte';
 	import { api } from '$lib/api';
-	import { gameLabel } from '$lib/games/catalog';
+	import { gameLabel, gamesFor, sideOf } from '$lib/games/catalog';
+	import { theme } from '$lib/theme.svelte';
 	import Avatar from '$lib/Avatar.svelte';
 	import GameOptions from '$lib/games/GameOptions.svelte';
 	import GamePicker from '$lib/games/GamePicker.svelte';
@@ -57,6 +58,17 @@
 
 	// Entra con codice
 	let joinCode = $state('');
+
+	// Lato attivo (DigiGames / DigiCasinò): si ospita e si invita solo ai suoi giochi, e le
+	// stanze pubbliche mostrano solo quelli. "Partite in corso" resta completa: una partita
+	// propria non deve sparire cambiando lato.
+	const sideGames = $derived(gamesFor(theme.side));
+	const sideRooms = $derived(rooms.filter((r) => sideOf(r.gameSlug) === theme.side));
+	$effect(() => {
+		const slugs = sideGames.map((g) => g.slug);
+		if (!slugs.includes(hostGame)) hostGame = slugs[0];
+		if (!slugs.includes(inviteGame)) inviteGame = slugs[0];
+	});
 
 	const lettersLeft = $derived(daily ? (daily.masked.match(/_/g)?.length ?? 0) : 0);
 
@@ -245,7 +257,7 @@
 	</Modal>
 {/if}
 
-<h1 class="title">SELECT YOUR GAME</h1>
+<h1 class="title"><span class="marquee">{theme.side === 'casino' ? 'PLACE YOUR BETS' : 'SELECT YOUR GAME'}</span></h1>
 <div class="arcade-strip">
 	<span class="oneup">1UP</span>
 	<span class="hi">HIGH SCORE</span>
@@ -255,11 +267,11 @@
 
 <div class="cards">
 	<!-- Card 1: Ospita partita -->
-	<section class="card fade" style="--delay: 0ms">
+	<section class="card bulbs fade" style="--delay: 0ms">
 		<div class="card-icon"><Icon name="house" size={40} title="Ospita" /></div>
 		<h2>Ospita partita</h2>
 		<p class="muted">Apri una stanza pubblica: chiunque può entrare.</p>
-		<GamePicker bind:value={hostGame} />
+		<GamePicker bind:value={hostGame} items={sideGames} />
 		<GameOptions game={hostGame} bind:options={hostOptions} />
 		<button onclick={createHost} disabled={hosting}>
 			{hosting ? 'Creo…' : 'Crea partita pubblica'}
@@ -267,7 +279,7 @@
 	</section>
 
 	<!-- Card 2 (centrale): Parola del Giorno -->
-	<section class="card center fade" style="--delay: 80ms">
+	<section class="card center bulbs fade" style="--delay: 80ms">
 		<div class="card-icon"><Icon name="calendar" size={40} title="Parola del Giorno" /></div>
 		<h2>Parola del Giorno</h2>
 		{#if !daily}
@@ -304,12 +316,12 @@
 	</section>
 
 	<!-- Card 3: Invita un amico -->
-	<section class="card fade" style="--delay: 160ms">
+	<section class="card bulbs fade" style="--delay: 160ms">
 		<div class="card-icon"><Icon name="mail" size={40} title="Invita" /></div>
 		<h2>Invita un amico</h2>
 		<p class="muted">Scegli un gioco e invita una o più persone.</p>
 		<p class="muted small"><Icon name="online" size={14} /> {onlineCount} online ora</p>
-		<GamePicker bind:value={inviteGame} />
+		<GamePicker bind:value={inviteGame} items={sideGames} />
 		<GameOptions game={inviteGame} bind:options={inviteOptions} />
 		<div class="users">
 			{#if users.length === 0}
@@ -338,7 +350,7 @@
 
 {#if activeRooms.length > 0}
 	<!-- Partite in corso: rientra con un click, senza ricordare il codice -->
-	<section class="panel active-games">
+	<section class="panel bulbs active-games">
 		<h3>Partite in corso</h3>
 		<ul class="rooms">
 			{#each activeRooms as r (r.code)}
@@ -358,7 +370,7 @@
 {/if}
 
 <!-- Entra con codice -->
-<section class="panel">
+<section class="panel bulbs">
 	<h3>Entra con un codice</h3>
 	<div class="row">
 		<input placeholder="ABC123" bind:value={joinCode} maxlength="6" />
@@ -367,16 +379,16 @@
 </section>
 
 <!-- Stanze pubbliche -->
-<section class="panel">
+<section class="panel bulbs">
 	<div class="row between">
 		<h3>Stanze pubbliche</h3>
 		<button class="link" onclick={refreshRooms}>↻ Aggiorna</button>
 	</div>
-	{#if rooms.length === 0}
+	{#if sideRooms.length === 0}
 		<p class="muted">Nessuna stanza aperta. Creane una qui sopra!</p>
 	{:else}
 		<ul class="rooms">
-			{#each rooms as r (r.code)}
+			{#each sideRooms as r (r.code)}
 				<li>
 					<div>
 						<strong>{gameLabel(r.gameSlug)}</strong>
@@ -398,7 +410,11 @@
 		font-family: var(--font-display);
 		font-size: clamp(1rem, 4vw, 1.6rem);
 		color: var(--amber);
-		text-shadow: 0 0 10px var(--amber), 0 0 24px rgba(255, 207, 63, 0.4);
+		text-shadow: 0 0 10px var(--amber), 0 0 24px color-mix(in srgb, var(--amber) 40%, transparent);
+	}
+	/* insegna a lampadine in DigiCasinò (casino-theme.css): deve stringersi sul testo */
+	.title .marquee {
+		display: inline-block;
 	}
 	.arcade-strip {
 		display: flex;
@@ -447,7 +463,7 @@
 	}
 	.card.center {
 		border: 2px solid var(--accent);
-		box-shadow: 0 0 0 1px var(--accent), 0 0 30px rgba(255, 46, 136, 0.4);
+		box-shadow: 0 0 0 1px var(--accent), 0 0 30px color-mix(in srgb, var(--accent) 40%, transparent);
 		transform: scale(1.03);
 	}
 	.card-icon {
@@ -493,7 +509,7 @@
 	button {
 		width: 100%;
 		padding: 0.6rem 1rem;
-		border: 2px solid rgba(47, 243, 255, 0.5);
+		border: 2px solid color-mix(in srgb, var(--cyan) 50%, transparent);
 		border-radius: 4px;
 		background: transparent;
 		color: var(--cyan);
@@ -513,14 +529,14 @@
 	}
 	button.primary,
 	.card.center button {
-		background: linear-gradient(180deg, var(--accent), #c01e63);
+		background: linear-gradient(180deg, var(--accent), var(--accent-deep));
 		border-color: var(--amber);
 		color: #fff;
-		box-shadow: 0 0 18px rgba(255, 46, 136, 0.45);
+		box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent);
 	}
 	button.primary:hover,
 	.card.center button:hover {
-		box-shadow: 0 0 26px rgba(255, 46, 136, 0.7);
+		box-shadow: 0 0 26px color-mix(in srgb, var(--accent) 70%, transparent);
 	}
 	button:disabled {
 		opacity: 0.5;
@@ -541,12 +557,12 @@
 	.badge.ok {
 		background: #10331f;
 		color: var(--green);
-		box-shadow: 0 0 10px rgba(61, 255, 154, 0.3);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--green) 30%, transparent);
 	}
 	.badge.danger {
 		background: #3a1420;
 		color: var(--danger);
-		box-shadow: 0 0 10px rgba(255, 82, 119, 0.3);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--danger) 30%, transparent);
 	}
 	.badge.dim {
 		background: var(--inset);
@@ -582,7 +598,7 @@
 	.user.on {
 		border-color: var(--accent);
 		background: #2a0f33;
-		box-shadow: 0 0 10px rgba(255, 46, 136, 0.3);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 30%, transparent);
 	}
 	.user:hover {
 		border-color: var(--cyan);
@@ -646,10 +662,10 @@
 	.alt {
 		width: auto;
 		margin-top: 0;
-		background: linear-gradient(180deg, var(--accent), #c01e63);
+		background: linear-gradient(180deg, var(--accent), var(--accent-deep));
 		border-color: var(--amber);
 		color: #fff;
-		box-shadow: 0 0 14px rgba(255, 46, 136, 0.4);
+		box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
 	}
 	.link {
 		width: auto;
@@ -782,11 +798,11 @@
 		width: auto;
 		margin: 0;
 		padding: 0.55rem 1.4rem;
-		background: linear-gradient(180deg, var(--accent), #c01e63);
+		background: linear-gradient(180deg, var(--accent), var(--accent-deep));
 		border: 2px solid var(--amber);
 		border-radius: 4px;
 		color: #fff;
 		cursor: pointer;
-		box-shadow: 0 0 18px rgba(255, 46, 136, 0.45);
+		box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent);
 	}
 </style>

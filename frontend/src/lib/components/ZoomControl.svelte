@@ -79,7 +79,7 @@
 	.zoom-btn:hover:not(:disabled),
 	.zoom-value:hover {
 		color: var(--cyan);
-		background: rgba(47, 243, 255, 0.1);
+		background: color-mix(in srgb, var(--cyan) 10%, transparent);
 	}
 	.zoom-btn:disabled {
 		opacity: 0.35;

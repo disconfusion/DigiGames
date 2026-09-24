@@ -1,12 +1,13 @@
 <script lang="ts">
 	import '$lib/retro-crt-theme.css';
+	import '$lib/casino-theme.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { onDestroy } from 'svelte';
 	import { auth, logout } from '$lib/auth.svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { api } from '$lib/api';
-	import { GAME_CATALOG } from '$lib/games/catalog';
+	import { GAME_CATALOG, gamesFor, gameLabelFor } from '$lib/games/catalog';
 	import { connectNotify, type NotifyConnection } from '$lib/ws';
 	import { notifications, onInviteReceived, onInviteResolved, setInviteCount, onDailyUpdate, onPresenceUpdate, onGiftReceived, showToast } from '$lib/notifications.svelte';
 	import { wallet, setBalance, refreshBalance } from '$lib/wallet.svelte';
@@ -16,13 +17,27 @@
 	import Modal from '$lib/components/Modal.svelte';
 	import ZoomControl from '$lib/components/ZoomControl.svelte';
 	import { initScale } from '$lib/uiScale.svelte';
+	import { theme, brandName, initSide, toggleSide, isSecretCode, isDoubleTap } from '$lib/theme.svelte';
 
-	// Etichetta gioco da slug (per i toast invito)
+	// Etichetta gioco da slug (per i toast invito): i tavoli del casinò restano segreti in sala giochi
 	const gameLabel = (slug: unknown): string =>
-		GAME_CATALOG.find((g) => g.slug === slug)?.label ?? 'una partita';
+		typeof slug === 'string' && GAME_CATALOG.some((g) => g.slug === slug)
+			? gameLabelFor(slug, theme.side)
+			: 'una partita';
 
-	// Aree selezionabili nella segnalazione bug: "Generale" + tutti i giochi
-	const BUG_AREAS = [{ slug: 'generale', label: 'Generale / Altro' }, ...GAME_CATALOG];
+	// Aree selezionabili nella segnalazione bug: "Generale" + i giochi del lato attivo
+	const bugAreas = $derived([{ slug: 'generale', label: 'Generale / Altro' }, ...gamesFor(theme.side)]);
+
+	const casino = $derived(theme.side === 'casino');
+	const brand = $derived(brandName(theme.side));
+
+	// Lato oscuro: 777 sulla tastiera o doppio tocco sul logo
+	function onSecretKey(e: KeyboardEvent) {
+		if (isSecretCode(e)) toggleSide();
+	}
+	function onBrandTap(e: PointerEvent) {
+		if (isDoubleTap(e)) toggleSide();
+	}
 
 	let { children } = $props();
 
@@ -159,6 +174,7 @@
 	// disegno, qui si allinea lo stato reattivo del controllo in header.
 	$effect(() => {
 		initScale();
+		initSide();
 	});
 
 	$effect(() => {
@@ -239,14 +255,18 @@
 	}
 </script>
 
+<svelte:window onkeydown={onSecretKey} />
+
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<title>DigiGames</title>
+	<title>{brand}</title>
 </svelte:head>
 
-<header>
+<header class="bulbs bulbs-bottom">
 	<div class="bar-top">
-		<a class="brand" href="/"><Icon name="gamepad" size={18} title="DigiGames" /> DigiGames</a>
+		<a class="brand marquee" href="/" onpointerup={onBrandTap}>
+			<Icon name={casino ? 'suit-spade' : 'gamepad'} size={18} title={brand} /> {brand}
+		</a>
 		{#if auth.session}
 			<div class="actions">
 				<ZoomControl />
@@ -293,7 +313,7 @@
 	<Modal title="Segnala un bug" icon="bug" onClose={() => (showBug = false)}>
 		<div class="field">
 			<span class="field-label">Gioco / area interessata</span>
-			<GamePicker bind:value={bugGame} items={BUG_AREAS} iconSize={28} />
+			<GamePicker bind:value={bugGame} items={bugAreas} iconSize={28} />
 		</div>
 		<label class="field">
 			Descrizione del problema
@@ -401,6 +421,10 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.4rem;
+		/* doppio tocco = cambio di lato: niente zoom del browser né selezione del testo */
+		touch-action: manipulation;
+		user-select: none;
+		-webkit-user-select: none;
 	}
 	.actions {
 		display: flex;
@@ -421,10 +445,10 @@
 		font-size: 0.8rem;
 		white-space: nowrap;
 		text-decoration: none;
-		text-shadow: 0 0 6px rgba(255, 207, 63, 0.5);
+		text-shadow: 0 0 6px color-mix(in srgb, var(--amber) 50%, transparent);
 	}
 	.token-badge:hover {
-		box-shadow: 0 0 10px rgba(255, 207, 63, 0.45);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--amber) 45%, transparent);
 	}
 	.who {
 		display: inline-flex;

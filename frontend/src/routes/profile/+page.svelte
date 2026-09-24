@@ -1088,7 +1088,7 @@
 	.house.on {
 		border-color: var(--amber);
 		color: var(--text);
-		box-shadow: 0 0 10px rgba(255, 207, 63, 0.45);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--amber) 45%, transparent);
 	}
 	.house-name {
 		font-size: 0.7rem;

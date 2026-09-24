@@ -363,7 +363,7 @@
 		border: 1px solid var(--amber);
 		border-radius: 999px;
 		padding: 0.3rem 0.9rem;
-		text-shadow: 0 0 6px rgba(255, 207, 63, 0.5);
+		text-shadow: 0 0 6px color-mix(in srgb, var(--amber) 50%, transparent);
 		white-space: nowrap;
 	}
 	.balance strong {
@@ -404,7 +404,7 @@
 	}
 	.power.owned {
 		border-color: var(--cyan);
-		box-shadow: 0 0 10px rgba(47, 243, 255, 0.18);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--cyan) 18%, transparent);
 	}
 	.emoji {
 		font-size: 1.8rem;
@@ -462,7 +462,7 @@
 		padding: 0.55rem 1rem;
 		border: 2px solid var(--accent);
 		border-radius: 6px;
-		background: linear-gradient(180deg, var(--accent), #c01e63);
+		background: linear-gradient(180deg, var(--accent), var(--accent-deep));
 		color: #fff;
 		font-family: var(--font-ui);
 		font-weight: 700;
@@ -471,11 +471,11 @@
 		font-size: 0.8rem;
 		cursor: pointer;
 		min-height: 40px;
-		box-shadow: 0 0 12px rgba(255, 46, 136, 0.35);
+		box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 35%, transparent);
 		transition: box-shadow 0.15s, opacity 0.15s;
 	}
 	button:hover:not(:disabled) {
-		box-shadow: 0 0 20px rgba(255, 46, 136, 0.6);
+		box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 60%, transparent);
 	}
 	button:disabled {
 		opacity: 0.45;

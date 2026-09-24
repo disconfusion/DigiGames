@@ -3,7 +3,8 @@
 	import { goto } from '$app/navigation';
 	import { auth } from '$lib/auth.svelte';
 	import { api } from '$lib/api';
-	import { gameLabel } from '$lib/games/catalog';
+	import { gameLabelFor } from '$lib/games/catalog';
+	import { theme } from '$lib/theme.svelte';
 	import { notifications, setInviteCount } from '$lib/notifications.svelte';
 	import Icon from '$lib/icons/Icon.svelte';
 
@@ -76,7 +77,7 @@
 			<li>
 				<div class="info">
 					<strong>{inv.fromDisplayName}</strong> ti invita a giocare a
-					<strong>{gameLabel(inv.gameSlug)}</strong>
+					<strong>{gameLabelFor(inv.gameSlug, theme.side)}</strong>
 					<span class="muted">· stanza {inv.roomCode}</span>
 				</div>
 				<div class="actions">

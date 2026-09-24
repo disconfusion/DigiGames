@@ -507,7 +507,7 @@
 		font-size: 1rem;
 		line-height: 1.15;
 		color: var(--green);
-		text-shadow: 0 0 8px rgba(61, 255, 154, 0.55);
+		text-shadow: 0 0 8px color-mix(in srgb, var(--green) 55%, transparent);
 		background: var(--inset);
 		border: 1px solid var(--line);
 		padding: 0.75rem 1rem;
@@ -566,7 +566,7 @@
 		color: var(--green);
 		border-color: var(--green);
 		background: #10331f;
-		box-shadow: 0 0 8px rgba(61, 255, 154, 0.35);
+		box-shadow: 0 0 8px color-mix(in srgb, var(--green) 35%, transparent);
 	}
 	.chip.miss {
 		color: var(--danger);
@@ -586,12 +586,12 @@
 	.banner.won {
 		background: #10331f;
 		color: var(--green);
-		box-shadow: 0 0 18px rgba(61, 255, 154, 0.35);
+		box-shadow: 0 0 18px color-mix(in srgb, var(--green) 35%, transparent);
 	}
 	.banner.lost {
 		background: #3a1420;
 		color: var(--danger);
-		box-shadow: 0 0 18px rgba(255, 82, 119, 0.35);
+		box-shadow: 0 0 18px color-mix(in srgb, var(--danger) 35%, transparent);
 	}
 
 	.section {
@@ -619,7 +619,7 @@
 	.key {
 		width: 2.75rem;
 		height: 2.75rem;
-		border: 2px solid rgba(47, 243, 255, 0.5);
+		border: 2px solid color-mix(in srgb, var(--cyan) 50%, transparent);
 		border-radius: 4px;
 		background: transparent;
 		color: var(--cyan);
@@ -634,7 +634,7 @@
 		background: #10331f;
 		border-color: var(--green);
 		color: var(--green);
-		box-shadow: 0 0 10px rgba(61, 255, 154, 0.4);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--green) 40%, transparent);
 	}
 	.key.miss {
 		background: #3a1420;
@@ -660,7 +660,7 @@
 	}
 	.word-form input:focus { outline: none; border-color: var(--cyan); box-shadow: var(--glow-cyan); }
 	.word-form button {
-		background: linear-gradient(180deg, var(--accent), #c01e63);
+		background: linear-gradient(180deg, var(--accent), var(--accent-deep));
 		color: #fff;
 		border: 2px solid var(--amber);
 		border-radius: 4px;
@@ -670,7 +670,7 @@
 		font-weight: 700;
 		text-transform: uppercase;
 		min-height: 44px;
-		box-shadow: 0 0 14px rgba(255, 46, 136, 0.4);
+		box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
 	}
 	.word-form button:disabled { opacity: 0.5; cursor: default; }
 	.word-err { color: var(--danger); font-family: var(--font-term); margin: 0.4rem 0 0; font-size: 1.05rem; }

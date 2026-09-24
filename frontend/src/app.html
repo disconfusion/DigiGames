@@ -5,11 +5,13 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
 		<script>
-			// Zoom dell'interfaccia scelto dall'utente, applicato prima del primo disegno:
-			// impostarlo dopo l'avvio dell'app farebbe vedere la pagina rimpicciolirsi.
+			// Zoom dell'interfaccia e lato del sito (DigiGames / DigiCasinò) scelti dall'utente,
+			// applicati prima del primo disegno: impostarli dopo l'avvio dell'app farebbe vedere
+			// la pagina rimpicciolirsi o cambiare colore.
 			try {
 				var s = parseFloat(localStorage.getItem('digigames:ui-scale'));
 				if (s >= 0.8 && s <= 1.6) document.documentElement.style.fontSize = s * 100 + '%';
+				if (localStorage.getItem('digigames:side') === 'casino') document.documentElement.dataset.theme = 'casino';
 			} catch (e) {
 				/* storage negato: si resta alla dimensione di default */
 			}

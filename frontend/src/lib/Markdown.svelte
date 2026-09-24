@@ -27,7 +27,7 @@
 		color: var(--accent);
 		line-height: 1.3;
 		margin: 1.4em 0 0.6em;
-		text-shadow: 0 0 8px rgba(255, 46, 136, 0.4);
+		text-shadow: 0 0 8px color-mix(in srgb, var(--accent) 40%, transparent);
 	}
 	.md :global(h1) { font-size: 1.5rem; }
 	.md :global(h2) { font-size: 1.25rem; }

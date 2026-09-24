@@ -6,6 +6,8 @@
 	import { api } from '$lib/api';
 	import { connectRoom, type RoomEvent, type RoomConnection } from '$lib/ws';
 	import { BOARDS } from '$lib/games/registry';
+	import { sideOf } from '$lib/games/catalog';
+	import { switchSide } from '$lib/theme.svelte';
 	import Icon from '$lib/icons/Icon.svelte';
 	import Avatar from '$lib/Avatar.svelte';
 
@@ -173,6 +175,9 @@
 			loadError = 'Stanza non trovata o non più disponibile.';
 			return;
 		}
+		// Un tavolo del casinò porta con sé il suo lato: chi arriva da un invito o da un link
+		// entra in DigiCasinò anche senza conoscere il trucco.
+		if (sideOf(room.gameSlug) === 'casino') switchSide('casino');
 		conn = connectRoom(code, token, handle, (s) => {
 			wsStatus = s;
 			if (s === 'reconnecting') push('⟳ Riconnessione in corso…');
@@ -224,7 +229,7 @@
 			{@render seat(meUsername, 'left')}
 		</div>
 
-		<section class="panel board-panel">
+		<section class="panel board-panel bulbs">
 			{#if Board && auth.session}
 				<Board send={sendMsg} event={gameEvent} me={auth.session} names={nameMap} />
 			{:else}
@@ -302,10 +307,10 @@
 		border-color: var(--amber);
 	}
 	.leave:hover {
-		box-shadow: 0 0 14px rgba(255, 82, 119, 0.5);
+		box-shadow: 0 0 14px color-mix(in srgb, var(--danger) 50%, transparent);
 	}
 	.close-room:hover {
-		box-shadow: 0 0 14px rgba(255, 207, 63, 0.5);
+		box-shadow: 0 0 14px color-mix(in srgb, var(--amber) 50%, transparent);
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.leave,
@@ -359,11 +364,11 @@
 		border: 2px solid var(--amber);
 		border-radius: 12px;
 		padding: 0.4rem 0.5rem;
-		box-shadow: 0 0 12px rgba(255, 207, 63, 0.3);
+		box-shadow: 0 0 12px color-mix(in srgb, var(--amber) 30%, transparent);
 	}
 	.me-seat .avatar-box {
 		border-color: var(--accent);
-		box-shadow: 0 0 12px rgba(255, 46, 136, 0.4);
+		box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 40%, transparent);
 	}
 	.avatar-box.dim {
 		border-color: var(--line);
@@ -512,7 +517,7 @@
 		box-shadow: var(--glow-cyan);
 	}
 	form button {
-		background: linear-gradient(180deg, var(--accent), #c01e63);
+		background: linear-gradient(180deg, var(--accent), var(--accent-deep));
 		color: #fff;
 		border: 2px solid var(--amber);
 		border-radius: 4px;
@@ -522,7 +527,7 @@
 		text-transform: uppercase;
 		cursor: pointer;
 		min-height: 44px;
-		box-shadow: 0 0 14px rgba(255, 46, 136, 0.4);
+		box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
 	}
 	button:disabled {
 		opacity: 0.5;

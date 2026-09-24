@@ -1,0 +1,194 @@
+/* =============================================================================
+   DigiCasinò · il lato oscuro di DigiGames
+   -----------------------------------------------------------------------------
+   Attivo con `data-theme="casino"` su <html> (vedi $lib/theme.svelte.ts), importato nel
+   layout radice DOPO retro-crt-theme.css. Ridefinisce gli stessi token con la palette
+   della roulette su panno scuro: view, tabelloni e icone pixel-art li consumano già.
+   Restano font arcade, scanline e vignettatura CRT; si aggiungono il vortice lento sullo
+   sfondo (stile Balatro) e le lampadine delle insegne di Las Vegas:
+     .marquee → cornice di lampadine tutto intorno (insegne: logo, titoli)
+     .bulbs   → fila di lampadine sul bordo alto (card, pannelli); .bulbs-bottom sul basso
+   Le due classi si possono lasciare sempre nel markup: fuori dal casinò non fanno nulla.
+============================================================================= */
+
+/* ---- 1. Token: rosso e nero della roulette, oro, panno verde scuro -------- */
+:root[data-theme='casino'] {
+	--bg: #06140e;          /* panno quasi nero */
+	--panel: #0c2419;       /* panno scuro */
+	--accent: #e0303f;      /* rosso roulette (primario) */
+	--accent-deep: #8f1420;
+	--text: #f6eedb;        /* avorio */
+	--muted: #8aa596;
+
+	--cyan: #f2c14e;        /* oro: prende il posto del cyan come colore di evidenza */
+	--amber: #ffb627;
+	--green: #37d67a;
+	--danger: #ff4f5e;
+	--line: #1d4331;        /* bordi sottili */
+	--inset: #030c08;       /* nero roulette: fondo campi/input */
+
+	/* lampadine a incandescenza */
+	--bulb-on: #ffe39a;
+	--bulb-glow: #ffb627;
+	--bulb-gap: 14px;       /* passo fra due lampadine */
+	--bulb-o: 0px;          /* sfasamento della fila (la seconda fila è a mezzo passo) */
+	--bulb: radial-gradient(circle, var(--bulb-on) 0 2.2px, transparent 3px);
+}
+
+/* ---- 2. Sfondo: panno scuro + vortice lento (stile Balatro) --------------- */
+@property --swirl {
+	syntax: '<angle>';
+	inherits: false;
+	initial-value: 0deg;
+}
+
+:root[data-theme='casino'] body {
+	background-image:
+		radial-gradient(90% 70% at 50% 40%, #0f3524 0%, transparent 70%),
+		linear-gradient(180deg, #0a2a1c 0%, var(--bg) 65%);
+}
+
+/* Due ventagli conici che girano in versi opposti: sovrapposti danno il vortice.
+   L'angolo avanza a scatti (4 al secondo): basta per un moto lento e costa poco. */
+:root[data-theme='casino'] body::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	background:
+		conic-gradient(
+			from var(--swirl) at 50% 45%,
+			color-mix(in srgb, var(--accent) 14%, transparent),
+			transparent 12%,
+			color-mix(in srgb, var(--green) 8%, transparent) 25%,
+			transparent 37%,
+			color-mix(in srgb, var(--accent) 14%, transparent) 50%,
+			transparent 62%,
+			color-mix(in srgb, var(--green) 8%, transparent) 75%,
+			transparent 87%,
+			color-mix(in srgb, var(--accent) 14%, transparent)
+		),
+		conic-gradient(
+			from calc(var(--swirl) * -1.5) at 50% 45%,
+			transparent,
+			color-mix(in srgb, var(--amber) 6%, transparent) 16%,
+			transparent 33%,
+			color-mix(in srgb, var(--amber) 6%, transparent) 50%,
+			transparent 66%,
+			color-mix(in srgb, var(--amber) 6%, transparent) 83%,
+			transparent
+		);
+	-webkit-mask-image: radial-gradient(circle at 50% 45%, #000 0%, transparent 75%);
+	mask-image: radial-gradient(circle at 50% 45%, #000 0%, transparent 75%);
+	animation: casino-swirl 60s steps(240) infinite;
+}
+@keyframes casino-swirl {
+	to {
+		--swirl: 360deg;
+	}
+}
+
+/* ---- 3. Chrome di navigazione ------------------------------------------- */
+:root[data-theme='casino'] header {
+	position: relative;
+	background: linear-gradient(180deg, #111512, #07150f) !important;
+	border-bottom-color: var(--amber);
+	box-shadow: 0 2px 24px color-mix(in srgb, var(--amber) 22%, transparent);
+}
+
+/* ---- 4. Lampadine ------------------------------------------------------- */
+:root[data-theme='casino'] .marquee {
+	position: relative;
+	padding: 0.35em 0.8em;
+	border: 2px solid var(--amber);
+	border-radius: 6px;
+	background: linear-gradient(180deg, #1c0f08, #0b0604);
+	box-shadow:
+		0 0 14px color-mix(in srgb, var(--amber) 35%, transparent),
+		inset 0 0 12px rgba(0, 0, 0, 0.6);
+}
+:root[data-theme='casino'] .bulbs {
+	position: relative;
+}
+
+/* Due file identiche sfasate di mezzo passo (::before / ::after) che si accendono a turno:
+   è l'effetto "chase" delle insegne. Si anima solo l'opacità. */
+:root[data-theme='casino'] :is(.marquee, .bulbs)::before,
+:root[data-theme='casino'] :is(.marquee, .bulbs)::after {
+	content: '';
+	position: absolute;
+	pointer-events: none;
+	filter: drop-shadow(0 0 3px var(--bulb-glow));
+	animation: bulb-chase 0.9s steps(1) infinite;
+}
+:root[data-theme='casino'] :is(.marquee, .bulbs)::after {
+	--bulb-o: calc(var(--bulb-gap) / 2);
+	animation-delay: -0.45s;
+}
+
+/* cornice: la mezzeria delle lampadine cade sul bordo dell'insegna */
+:root[data-theme='casino'] .marquee::before,
+:root[data-theme='casino'] .marquee::after {
+	inset: calc(var(--bulb-gap) / -2);
+	background:
+		var(--bulb) var(--bulb-o) 0 / var(--bulb-gap) var(--bulb-gap) repeat-x,
+		var(--bulb) var(--bulb-o) 100% / var(--bulb-gap) var(--bulb-gap) repeat-x,
+		var(--bulb) 0 var(--bulb-o) / var(--bulb-gap) var(--bulb-gap) repeat-y,
+		var(--bulb) 100% var(--bulb-o) / var(--bulb-gap) var(--bulb-gap) repeat-y;
+}
+
+/* fila singola sul bordo alto (o basso) */
+:root[data-theme='casino'] .bulbs::before,
+:root[data-theme='casino'] .bulbs::after {
+	left: 12px;
+	right: 12px;
+	top: calc(var(--bulb-gap) / -2);
+	height: var(--bulb-gap);
+	background: var(--bulb) var(--bulb-o) 50% / var(--bulb-gap) var(--bulb-gap) repeat-x;
+}
+:root[data-theme='casino'] .bulbs.bulbs-bottom::before,
+:root[data-theme='casino'] .bulbs.bulbs-bottom::after {
+	top: auto;
+	bottom: calc(var(--bulb-gap) / -2);
+	z-index: 1;
+}
+
+@keyframes bulb-chase {
+	0% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.25;
+	}
+}
+
+/* ---- 5. Cambio di lato: lampo CRT sull'overlay delle scanline -----------
+   Classe da theme.svelte.ts, aggiunta dopo il cambio: il lampo ha il colore di evidenza
+   del lato in cui si entra. In `screen` il nero delle scanline è neutro, il colore illumina. */
+@media (prefers-reduced-motion: no-preference) {
+	:root.side-switch body::after {
+		mix-blend-mode: screen;
+		background-color: color-mix(in srgb, var(--cyan) 30%, transparent);
+		animation: side-switch 0.6s steps(6) 1;
+	}
+}
+@keyframes side-switch {
+	0% { opacity: 1; }
+	20% { opacity: 0.15; }
+	40% { opacity: 0.9; }
+	60% { opacity: 0.3; }
+	100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:root[data-theme='casino'] body::before,
+	:root[data-theme='casino'] :is(.marquee, .bulbs)::before {
+		animation: none;
+	}
+	/* lampadine ferme: una fila accesa, l'altra spenta */
+	:root[data-theme='casino'] :is(.marquee, .bulbs)::after {
+		animation: none;
+		opacity: 0.25;
+	}
+}

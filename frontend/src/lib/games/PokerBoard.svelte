@@ -409,7 +409,7 @@
 		border: 1px solid var(--cyan);
 		border-radius: 12px;
 		background: var(--inset);
-		box-shadow: 0 0 10px rgba(47, 243, 255, 0.15);
+		box-shadow: 0 0 10px color-mix(in srgb, var(--cyan) 15%, transparent);
 	}
 	.pot {
 		display: flex;
